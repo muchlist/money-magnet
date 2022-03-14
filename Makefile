@@ -19,6 +19,11 @@ confirm:
 ## run/api: run the app/api application
 .PHONY: run/api
 run/api:
+	go run ./app/api
+
+## run/api-log: run the app/api with wrap log application
+.PHONY: run/api-log
+run/api-log:
 	go run ./app/api | go run app/tooling/logfmt/main.go
 
 ## db/psql: connect to the database using psql
