@@ -18,7 +18,7 @@ const (
 	keyName       = "name"
 	keyPassword   = "password"
 	keyRoles      = "roles"
-	keySafesRoles = "safes_roles"
+	keySafesRoles = "pocket_roles"
 	keyFCM        = "fcm"
 	keyCreatedAt  = "created_at"
 	keyUpdatedAt  = "updated_at"
@@ -61,7 +61,7 @@ func (r Repo) Insert(ctx context.Context, user usermodel.User) (string, error) {
 			user.Email,
 			user.Password,
 			user.Roles,
-			user.SafesRoles,
+			user.PocketRoles,
 			user.Fcm,
 			timeNow,
 			timeNow).

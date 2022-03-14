@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS "users" (
   "name" varchar(255) NOT NULL,
   "password" char(60) NOT NULL,
   "roles" text[],
-  "safes_roles" text[],
+  "pocket_roles" text[],
   "fcm" varchar(255) NOT NULL DEFAULT '',
   "created_at" timestamp NOT NULL DEFAULT (now()),
   "updated_at" timestamp NOT NULL DEFAULT (now())

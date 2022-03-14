@@ -35,15 +35,15 @@ func NewService(log mlogger.Logger, repo userrepo.UserRepoAssumer) Service {
 func (s Service) InsertUser(ctx context.Context, user usermodel.UserReq) (string, error) {
 
 	userInput := usermodel.User{
-		ID:         uuid.New(),
-		Email:      "whois.muchlas@gmail.com",
-		Name:       "Muchlis",
-		Password:   "secret",
-		Roles:      []string{"admin"},
-		SafesRoles: []string{"asdsadadasd:read"},
-		Fcm:        "",
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		ID:          uuid.New(),
+		Email:       "whois.muchlas@gmail.com",
+		Name:        "Muchlis",
+		Password:    "secret",
+		Roles:       []string{"admin"},
+		PocketRoles: []string{"asdsadadasd:read"},
+		Fcm:         "",
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 	// return s.repo.Insert(ctx, userInput)
 	msg, err := s.repo.Insert(ctx, userInput)
