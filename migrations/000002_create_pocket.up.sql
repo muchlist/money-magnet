@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS "pockets" (
   "pocket_name" varchar(100) NOT NULL,
   "level" int NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now()),
-  "updated_at" timestamp NOT NULL DEFAULT (now())
+  "updated_at" timestamp NOT NULL DEFAULT (now()),
+  "version" integer NOT NULL DEFAULT 1
 );
 
 ALTER TABLE "pockets" ADD FOREIGN KEY ("owner") REFERENCES "users" ("id");

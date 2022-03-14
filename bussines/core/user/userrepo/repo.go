@@ -12,16 +12,16 @@ import (
 )
 
 const (
-	keyTable      = "users"
-	keyID         = "id"
-	keyEmail      = "email"
-	keyName       = "name"
-	keyPassword   = "password"
-	keyRoles      = "roles"
-	keySafesRoles = "pocket_roles"
-	keyFCM        = "fcm"
-	keyCreatedAt  = "created_at"
-	keyUpdatedAt  = "updated_at"
+	keyTable       = "users"
+	keyID          = "id"
+	keyEmail       = "email"
+	keyName        = "name"
+	keyPassword    = "password"
+	keyRoles       = "roles"
+	keyPocketRoles = "pocket_roles"
+	keyFCM         = "fcm"
+	keyCreatedAt   = "created_at"
+	keyUpdatedAt   = "updated_at"
 )
 
 // Repo manages the set of APIs for user access.
@@ -51,7 +51,7 @@ func (r Repo) Insert(ctx context.Context, user usermodel.User) (string, error) {
 			keyEmail,
 			keyPassword,
 			keyRoles,
-			keySafesRoles,
+			keyPocketRoles,
 			keyFCM,
 			keyCreatedAt,
 			keyUpdatedAt).

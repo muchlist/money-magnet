@@ -44,7 +44,7 @@ migrate -path ./migrations -database ${MONEYMAGNET_DB_DSN} up
 
 Eksekusi migrasi DOWN
 ```shell
-migrate -path ./migrations -database ${MONEYMAGNET_DB_DSN} up
+migrate -path ./migrations -database ${MONEYMAGNET_DB_DSN} down
 ```
 
 untuk mengeksekusi migrasi dapat menggunakan makefile dengan perintah
