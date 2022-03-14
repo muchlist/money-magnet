@@ -29,8 +29,8 @@ func (usr userHandler) Get(w http.ResponseWriter, r *http.Request) {
 	traceID := web.ReadTraceID(r.Context())
 
 	user := usermodel.UserReq{
-		Name:     "",
-		Email:    "",
+		Name:     "aaa",
+		Email:    "aaa@muchlis.dev",
 		Password: "123131312",
 	}
 

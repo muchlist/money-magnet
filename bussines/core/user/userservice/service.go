@@ -3,11 +3,10 @@ package userservice
 import (
 	"context"
 	"errors"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/bussines/core/user/usermodel"
 	"github.com/muchlist/moneymagnet/bussines/core/user/userrepo"
+	"github.com/muchlist/moneymagnet/bussines/sys/db"
 	"github.com/muchlist/moneymagnet/foundation/mlogger"
 )
 
@@ -32,25 +31,29 @@ func NewService(log mlogger.Logger, repo userrepo.UserRepoAssumer) Service {
 }
 
 // InsertUser melakukan register user
-func (s Service) InsertUser(ctx context.Context, user usermodel.UserReq) (string, error) {
+func (s Service) InsertUser(ctx context.Context, user usermodel.UserReq) (*usermodel.User, error) {
 
-	userInput := usermodel.User{
-		ID:          uuid.New(),
-		Email:       "whois.muchlas@gmail.com",
-		Name:        "Muchlis",
-		Password:    "secret",
-		Roles:       []string{"admin"},
-		PocketRoles: []string{"asdsadadasd:read"},
-		Fcm:         "",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
+	// userInput := usermodel.User{
+	// 	ID:          uuid.New(),
+	// 	Email:       "whois.muchlas@gmail.com",
+	// 	Name:        "Muchlis",
+	// 	Password:    "secret",
+	// 	Roles:       []string{"admin"},
+	// 	PocketRoles: []string{"asdsadadasd:read"},
+	// 	Fcm:         "",
+	// 	CreatedAt:   time.Now(),
+	// 	UpdatedAt:   time.Now(),
+	// }
 	// return s.repo.Insert(ctx, userInput)
-	msg, err := s.repo.Insert(ctx, userInput)
+	_, err := s.repo.Find(ctx, "uuuuu", db.Filters{
+		Page:     1,
+		PageSize: 10,
+		Sort:     "name",
+	})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return msg, nil
+	return nil, nil
 
 	// // cek ketersediaan id
 	// _, err := s.dao.CheckIDAvailable(ctx, user.ID)

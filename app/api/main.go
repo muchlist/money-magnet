@@ -33,7 +33,7 @@ func main() {
 
 	flag.IntVar(&cfg.port, "port", 8081, "Api server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://postgres:postgres@172.20.96.1:5432/test_db?sslmode=disable", "PostgreSQL DSN")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://postgres:postgres@172.24.48.1:5432/test_db?sslmode=disable", "PostgreSQL DSN")
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max", 100, "PostgreSQL max open connections")
 	flag.IntVar(&cfg.db.minOpenConns, "db-min", 1, "PostgreSQL min open connections")
 
