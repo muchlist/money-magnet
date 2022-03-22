@@ -12,16 +12,7 @@ type mlog struct {
 	zap *zap.Logger
 }
 
-type Logger interface {
-	Info(msg string, tags ...zap.Field)
-	Error(msg string, err error, tags ...zap.Field)
-	InfoT(traceID string, msg string, tags ...zap.Field)
-	ErrorT(traceID string, msg string, err error, tags ...zap.Field)
-	Printf(format string, v ...interface{})
-	Print(format string, v ...interface{})
-}
-
-func New(level string, output string) Logger {
+func New(level string, output string) *mlog {
 	logConfig := zap.Config{
 		Level:       zap.NewAtomicLevelAt(getLevel(level)),
 		OutputPaths: []string{getOutput(output)},

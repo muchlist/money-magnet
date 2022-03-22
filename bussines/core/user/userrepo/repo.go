@@ -33,7 +33,7 @@ type Repo struct {
 }
 
 // NewRepo constructs a data for api access..
-func NewRepo(sqlDB *pgxpool.Pool) UserRepoAssumer {
+func NewRepo(sqlDB *pgxpool.Pool) Repo {
 	return Repo{
 		db: sqlDB,
 		sb: squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar),
@@ -317,8 +317,8 @@ func (r Repo) Find(ctx context.Context, name string, filter db.Filters) ([]userm
 		users = append(users, user)
 	}
 
-	if len(users) == 0 {
-		return []usermodel.User{}, db.ErrDBNotFound
+	if err := rows.Err(); err != nil {
+		return []usermodel.User{}, err
 	}
 
 	return users, nil

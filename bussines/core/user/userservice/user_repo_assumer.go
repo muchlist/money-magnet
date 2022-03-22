@@ -1,4 +1,4 @@
-package userrepo
+package userservice
 
 import (
 	"context"

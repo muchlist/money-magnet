@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/muchlist/moneymagnet/bussines/sys/validate"
-	"github.com/muchlist/moneymagnet/foundation/tools"
+	"github.com/muchlist/moneymagnet/foundation/tools/slicer"
 )
 
 type Filters struct {
@@ -35,7 +35,7 @@ func (f *Filters) Validate() error {
 	}
 
 	if len(f.SortSafelist) != 0 {
-		if !tools.In(f.Sort, f.SortSafelist...) {
+		if !slicer.In(f.Sort, f.SortSafelist...) {
 			return fmt.Errorf("invalid sort value")
 		}
 	}

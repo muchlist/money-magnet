@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/muchlist/moneymagnet/bussines/core/user/usermodel"
-	"github.com/muchlist/moneymagnet/bussines/core/user/userrepo"
 	"github.com/muchlist/moneymagnet/bussines/sys/db"
 	"github.com/muchlist/moneymagnet/foundation/mlogger"
 )
@@ -19,11 +18,11 @@ var (
 // Service manages the set of APIs for user access.
 type Service struct {
 	log  mlogger.Logger
-	repo userrepo.UserRepoAssumer
+	repo UserRepoAssumer
 }
 
 // NewService constructs a core for user api access.
-func NewService(log mlogger.Logger, repo userrepo.UserRepoAssumer) Service {
+func NewService(log mlogger.Logger, repo UserRepoAssumer) Service {
 	return Service{
 		log:  log,
 		repo: repo,
