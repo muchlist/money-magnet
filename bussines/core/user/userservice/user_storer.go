@@ -8,7 +8,7 @@ import (
 	"github.com/muchlist/moneymagnet/bussines/sys/db"
 )
 
-type UserRepoAssumer interface {
+type UserStorer interface {
 	UserSaver
 	UserReader
 }

@@ -1,4 +1,4 @@
-package crypto
+package mcrypto
 
 import (
 	"fmt"
@@ -6,24 +6,24 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func NewCrypto() crypto {
-	return crypto{}
+func New() core {
+	return core{}
 }
 
-type crypto struct{}
+type core struct{}
 
 // GenerateHash membuat hashpassword, hash password 1 dengan yang lainnya akan berbeda meskipun
 // inputannya sama, sehingga untuk membandingkan hashpassword memerlukan method lain IsPWAndHashPWMatch
-func (c crypto) GenerateHash(password string) (string, error) {
+func (c core) GenerateHash(password string) ([]byte, error) {
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
-		return "", fmt.Errorf("generate hash error: %w", err)
+		return nil, fmt.Errorf("generate hash error: %w", err)
 	}
-	return string(passwordHash), nil
+	return passwordHash, nil
 }
 
 // IsPWAndHashPWMatch return true jika inputan password dan hashpassword sesuai
-func (c crypto) IsPWAndHashPWMatch(password string, hashPass string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hashPass), []byte(password))
+func (c core) IsPWAndHashPWMatch(password []byte, hashPass []byte) bool {
+	err := bcrypt.CompareHashAndPassword(hashPass, password)
 	return err == nil
 }

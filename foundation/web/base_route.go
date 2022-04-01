@@ -16,7 +16,7 @@ func (ws *webServer) setupRoutes(injectRoute http.Handler) http.Handler {
 	// convert methodNotAllowedResponse to http handler and set it as the custom error handler for 405 method not allowed
 	router.MethodNotAllowed(MethodNotAllowedResponse)
 
-	router.Use(middleware.RequestID)
+	router.Use(requestID)
 	router.Use(middleware.RealIP)
 	router.Use(midLogger(ws.logger))
 	router.Use(middleware.Recoverer)

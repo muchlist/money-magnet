@@ -20,6 +20,7 @@ type config struct {
 		maxOpenConns int
 		minOpenConns int
 	}
+	secret string
 }
 
 type application struct {
@@ -36,6 +37,7 @@ func main() {
 	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://postgres:postgres@172.24.48.1:5432/test_db?sslmode=disable", "PostgreSQL DSN")
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max", 100, "PostgreSQL max open connections")
 	flag.IntVar(&cfg.db.minOpenConns, "db-min", 1, "PostgreSQL min open connections")
+	flag.StringVar(&cfg.secret, "secret", "xoxoxoxo", "jwt secret")
 
 	flag.Parse()
 

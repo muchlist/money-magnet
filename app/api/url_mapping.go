@@ -10,6 +10,8 @@ import (
 	"github.com/muchlist/moneymagnet/app/api/handler"
 	"github.com/muchlist/moneymagnet/bussines/core/user/userrepo"
 	"github.com/muchlist/moneymagnet/bussines/core/user/userservice"
+	"github.com/muchlist/moneymagnet/bussines/sys/mjwt"
+	"github.com/muchlist/moneymagnet/foundation/mcrypto"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -18,12 +20,16 @@ func (app *application) routes() http.Handler {
 	router := chi.NewRouter()
 
 	// dependency
+	jwt := mjwt.New(app.config.secret)
+	bcrypt := mcrypto.New()
+
 	userRepo := userrepo.NewRepo(app.db)
-	userService := userservice.NewService(app.logger, userRepo)
+	userService := userservice.NewService(app.logger, userRepo, bcrypt, jwt)
 	userHandler := handler.NewUserHandler(app.logger, userService)
 
 	router.Get("/healthcheck", handler.HealthCheckHandler)
-	router.Get("/test", userHandler.Get)
+	router.Post("/login", userHandler.Login)
+	router.Post("/register", userHandler.Register)
 
 	// setup exvar for monitoring
 	setupExpvar(app.db)
@@ -31,6 +37,8 @@ func (app *application) routes() http.Handler {
 
 	return router
 }
+
+// =============================================================================
 
 // setupExpvar setup exvar for monitoring
 func setupExpvar(db *pgxpool.Pool) {

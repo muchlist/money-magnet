@@ -43,12 +43,10 @@ func NewRepo(sqlDB *pgxpool.Pool) Repo {
 // =========================================================================
 // MANIPULATOR
 
-// Insert implements UserRepoAssumer
+// Insert ...
 func (r Repo) Insert(ctx context.Context, user *usermodel.User) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
-
-	timeNow := time.Now()
 
 	sqlStatement, args, err := r.sb.Insert(keyTable).
 		Columns(
@@ -69,8 +67,8 @@ func (r Repo) Insert(ctx context.Context, user *usermodel.User) error {
 			user.Roles,
 			user.PocketRoles,
 			user.Fcm,
-			timeNow,
-			timeNow).
+			user.CreatedAt,
+			user.UpdatedAt).
 		Suffix(db.Returning(keyID)).ToSql()
 
 	if err != nil {
@@ -79,13 +77,13 @@ func (r Repo) Insert(ctx context.Context, user *usermodel.User) error {
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&user.ID)
 	if err != nil {
-		db.ParseError(err)
+		return db.ParseError(err)
 	}
 
 	return nil
 }
 
-// Edit implements UserRepoAssumer
+// Edit ...
 func (r Repo) Edit(ctx context.Context, user *usermodel.User) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
@@ -108,13 +106,13 @@ func (r Repo) Edit(ctx context.Context, user *usermodel.User) error {
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&user.Version)
 	if err != nil {
-		db.ParseError(err)
+		return db.ParseError(err)
 	}
 
 	return nil
 }
 
-// Delete implements UserRepoAssumer
+// Delete ...
 func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
@@ -139,7 +137,7 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-// ChangePassword implements UserRepoAssumer
+// ChangePassword ...
 func (r Repo) ChangePassword(ctx context.Context, user *usermodel.User) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
@@ -160,7 +158,7 @@ func (r Repo) ChangePassword(ctx context.Context, user *usermodel.User) error {
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&user.Version)
 	if err != nil {
-		db.ParseError(err)
+		return db.ParseError(err)
 	}
 
 	return nil
@@ -169,7 +167,7 @@ func (r Repo) ChangePassword(ctx context.Context, user *usermodel.User) error {
 // =========================================================================
 // GETTER
 
-// GetByID implements UserRepoAssumer
+// GetByID get one user by email
 func (r Repo) GetByID(ctx context.Context, id int) (usermodel.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
@@ -205,13 +203,13 @@ func (r Repo) GetByID(ctx context.Context, id int) (usermodel.User, error) {
 			&user.UpdatedAt,
 			&user.Version)
 	if err != nil {
-		db.ParseError(err)
+		return usermodel.User{}, db.ParseError(err)
 	}
 
 	return user, nil
 }
 
-// GetByEmail implements UserRepoAssumer
+// GetByEmail get one user by email
 func (r Repo) GetByEmail(ctx context.Context, email string) (usermodel.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
@@ -247,13 +245,13 @@ func (r Repo) GetByEmail(ctx context.Context, email string) (usermodel.User, err
 			&user.UpdatedAt,
 			&user.Version)
 	if err != nil {
-		db.ParseError(err)
+		return usermodel.User{}, db.ParseError(err)
 	}
 
 	return user, nil
 }
 
-// Find implements UserRepoAssumer
+// Find get all user
 func (r Repo) Find(ctx context.Context, name string, filter db.Filters) ([]usermodel.User, error) {
 
 	// Validation filter

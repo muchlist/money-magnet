@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/muchlist/moneymagnet/foundation/tools/slicer"
@@ -15,7 +14,7 @@ const (
 	identityKey    = "identity"
 	nameKey        = "name"
 	rolesKey       = "roles"
-	pocketRolesKey = "roles"
+	pocketRolesKey = "pocket_roles"
 	tokenTypeKey   = "type"
 	expKey         = "exp"
 	freshKey       = "fresh"
@@ -26,32 +25,32 @@ var (
 	ErrInvalidToken  = errors.New("token not valid")
 )
 
-func NewJwt(secretKey string) *jwtUtils {
+func New(secretKey string) *core {
 	if secretKey == "" {
 		log.Fatal("secret key cannot be empty")
 	}
-	return &jwtUtils{
+	return &core{
 		secretKey: []byte(secretKey),
 	}
 }
 
-type jwtUtils struct {
+type core struct {
 	secretKey []byte
 }
 
 // GenerateToken membuat token jwt untuk login header, untuk menguji nilai payloadnya
 // dapat menggunakan situs jwt.io
-func (j *jwtUtils) GenerateToken(claims CustomClaim) (string, error) {
-	expired := time.Now().Add(time.Minute * claims.ExtraMinute).Unix()
+func (j *core) GenerateToken(claims CustomClaim) (string, error) {
 
-	jwtClaim := jwt.MapClaims{}
-	jwtClaim[identityKey] = claims.Identity
-	jwtClaim[nameKey] = claims.Name
-	jwtClaim[rolesKey] = claims.Roles
-	jwtClaim[pocketRolesKey] = claims.PocketRoles
-	jwtClaim[expKey] = expired
-	jwtClaim[tokenTypeKey] = claims.Type
-	jwtClaim[freshKey] = claims.Fresh
+	jwtClaim := jwt.MapClaims{
+		identityKey:    claims.Identity,
+		nameKey:        claims.Name,
+		rolesKey:       claims.Roles,
+		pocketRolesKey: claims.PocketRoles,
+		expKey:         claims.Exp,
+		tokenTypeKey:   claims.Type,
+		freshKey:       claims.Fresh,
+	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtClaim)
 
@@ -65,7 +64,7 @@ func (j *jwtUtils) GenerateToken(claims CustomClaim) (string, error) {
 
 // ReadToken membaca inputan token dan menghasilkan pointer struct CustomClaim
 // struct CustomClaim digunakan untuk nilai passing antar middleware
-func (j *jwtUtils) ReadToken(token *jwt.Token) (*CustomClaim, error) {
+func (j *core) ReadToken(token *jwt.Token) (*CustomClaim, error) {
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
 		return nil, ErrCastingClaims
@@ -96,6 +95,9 @@ func (j *jwtUtils) ReadToken(token *jwt.Token) (*CustomClaim, error) {
 		return nil, fmt.Errorf("%v: %w", err.Error(), ErrCastingClaims)
 	}
 	pocketRoles, err := slicer.ToStringSlice(claims[pocketRolesKey])
+	if err != nil {
+		return nil, fmt.Errorf("%v: %w", err.Error(), ErrCastingClaims)
+	}
 
 	customClaim := CustomClaim{
 		Identity:    identity,
@@ -111,7 +113,7 @@ func (j *jwtUtils) ReadToken(token *jwt.Token) (*CustomClaim, error) {
 }
 
 // ValidateToken memvalidasi apakah token string masukan valid, termasuk memvalidasi apabila field exp nya kadaluarsa
-func (j *jwtUtils) ValidateToken(tokenString string) (*jwt.Token, error) {
+func (j *core) ValidateToken(tokenString string) (*jwt.Token, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		_, ok := token.Method.(*jwt.SigningMethodHMAC)
 		if !ok {

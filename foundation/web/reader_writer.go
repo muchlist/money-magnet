@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
 )
 
 type Envelope map[string]interface{}
@@ -144,5 +143,11 @@ func ReadInt(qs url.Values, key string, defaultValue int) int {
 
 // ReadTraceID helper reads a trace_id value from r.Context() injected by chi middleware.RequestID.
 func ReadTraceID(ctx context.Context) string {
-	return middleware.GetReqID(ctx)
+	if ctx == nil {
+		return ""
+	}
+	if reqID, ok := ctx.Value(RequestIDKey).(string); ok {
+		return reqID
+	}
+	return ""
 }
