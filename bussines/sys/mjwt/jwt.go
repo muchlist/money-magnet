@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/muchlist/moneymagnet/foundation/tools/slicer"
+	"github.com/muchlist/moneymagnet/foundation/utils/slicer"
 )
 
 const (
@@ -21,6 +21,8 @@ const (
 )
 
 var (
+	// Glob is Global variable JWT
+	Glob             = &core{}
 	ErrCastingClaims = errors.New("fail to type casting")
 	ErrInvalidToken  = errors.New("token not valid")
 )
@@ -29,9 +31,11 @@ func New(secretKey string) *core {
 	if secretKey == "" {
 		log.Fatal("secret key cannot be empty")
 	}
-	return &core{
+	newCore := &core{
 		secretKey: []byte(secretKey),
 	}
+	Glob = newCore
+	return newCore
 }
 
 type core struct {
@@ -64,39 +68,39 @@ func (j *core) GenerateToken(claims CustomClaim) (string, error) {
 
 // ReadToken membaca inputan token dan menghasilkan pointer struct CustomClaim
 // struct CustomClaim digunakan untuk nilai passing antar middleware
-func (j *core) ReadToken(token *jwt.Token) (*CustomClaim, error) {
+func (j *core) ReadToken(token *jwt.Token) (CustomClaim, error) {
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		return nil, ErrCastingClaims
+		return CustomClaim{}, ErrCastingClaims
 	}
 
 	identity, ok := claims[identityKey].(string)
 	if !ok {
-		return nil, ErrCastingClaims
+		return CustomClaim{}, ErrCastingClaims
 	}
 	name, ok := claims[nameKey].(string)
 	if !ok {
-		return nil, ErrCastingClaims
+		return CustomClaim{}, ErrCastingClaims
 	}
 	exp, ok := claims[expKey].(float64)
 	if !ok {
-		return nil, ErrCastingClaims
+		return CustomClaim{}, ErrCastingClaims
 	}
 	tokenType, ok := claims[tokenTypeKey].(string)
 	if !ok {
-		return nil, ErrCastingClaims
+		return CustomClaim{}, ErrCastingClaims
 	}
 	fresh, ok := claims[freshKey].(bool)
 	if !ok {
-		return nil, ErrCastingClaims
+		return CustomClaim{}, ErrCastingClaims
 	}
 	roles, err := slicer.ToStringSlice(claims[rolesKey])
 	if err != nil {
-		return nil, fmt.Errorf("%v: %w", err.Error(), ErrCastingClaims)
+		return CustomClaim{}, fmt.Errorf("%v: %w", err.Error(), ErrCastingClaims)
 	}
 	pocketRoles, err := slicer.ToStringSlice(claims[pocketRolesKey])
 	if err != nil {
-		return nil, fmt.Errorf("%v: %w", err.Error(), ErrCastingClaims)
+		return CustomClaim{}, fmt.Errorf("%v: %w", err.Error(), ErrCastingClaims)
 	}
 
 	customClaim := CustomClaim{
@@ -109,7 +113,7 @@ func (j *core) ReadToken(token *jwt.Token) (*CustomClaim, error) {
 		Fresh:       fresh,
 	}
 
-	return &customClaim, nil
+	return customClaim, nil
 }
 
 // ValidateToken memvalidasi apakah token string masukan valid, termasuk memvalidasi apabila field exp nya kadaluarsa

@@ -168,7 +168,7 @@ func (r Repo) ChangePassword(ctx context.Context, user *usermodel.User) error {
 // GETTER
 
 // GetByID get one user by email
-func (r Repo) GetByID(ctx context.Context, id int) (usermodel.User, error) {
+func (r Repo) GetByID(ctx context.Context, uuid string) (usermodel.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -183,7 +183,7 @@ func (r Repo) GetByID(ctx context.Context, id int) (usermodel.User, error) {
 		keyCreatedAt,
 		keyUpdatedAt,
 		keyVersion,
-	).From(keyTable).Where(squirrel.Eq{keyID: id}).ToSql()
+	).From(keyTable).Where(squirrel.Eq{keyID: uuid}).ToSql()
 
 	if err != nil {
 		return usermodel.User{}, fmt.Errorf("build query get user by id: %w", err)

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
 	"github.com/muchlist/moneymagnet/bussines/core/user/usermodel"
 	"github.com/muchlist/moneymagnet/bussines/sys/mjwt"
 	"github.com/muchlist/moneymagnet/foundation/mcrypto"
@@ -152,4 +151,12 @@ func (s Service) InsertUser(ctx context.Context, req usermodel.UserRegisterReq) 
 		UpdatedAt:   user.UpdatedAt,
 		Version:     user.Version,
 	}, nil
+}
+
+func (s Service) GetProfile(ctx context.Context, id string) (usermodel.UserResp, error) {
+	user, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return usermodel.UserResp{}, fmt.Errorf("get by id: %w", err)
+	}
+	return user.ToUserResp(), nil
 }

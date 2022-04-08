@@ -19,6 +19,21 @@ type User struct {
 	Version     int
 }
 
+func (u User) ToUserResp() UserResp {
+	return UserResp{
+		ID:           u.ID,
+		Email:        u.Email,
+		Name:         u.Name,
+		Roles:        u.Roles,
+		PocketRoles:  u.PocketRoles,
+		CreatedAt:    u.CreatedAt,
+		UpdatedAt:    u.UpdatedAt,
+		Version:      u.Version,
+		AccessToken:  "",
+		RefreshToken: "",
+	}
+}
+
 // DTO adalah refresentasi dari balikan database atau API sehingga apabila terjadi perubahan
 // aplikasi CORE tidak harus dirubah namun DTO akan digunakan apabila ada perbedaan antara
 // domain dan dto kedepannya

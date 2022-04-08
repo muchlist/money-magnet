@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/muchlist/moneymagnet/bussines/sys/validate"
-	"github.com/muchlist/moneymagnet/foundation/tools/slicer"
+	"github.com/muchlist/moneymagnet/foundation/utils/slicer"
 )
 
 type Filters struct {

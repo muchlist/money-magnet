@@ -7,6 +7,7 @@ import (
 	"github.com/muchlist/moneymagnet/bussines/core/user/usermodel"
 	"github.com/muchlist/moneymagnet/bussines/core/user/userservice"
 	"github.com/muchlist/moneymagnet/bussines/sys/db"
+	"github.com/muchlist/moneymagnet/bussines/sys/mid"
 	"github.com/muchlist/moneymagnet/bussines/sys/validate"
 	"github.com/muchlist/moneymagnet/foundation/mlogger"
 	"github.com/muchlist/moneymagnet/foundation/web"
@@ -78,6 +79,31 @@ func (usr userHandler) Login(w http.ResponseWriter, r *http.Request) {
 	result, err := usr.service.Login(r.Context(), req.Email, req.Password)
 	if err != nil {
 		usr.log.ErrorT(traceID, "error login", err)
+		statusCode, msg := parseError(err)
+		web.ErrorResponse(w, statusCode, msg)
+		return
+	}
+	env := web.Envelope{
+		"data": result,
+	}
+	err = web.WriteJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+}
+
+func (usr userHandler) Profile(w http.ResponseWriter, r *http.Request) {
+	traceID := web.ReadTraceID(r.Context())
+	claims, err := mid.GetClaims(r.Context())
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	result, err := usr.service.GetProfile(r.Context(), claims.Identity)
+	if err != nil {
+		usr.log.ErrorT(traceID, "error get profile", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return

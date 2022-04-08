@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"net/http"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/muchlist/moneymagnet/bussines/sys/db"
@@ -13,9 +15,10 @@ import (
 const version = "1.0.0"
 
 type config struct {
-	port int
-	env  string
-	db   struct {
+	port      int
+	debugPort int
+	env       string
+	db        struct {
 		dsn          string
 		maxOpenConns int
 		minOpenConns int
@@ -33,6 +36,7 @@ func main() {
 	var cfg config
 
 	flag.IntVar(&cfg.port, "port", 8081, "Api server port")
+	flag.IntVar(&cfg.debugPort, "debug-port", 4000, "Debug server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://postgres:postgres@172.24.48.1:5432/test_db?sslmode=disable", "PostgreSQL DSN")
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max", 100, "PostgreSQL max open connections")
@@ -66,7 +70,15 @@ func main() {
 		db:     database,
 	}
 
-	// new api server
+	// start debug server
+	debugMux := debugMux(database)
+	go func(mux *http.ServeMux) {
+		if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", cfg.debugPort), mux); err != nil {
+			log.Error("serve debug api", err)
+		}
+	}(debugMux)
+
+	// create and start api server
 	webApi := web.New(app.logger, app.config.port, app.config.env)
 	err = webApi.Serve(app.routes())
 	if err != nil {

@@ -19,7 +19,8 @@ func (ws *webServer) setupRoutes(injectRoute http.Handler) http.Handler {
 	router.Use(requestID)
 	router.Use(middleware.RealIP)
 	router.Use(midLogger(ws.logger))
-	router.Use(middleware.Recoverer)
+	router.Use(panicRecovery(ws.logger))
+	// router.Use(middleware.Recoverer)
 	router.Use(middleware.Timeout(10 * time.Second))
 
 	router.Mount("/", injectRoute)

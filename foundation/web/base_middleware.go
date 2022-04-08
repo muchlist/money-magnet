@@ -2,9 +2,12 @@ package web
 
 import (
 	"context"
-	"github.com/google/uuid"
+	"fmt"
 	"net/http"
+	"runtime"
 	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/muchlist/moneymagnet/foundation/mlogger"
@@ -53,4 +56,25 @@ func requestID(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 	return http.HandlerFunc(fn)
+}
+
+// response writted when got panic
+func panicRecovery(l mlogger.Logger) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			defer func() {
+				if err := recover(); err != nil {
+					buf := make([]byte, 2048)
+					n := runtime.Stack(buf, false)
+					buf = buf[:n]
+
+					l.Info(fmt.Sprintf("recovering from err %v\n %s", err, buf))
+					ServerErrorResponse(w, r, fmt.Errorf("%v", err))
+				}
+			}()
+
+			next.ServeHTTP(w, r)
+		}
+		return http.HandlerFunc(fn)
+	}
 }

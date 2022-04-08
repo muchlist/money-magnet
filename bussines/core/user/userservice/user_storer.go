@@ -21,7 +21,7 @@ type UserSaver interface {
 }
 
 type UserReader interface {
-	GetByID(ctx context.Context, id int) (usermodel.User, error)
+	GetByID(ctx context.Context, uuid string) (usermodel.User, error)
 	GetByEmail(ctx context.Context, email string) (usermodel.User, error)
 	Find(ctx context.Context, name string, filter db.Filters) ([]usermodel.User, error)
 }
