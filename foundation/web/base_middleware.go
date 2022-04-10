@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/muchlist/moneymagnet/foundation/mlogger"
 	"go.uber.org/zap"
 )

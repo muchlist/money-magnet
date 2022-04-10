@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func (ws *webServer) setupRoutes(injectRoute http.Handler) http.Handler {

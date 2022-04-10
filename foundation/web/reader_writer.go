@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 )
 
 type Envelope map[string]interface{}
@@ -23,6 +23,14 @@ func ReadIDParam(r *http.Request) (int64, error) {
 		return 0, errors.New("invalid id parameter")
 	}
 	return id, nil
+}
+
+func ReadStrIDParam(r *http.Request) (string, error) {
+	idParam := chi.URLParam(r, "strID")
+	if idParam == "" {
+		return "", errors.New("invalid strID parameter")
+	}
+	return idParam, nil
 }
 
 // WriteJSON untuk keperluan mengirimkan response JSON seperti marshaling body JSON,
