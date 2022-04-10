@@ -111,7 +111,7 @@ func validateAuthorizationRole(rolesHave []string, rolesAllowed []string) error 
 	if (len(rolesAllowed) != 0) &&
 		!(len(rolesAllowed) == 1 && rolesAllowed[0] == "") {
 		for _, roleReq := range rolesAllowed {
-			if !slicer.In(roleReq, rolesHave...) {
+			if !slicer.In(roleReq, rolesHave) {
 				err := fmt.Errorf("expected role : %s", roleReq)
 				return err
 			}

@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func In(value string, list ...string) bool {
+func In[T comparable](value T, list []T) bool {
 	for i := range list {
 		if value == list[i] {
 			return true

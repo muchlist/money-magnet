@@ -35,7 +35,7 @@ func (f *Filters) Validate() error {
 	}
 
 	if len(f.SortSafelist) != 0 {
-		if !slicer.In(f.Sort, f.SortSafelist...) {
+		if !slicer.In(f.Sort, f.SortSafelist) {
 			return fmt.Errorf("invalid sort value")
 		}
 	}
