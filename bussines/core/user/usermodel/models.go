@@ -71,9 +71,16 @@ type UserResp struct {
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 	Version      int       `json:"version"`
-	AccessToken  string    `json:"access_token"`
-	RefreshToken string    `json:"refresh_token"`
+	AccessToken  string    `json:"access_token,omitempty" `
+	RefreshToken string    `json:"refresh_token,omitempty"`
 }
 
 type UserUpdate struct {
+	ID          string   `json:"-"`
+	Email       *string  `json:"email"`
+	Name        *string  `json:"name"`
+	Password    *string  `json:"password"`
+	Roles       []string `json:"roles"`
+	PocketRoles []string `json:"pocket_roles"`
+	Fcm         *string  `json:"fcm"`
 }

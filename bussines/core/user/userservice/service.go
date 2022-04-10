@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/bussines/core/user/usermodel"
+	"github.com/muchlist/moneymagnet/bussines/sys/errr"
 	"github.com/muchlist/moneymagnet/bussines/sys/mjwt"
 	"github.com/muchlist/moneymagnet/foundation/mcrypto"
 	"github.com/muchlist/moneymagnet/foundation/mlogger"
@@ -48,7 +49,7 @@ func NewService(
 	}
 }
 
-// Login ...
+// Login return detail user with access token and refresh token
 func (s Service) Login(ctx context.Context, email, password string) (usermodel.UserResp, error) {
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
@@ -107,7 +108,7 @@ func (s Service) Login(ctx context.Context, email, password string) (usermodel.U
 	return response, nil
 }
 
-// InsertUser
+// InsertUser used for register user
 func (s Service) InsertUser(ctx context.Context, req usermodel.UserRegisterReq) (usermodel.UserResp, error) {
 
 	hashPassword, err := s.crypto.GenerateHash(req.Password)
@@ -153,6 +154,118 @@ func (s Service) InsertUser(ctx context.Context, req usermodel.UserRegisterReq) 
 	}, nil
 }
 
+// FetchUser do edit user with ignoring nil field
+// ID is required
+func (s Service) FetchUser(ctx context.Context, req usermodel.UserUpdate) (usermodel.UserResp, error) {
+	userExisting, err := s.repo.GetByID(ctx, req.ID)
+	if err != nil {
+		return usermodel.UserResp{}, fmt.Errorf("get user: %w", err)
+	}
+
+	if req.Email != nil {
+		userExisting.Email = *req.Email
+	}
+	if req.Name != nil {
+		userExisting.Name = *req.Name
+	}
+	if req.Roles != nil {
+		userExisting.Roles = req.Roles
+	}
+	if req.PocketRoles != nil {
+		userExisting.PocketRoles = req.PocketRoles
+	}
+	if req.Password != nil {
+		hashPassword, err := s.crypto.GenerateHash(*req.Password)
+		if err != nil {
+			return usermodel.UserResp{}, fmt.Errorf("generate hashpw when edit user: %w", err)
+		}
+		userExisting.Password = hashPassword
+	}
+	if req.Fcm != nil {
+		userExisting.Fcm = *req.Fcm
+	}
+
+	if err := s.repo.Edit(ctx, &userExisting); err != nil {
+		return usermodel.UserResp{}, fmt.Errorf("edit user: %w", err)
+	}
+
+	return userExisting.ToUserResp(), nil
+}
+
+// UpdateFCM do save fcm to database
+func (s Service) UpdateFCM(ctx context.Context, userID string, fcm string) error {
+	userUUID := uuid.MustParse(userID)
+	if err := s.repo.EditFCM(ctx, userUUID, fcm); err != nil {
+		return fmt.Errorf("edit fcm: %w", err)
+	}
+	return nil
+}
+
+// Delete ...
+func (s Service) Delete(ctx context.Context, userIDToDelete string, userIDExecutor string) error {
+	if userIDExecutor == userIDToDelete {
+		return errr.New("cannot delete self profile", 400)
+	}
+	return s.repo.Delete(ctx, uuid.MustParse(userIDToDelete))
+}
+
+// Refresh do refresh token,
+// access token in reslt is new but tagged as not fresh
+func (s Service) Refresh(ctx context.Context, refreshToken string) (usermodel.UserResp, error) {
+	// validate token, signature and exp etc...
+	token, err := s.jwt.ValidateToken(refreshToken)
+	if err != nil {
+		return usermodel.UserResp{}, err
+	}
+	claims, err := s.jwt.ReadToken(token)
+	if err != nil {
+		return usermodel.UserResp{}, err
+	}
+
+	// cek claims type token
+	if claims.Type != mjwt.Refresh {
+		return usermodel.UserResp{}, mjwt.ErrInvalidToken
+	}
+
+	user, err := s.repo.GetByID(ctx, claims.Identity)
+	if err != nil {
+		return usermodel.UserResp{}, fmt.Errorf("%v: %w", err, ErrInvalidEmailOrPass)
+	}
+
+	expired := time.Now().Add(time.Minute * expiredJWTToken).Unix()
+
+	AccessClaims := mjwt.CustomClaim{
+		Identity:    user.ID.String(),
+		Name:        user.Name,
+		Exp:         expired,
+		Type:        mjwt.Access,
+		Fresh:       false,
+		Roles:       user.Roles,
+		PocketRoles: user.PocketRoles,
+	}
+
+	accessToken, err := s.jwt.GenerateToken(AccessClaims)
+	if err != nil {
+		return usermodel.UserResp{}, fmt.Errorf("fail to generate token when login: %w", err)
+	}
+
+	response := usermodel.UserResp{
+		ID:           user.ID,
+		Email:        user.Email,
+		Name:         user.Name,
+		Roles:        user.Roles,
+		PocketRoles:  user.PocketRoles,
+		CreatedAt:    user.CreatedAt,
+		UpdatedAt:    user.UpdatedAt,
+		Version:      user.Version,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+
+	return response, nil
+}
+
+// GetProfile do load user by id
 func (s Service) GetProfile(ctx context.Context, id string) (usermodel.UserResp, error) {
 	user, err := s.repo.GetByID(ctx, id)
 	if err != nil {

@@ -16,6 +16,7 @@ type UserStorer interface {
 type UserSaver interface {
 	Insert(ctx context.Context, user *usermodel.User) error
 	Edit(ctx context.Context, user *usermodel.User) error
+	EditFCM(ctx context.Context, id uuid.UUID, fcm string) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	ChangePassword(ctx context.Context, user *usermodel.User) error
 }

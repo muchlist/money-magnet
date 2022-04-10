@@ -26,18 +26,28 @@ func (app *application) routes() http.Handler {
 
 	// Endpoint with no auth required
 	r.Get("/healthcheck", handler.HealthCheckHandler)
-	r.Post("/login", userHandler.Login)
+	r.Post("/user/login", userHandler.Login)
+	r.Post("/user/refresh", userHandler.RefreshToken)
 
 	// Endpoint with fresh auth admin
 	r.Group(func(r chi.Router) {
 		r.Use(mid.RequiredFreshRoles("admin"))
 		r.Post("/register", userHandler.Register)
+		r.Patch("/edit-user/{strID}", userHandler.EditUser)
+		r.Delete("/user/{strID}", userHandler.DeleteUser)
 	})
 
 	// Endpoint with auth
 	r.Group(func(r chi.Router) {
 		r.Use(mid.RequiredRoles())
-		r.Get("/profile", userHandler.Profile)
+		r.Get("/user/profile", userHandler.Profile)
+		r.Post("/user/fcm/{strID}", userHandler.UpdateFCM)
+	})
+
+	// Endpoint with fresh auth
+	r.Group(func(r chi.Router) {
+		r.Use(mid.RequiredFreshRoles())
+		r.Patch("/user/profile", userHandler.EditSelfUser)
 	})
 
 	return r

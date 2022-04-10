@@ -91,8 +91,10 @@ func (r Repo) Edit(ctx context.Context, user *usermodel.User) error {
 	sqlStatement, args, err := r.sb.Update(keyTable).
 		SetMap(squirrel.Eq{
 			keyName:        user.Name,
+			keyEmail:       user.Email,
 			keyRoles:       user.Roles,
 			keyPocketRoles: user.PocketRoles,
+			keyFCM:         user.Fcm,
 			keyUpdatedAt:   time.Now(),
 			keyVersion:     user.Version + 1,
 		}).
@@ -105,6 +107,30 @@ func (r Repo) Edit(ctx context.Context, user *usermodel.User) error {
 	}
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&user.Version)
+	if err != nil {
+		return db.ParseError(err)
+	}
+
+	return nil
+}
+
+func (r Repo) EditFCM(ctx context.Context, id uuid.UUID, fcm string) error {
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	sqlStatement, args, err := r.sb.Update(keyTable).
+		SetMap(squirrel.Eq{
+			keyFCM:       fcm,
+			keyUpdatedAt: time.Now(),
+		}).
+		Where(squirrel.Eq{keyID: id}).
+		ToSql()
+
+	if err != nil {
+		return fmt.Errorf("build query update fcm user: %w", err)
+	}
+
+	_, err = r.db.Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		return db.ParseError(err)
 	}
