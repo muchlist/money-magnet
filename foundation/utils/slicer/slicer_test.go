@@ -15,3 +15,9 @@ func TestSlicer(t *testing.T) {
 	result = slicer.In(25, slice)
 	assert.Equal(t, result, false)
 }
+
+func TestRemoveFrom(t *testing.T) {
+	slice := []int64{24, 26, 27}
+	result := slicer.RemoveFrom(26, slice)
+	assert.Equal(t, result, []int64{24, 27})
+}

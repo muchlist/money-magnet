@@ -19,7 +19,7 @@ type User struct {
 	Version     int
 }
 
-func (u User) ToUserResp() UserResp {
+func (u *User) ToUserResp() UserResp {
 	return UserResp{
 		ID:           u.ID,
 		Email:        u.Email,

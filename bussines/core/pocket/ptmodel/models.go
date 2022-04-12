@@ -18,11 +18,24 @@ type Pocket struct {
 	Version    int
 }
 
+func (p *Pocket) ToPocketResp() PocketResp {
+	return PocketResp{
+		ID:         p.ID,
+		Owner:      p.Owner,
+		Editor:     p.Editor,
+		Watcher:    p.Watcher,
+		PocketName: p.PocketName,
+		Level:      p.Level,
+		CreatedAt:  p.CreatedAt,
+		UpdatedAt:  p.UpdatedAt,
+		Version:    p.Version,
+	}
+}
+
 type PocketNew struct {
-	Owner      uuid.UUID   `json:"owner"`
+	PocketName string      `json:"pocket_name"`
 	Editor     []uuid.UUID `json:"editor"`
 	Watcher    []uuid.UUID `json:"watcher"`
-	PocketName string      `json:"pocket_name"`
 }
 
 type PocketUpdate struct {
@@ -32,4 +45,16 @@ type PocketUpdate struct {
 	Watcher    []uuid.UUID `json:"watcher"`
 	PocketName *string     `json:"pocket_name"`
 	Version    *int        `json:"version"`
+}
+
+type PocketResp struct {
+	ID         uint64      `json:"id"`
+	Owner      uuid.UUID   `json:"owner"`
+	Editor     []uuid.UUID `json:"editor"`
+	Watcher    []uuid.UUID `json:"watcher"`
+	PocketName string      `json:"pocket_name"`
+	Level      int         `json:"level"`
+	CreatedAt  time.Time   `json:"created_at"`
+	UpdatedAt  time.Time   `json:"updated_at"`
+	Version    int         `json:"version"`
 }
