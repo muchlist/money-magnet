@@ -24,6 +24,6 @@ func MethodNotAllowedResponse(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServerErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
-	message := "the server encountered a problem and could not process your request"
+	message := fmt.Sprintf("the server encountered a problem and could not process your request: %s", err.Error())
 	ErrorResponse(w, http.StatusInternalServerError, message)
 }

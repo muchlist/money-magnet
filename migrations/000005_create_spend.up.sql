@@ -13,7 +13,8 @@ CREATE TABLE  IF NOT EXISTS "spends" (
   "type" int NOT NULL,
   "date" timestamp NOT NULL DEFAULT (now()),
   "created_at" timestamp NOT NULL DEFAULT (now()),
-  "updated_at" timestamp NOT NULL DEFAULT (now())
+  "updated_at" timestamp NOT NULL DEFAULT (now()),
+  "version" integer NOT NULL DEFAULT 1
 );
 
 ALTER TABLE "spends" ADD FOREIGN KEY ("user") REFERENCES "users" ("id");

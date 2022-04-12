@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func (ws *webServer) setupRoutes(injectRoute http.Handler) http.Handler {
@@ -16,10 +16,11 @@ func (ws *webServer) setupRoutes(injectRoute http.Handler) http.Handler {
 	// convert methodNotAllowedResponse to http handler and set it as the custom error handler for 405 method not allowed
 	router.MethodNotAllowed(MethodNotAllowedResponse)
 
-	router.Use(middleware.RequestID)
+	router.Use(requestID)
 	router.Use(middleware.RealIP)
 	router.Use(midLogger(ws.logger))
-	router.Use(middleware.Recoverer)
+	router.Use(panicRecovery(ws.logger))
+	// router.Use(middleware.Recoverer)
 	router.Use(middleware.Timeout(10 * time.Second))
 
 	router.Mount("/", injectRoute)
