@@ -41,6 +41,8 @@ func (app *application) routes() http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Use(mid.RequiredRoles())
 		r.Get("/user/profile", userHandler.Profile)
+		r.Get("/user/{strID}", userHandler.GetByID)
+		r.Get("/user", userHandler.FindByName)
 		r.Post("/user/fcm/{strID}", userHandler.UpdateFCM)
 	})
 

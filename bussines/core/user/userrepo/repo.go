@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/muchlist/moneymagnet/bussines/core/user/usermodel"
+	"github.com/muchlist/moneymagnet/bussines/sys/data"
 	"github.com/muchlist/moneymagnet/bussines/sys/db"
 )
 
@@ -194,7 +195,7 @@ func (r Repo) ChangePassword(ctx context.Context, user *usermodel.User) error {
 // GETTER
 
 // GetByID get one user by email
-func (r Repo) GetByID(ctx context.Context, uuid string) (usermodel.User, error) {
+func (r Repo) GetByID(ctx context.Context, uuid uuid.UUID) (usermodel.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -278,18 +279,19 @@ func (r Repo) GetByEmail(ctx context.Context, email string) (usermodel.User, err
 }
 
 // Find get all user
-func (r Repo) Find(ctx context.Context, name string, filter db.Filters) ([]usermodel.User, error) {
+func (r Repo) Find(ctx context.Context, name string, filter data.Filters) ([]usermodel.User, data.Metadata, error) {
 
 	// Validation filter
 	filter.SortSafelist = []string{"name", "-name", "updated_at", "-updated_at"}
 	if err := filter.Validate(); err != nil {
-		return []usermodel.User{}, err
+		return nil, data.Metadata{}, db.ErrDBSortFilter
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
 	sqlFrom := r.sb.Select(
+		"count(*) OVER()",
 		keyID,
 		keyName,
 		keyEmail,
@@ -312,19 +314,21 @@ func (r Repo) Find(ctx context.Context, name string, filter db.Filters) ([]userm
 		ToSql()
 
 	if err != nil {
-		return []usermodel.User{}, fmt.Errorf("build query find user: %w", err)
+		return nil, data.Metadata{}, fmt.Errorf("build query find user: %w", err)
 	}
 
 	rows, err := r.db.Query(ctx, sqlStatement, args...)
 	if err != nil {
-		return []usermodel.User{}, db.ParseError(err)
+		return nil, data.Metadata{}, db.ParseError(err)
 	}
 	defer rows.Close()
 
+	totalRecords := 0
 	users := make([]usermodel.User, 0)
 	for rows.Next() {
 		var user usermodel.User
 		err := rows.Scan(
+			&totalRecords,
 			&user.ID,
 			&user.Name,
 			&user.Email,
@@ -336,14 +340,16 @@ func (r Repo) Find(ctx context.Context, name string, filter db.Filters) ([]userm
 			&user.UpdatedAt,
 			&user.Version)
 		if err != nil {
-			return []usermodel.User{}, db.ParseError(err)
+			return nil, data.Metadata{}, db.ParseError(err)
 		}
 		users = append(users, user)
 	}
 
 	if err := rows.Err(); err != nil {
-		return []usermodel.User{}, err
+		return nil, data.Metadata{}, err
 	}
 
-	return users, nil
+	metadata := data.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
+
+	return users, metadata, nil
 }

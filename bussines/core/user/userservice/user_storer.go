@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/bussines/core/user/usermodel"
-	"github.com/muchlist/moneymagnet/bussines/sys/db"
+	"github.com/muchlist/moneymagnet/bussines/sys/data"
 )
 
 type UserStorer interface {
@@ -22,7 +22,7 @@ type UserSaver interface {
 }
 
 type UserReader interface {
-	GetByID(ctx context.Context, uuid string) (usermodel.User, error)
+	GetByID(ctx context.Context, uuid uuid.UUID) (usermodel.User, error)
 	GetByEmail(ctx context.Context, email string) (usermodel.User, error)
-	Find(ctx context.Context, name string, filter db.Filters) ([]usermodel.User, error)
+	Find(ctx context.Context, name string, filter data.Filters) ([]usermodel.User, data.Metadata, error)
 }

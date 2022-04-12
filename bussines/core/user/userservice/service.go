@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/bussines/core/user/usermodel"
+	"github.com/muchlist/moneymagnet/bussines/sys/data"
 	"github.com/muchlist/moneymagnet/bussines/sys/errr"
 	"github.com/muchlist/moneymagnet/bussines/sys/mjwt"
 	"github.com/muchlist/moneymagnet/foundation/mcrypto"
@@ -157,7 +158,12 @@ func (s Service) InsertUser(ctx context.Context, req usermodel.UserRegisterReq) 
 // FetchUser do edit user with ignoring nil field
 // ID is required
 func (s Service) FetchUser(ctx context.Context, req usermodel.UserUpdate) (usermodel.UserResp, error) {
-	userExisting, err := s.repo.GetByID(ctx, req.ID)
+	userID, err := uuid.FromBytes([]byte(req.ID))
+	if err != nil {
+		return usermodel.UserResp{}, ErrInvalidID
+	}
+
+	userExisting, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
 		return usermodel.UserResp{}, fmt.Errorf("get user: %w", err)
 	}
@@ -193,9 +199,12 @@ func (s Service) FetchUser(ctx context.Context, req usermodel.UserUpdate) (userm
 }
 
 // UpdateFCM do save fcm to database
-func (s Service) UpdateFCM(ctx context.Context, userID string, fcm string) error {
-	userUUID := uuid.MustParse(userID)
-	if err := s.repo.EditFCM(ctx, userUUID, fcm); err != nil {
+func (s Service) UpdateFCM(ctx context.Context, id string, fcm string) error {
+	userID, err := uuid.FromBytes([]byte(id))
+	if err != nil {
+		return ErrInvalidID
+	}
+	if err := s.repo.EditFCM(ctx, userID, fcm); err != nil {
 		return fmt.Errorf("edit fcm: %w", err)
 	}
 	return nil
@@ -227,7 +236,8 @@ func (s Service) Refresh(ctx context.Context, refreshToken string) (usermodel.Us
 		return usermodel.UserResp{}, mjwt.ErrInvalidToken
 	}
 
-	user, err := s.repo.GetByID(ctx, claims.Identity)
+	userID, _ := uuid.FromBytes([]byte(claims.Identity))
+	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
 		return usermodel.UserResp{}, fmt.Errorf("%v: %w", err, ErrInvalidEmailOrPass)
 	}
@@ -267,9 +277,27 @@ func (s Service) Refresh(ctx context.Context, refreshToken string) (usermodel.Us
 
 // GetProfile do load user by id
 func (s Service) GetProfile(ctx context.Context, id string) (usermodel.UserResp, error) {
-	user, err := s.repo.GetByID(ctx, id)
+	userID, err := uuid.FromBytes([]byte(id))
+	if err != nil {
+		return usermodel.UserResp{}, ErrInvalidID
+	}
+
+	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
 		return usermodel.UserResp{}, fmt.Errorf("get by id: %w", err)
 	}
 	return user.ToUserResp(), nil
+}
+
+// FindUserByName do find user filter by *name*
+func (s Service) FindUserByName(ctx context.Context, name string, filter data.Filters) ([]usermodel.UserResp, data.Metadata, error) {
+	users, metadata, err := s.repo.Find(ctx, name, filter)
+	if err != nil {
+		return nil, data.Metadata{}, fmt.Errorf("find user: %w", err)
+	}
+	usersResult := make([]usermodel.UserResp, len(users))
+	for i := range users {
+		usersResult[i] = users[i].ToUserResp()
+	}
+	return usersResult, metadata, nil
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/muchlist/moneymagnet/bussines/core/user/usermodel"
 	"github.com/muchlist/moneymagnet/bussines/core/user/userservice"
+	"github.com/muchlist/moneymagnet/bussines/sys/data"
 	"github.com/muchlist/moneymagnet/bussines/sys/db"
 	"github.com/muchlist/moneymagnet/bussines/sys/errr"
 	"github.com/muchlist/moneymagnet/bussines/sys/mid"
@@ -82,31 +83,6 @@ func (usr userHandler) Login(w http.ResponseWriter, r *http.Request) {
 	result, err := usr.service.Login(r.Context(), req.Email, req.Password)
 	if err != nil {
 		usr.log.ErrorT(traceID, "error login", err)
-		statusCode, msg := parseError(err)
-		web.ErrorResponse(w, statusCode, msg)
-		return
-	}
-	env := web.Envelope{
-		"data": result,
-	}
-	err = web.WriteJSON(w, http.StatusOK, env, nil)
-	if err != nil {
-		web.ServerErrorResponse(w, r, err)
-		return
-	}
-}
-
-func (usr userHandler) Profile(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
-	claims, err := mid.GetClaims(r.Context())
-	if err != nil {
-		web.ServerErrorResponse(w, r, err)
-		return
-	}
-
-	result, err := usr.service.GetProfile(r.Context(), claims.Identity)
-	if err != nil {
-		usr.log.ErrorT(traceID, "error get profile", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -308,6 +284,94 @@ func (usr userHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ==================================================GET
+func (usr userHandler) Profile(w http.ResponseWriter, r *http.Request) {
+	traceID := web.ReadTraceID(r.Context())
+	claims, err := mid.GetClaims(r.Context())
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	result, err := usr.service.GetProfile(r.Context(), claims.Identity)
+	if err != nil {
+		usr.log.ErrorT(traceID, "error get profile", err)
+		statusCode, msg := parseError(err)
+		web.ErrorResponse(w, statusCode, msg)
+		return
+	}
+	env := web.Envelope{
+		"data": result,
+	}
+	err = web.WriteJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+}
+
+// GetByID...
+func (usr userHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+	traceID := web.ReadTraceID(r.Context())
+
+	// extract url path
+	userID, err := web.ReadStrIDParam(r)
+	if err != nil {
+		usr.log.ErrorT(traceID, err.Error(), err)
+		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	result, err := usr.service.GetProfile(r.Context(), userID)
+	if err != nil {
+		usr.log.ErrorT(traceID, "error get user", err)
+		statusCode, msg := parseError(err)
+		web.ErrorResponse(w, statusCode, msg)
+		return
+	}
+	env := web.Envelope{
+		"data": result,
+	}
+	err = web.WriteJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+}
+
+func (usr userHandler) FindByName(w http.ResponseWriter, r *http.Request) {
+	traceID := web.ReadTraceID(r.Context())
+
+	// extract url query
+	name := web.ReadString(r.URL.Query(), "name", "")
+	sort := web.ReadString(r.URL.Query(), "sort", "")
+	page := web.ReadInt(r.URL.Query(), "page", 0)
+	pageSize := web.ReadInt(r.URL.Query(), "page_size", 0)
+
+	result, metadata, err := usr.service.FindUserByName(r.Context(), name, data.Filters{
+		Page:     page,
+		PageSize: pageSize,
+		Sort:     sort,
+	})
+	if err != nil {
+		usr.log.ErrorT(traceID, "error get profile", err)
+		statusCode, msg := parseError(err)
+		web.ErrorResponse(w, statusCode, msg)
+		return
+	}
+	env := web.Envelope{
+		"metadata": metadata,
+		"data":     result,
+	}
+	err = web.WriteJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+}
+
+// =================================================FUNC
+
 func parseError(err error) (int, string) {
 	switch err := err.(type) {
 	case errr.StatusCodeError:
@@ -315,7 +379,9 @@ func parseError(err error) (int, string) {
 	default:
 		if errors.Is(err, db.ErrDBDuplicatedEntry) ||
 			errors.Is(err, db.ErrDBNotFound) ||
-			errors.Is(err, db.ErrDBParentNotFound) {
+			errors.Is(err, db.ErrDBParentNotFound) ||
+			errors.Is(err, userservice.ErrInvalidID) ||
+			errors.Is(err, db.ErrDBSortFilter) {
 			return http.StatusBadRequest, err.Error()
 		}
 
