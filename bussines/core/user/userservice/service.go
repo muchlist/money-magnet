@@ -158,7 +158,7 @@ func (s Service) InsertUser(ctx context.Context, req usermodel.UserRegisterReq) 
 // FetchUser do edit user with ignoring nil field
 // ID is required
 func (s Service) FetchUser(ctx context.Context, req usermodel.UserUpdate) (usermodel.UserResp, error) {
-	userID, err := uuid.FromBytes([]byte(req.ID))
+	userID, err := uuid.Parse(req.ID)
 	if err != nil {
 		return usermodel.UserResp{}, ErrInvalidID
 	}
@@ -200,7 +200,7 @@ func (s Service) FetchUser(ctx context.Context, req usermodel.UserUpdate) (userm
 
 // UpdateFCM do save fcm to database
 func (s Service) UpdateFCM(ctx context.Context, id string, fcm string) error {
-	userID, err := uuid.FromBytes([]byte(id))
+	userID, err := uuid.Parse(id)
 	if err != nil {
 		return ErrInvalidID
 	}
@@ -212,10 +212,14 @@ func (s Service) UpdateFCM(ctx context.Context, id string, fcm string) error {
 
 // Delete ...
 func (s Service) Delete(ctx context.Context, userIDToDelete string, userIDExecutor string) error {
+	userID, err := uuid.Parse(userIDToDelete)
+	if err != nil {
+		return ErrInvalidID
+	}
 	if userIDExecutor == userIDToDelete {
 		return errr.New("cannot delete self profile", 400)
 	}
-	return s.repo.Delete(ctx, uuid.MustParse(userIDToDelete))
+	return s.repo.Delete(ctx, userID)
 }
 
 // Refresh do refresh token,
@@ -236,7 +240,7 @@ func (s Service) Refresh(ctx context.Context, refreshToken string) (usermodel.Us
 		return usermodel.UserResp{}, mjwt.ErrInvalidToken
 	}
 
-	userID, _ := uuid.FromBytes([]byte(claims.Identity))
+	userID, _ := uuid.Parse(claims.Identity)
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
 		return usermodel.UserResp{}, fmt.Errorf("%v: %w", err, ErrInvalidEmailOrPass)
@@ -277,7 +281,7 @@ func (s Service) Refresh(ctx context.Context, refreshToken string) (usermodel.Us
 
 // GetProfile do load user by id
 func (s Service) GetProfile(ctx context.Context, id string) (usermodel.UserResp, error) {
-	userID, err := uuid.FromBytes([]byte(id))
+	userID, err := uuid.Parse(id)
 	if err != nil {
 		return usermodel.UserResp{}, ErrInvalidID
 	}

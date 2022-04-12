@@ -324,7 +324,7 @@ func (usr userHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	result, err := usr.service.GetProfile(r.Context(), userID)
 	if err != nil {
-		usr.log.ErrorT(traceID, "error get user", err)
+		usr.log.ErrorT(traceID, "error get user by id", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
