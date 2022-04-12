@@ -12,3 +12,4 @@ CREATE TABLE IF NOT EXISTS "users" (
 );
 
 CREATE UNIQUE INDEX "users_email" ON "users" ("email");
+CREATE INDEX "name" ON "users" ("name");

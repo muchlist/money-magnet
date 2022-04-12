@@ -14,6 +14,7 @@ var (
 	ErrDBParentNotFound  = errors.New("invalid parent")
 	ErrDBInvalidTextEnum = errors.New("invalid enum text input")
 	ErrDBBuildQuery      = errors.New("query not valid")
+	ErrDBSortFilter      = errors.New("invalid filter or sort value")
 )
 
 func ParseError(err error) error {
