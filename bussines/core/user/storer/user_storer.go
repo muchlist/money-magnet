@@ -1,4 +1,4 @@
-package userservice
+package storer
 
 import (
 	"context"
@@ -23,6 +23,7 @@ type UserSaver interface {
 
 type UserReader interface {
 	GetByID(ctx context.Context, uuid uuid.UUID) (usermodel.User, error)
+	GetByIDs(ctx context.Context, uuids []uuid.UUID) ([]usermodel.User, error)
 	GetByEmail(ctx context.Context, email string) (usermodel.User, error)
 	Find(ctx context.Context, name string, filter data.Filters) ([]usermodel.User, data.Metadata, error)
 }

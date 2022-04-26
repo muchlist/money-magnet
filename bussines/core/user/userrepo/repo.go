@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Masterminds/squirrel"
+	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/muchlist/moneymagnet/bussines/core/user/usermodel"
@@ -30,14 +30,14 @@ const (
 // Repo manages the set of APIs for user access.
 type Repo struct {
 	db *pgxpool.Pool
-	sb squirrel.StatementBuilderType
+	sb sq.StatementBuilderType
 }
 
 // NewRepo constructs a data for api access..
 func NewRepo(sqlDB *pgxpool.Pool) Repo {
 	return Repo{
 		db: sqlDB,
-		sb: squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar),
+		sb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
 	}
 }
 
@@ -90,7 +90,7 @@ func (r Repo) Edit(ctx context.Context, user *usermodel.User) error {
 	defer cancel()
 
 	sqlStatement, args, err := r.sb.Update(keyTable).
-		SetMap(squirrel.Eq{
+		SetMap(sq.Eq{
 			keyName:        user.Name,
 			keyEmail:       user.Email,
 			keyRoles:       user.Roles,
@@ -99,7 +99,7 @@ func (r Repo) Edit(ctx context.Context, user *usermodel.User) error {
 			keyUpdatedAt:   time.Now(),
 			keyVersion:     user.Version + 1,
 		}).
-		Where(squirrel.Eq{keyID: user.ID}).
+		Where(sq.Eq{keyID: user.ID}).
 		Suffix(db.Returning(keyVersion)).
 		ToSql()
 
@@ -120,11 +120,11 @@ func (r Repo) EditFCM(ctx context.Context, id uuid.UUID, fcm string) error {
 	defer cancel()
 
 	sqlStatement, args, err := r.sb.Update(keyTable).
-		SetMap(squirrel.Eq{
+		SetMap(sq.Eq{
 			keyFCM:       fcm,
 			keyUpdatedAt: time.Now(),
 		}).
-		Where(squirrel.Eq{keyID: id}).
+		Where(sq.Eq{keyID: id}).
 		ToSql()
 
 	if err != nil {
@@ -145,8 +145,8 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 	defer cancel()
 
 	sqlStatement, args, err := r.sb.Delete(keyTable).
-		Where(squirrel.And{
-			squirrel.Eq{keyID: id},
+		Where(sq.And{
+			sq.Eq{keyID: id},
 		}).ToSql()
 	if err != nil {
 		return fmt.Errorf("build query delete user: %w", err)
@@ -170,12 +170,12 @@ func (r Repo) ChangePassword(ctx context.Context, user *usermodel.User) error {
 	defer cancel()
 
 	sqlStatement, args, err := r.sb.Update(keyTable).
-		SetMap(squirrel.Eq{
+		SetMap(sq.Eq{
 			keyName:      user.Password,
 			keyUpdatedAt: time.Now(),
 			keyVersion:   user.Version + 1,
 		}).
-		Where(squirrel.Eq{keyID: user.ID}).
+		Where(sq.Eq{keyID: user.ID}).
 		Suffix(db.Returning(keyVersion)).
 		ToSql()
 
@@ -194,7 +194,7 @@ func (r Repo) ChangePassword(ctx context.Context, user *usermodel.User) error {
 // =========================================================================
 // GETTER
 
-// GetByID get one user by email
+// GetByID get one user by uuid
 func (r Repo) GetByID(ctx context.Context, uuid uuid.UUID) (usermodel.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
@@ -210,7 +210,7 @@ func (r Repo) GetByID(ctx context.Context, uuid uuid.UUID) (usermodel.User, erro
 		keyCreatedAt,
 		keyUpdatedAt,
 		keyVersion,
-	).From(keyTable).Where(squirrel.Eq{keyID: uuid}).ToSql()
+	).From(keyTable).Where(sq.Eq{keyID: uuid}).ToSql()
 
 	if err != nil {
 		return usermodel.User{}, fmt.Errorf("build query get user by id: %w", err)
@@ -236,6 +236,59 @@ func (r Repo) GetByID(ctx context.Context, uuid uuid.UUID) (usermodel.User, erro
 	return user, nil
 }
 
+// GetByIDs get many user by []uuid
+func (r Repo) GetByIDs(ctx context.Context, uuids []uuid.UUID) ([]usermodel.User, error) {
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	sqlStatement, args, err := r.sb.Select(
+		keyID,
+		keyName,
+		keyEmail,
+		keyRoles,
+		keyPocketRoles,
+		keyFCM,
+		keyCreatedAt,
+		keyUpdatedAt,
+		keyVersion,
+	).From(keyTable).Where(sq.Eq{keyID: uuids}).ToSql()
+
+	if err != nil {
+		return nil, fmt.Errorf("build query get user by ids: %w", err)
+	}
+
+	rows, err := r.db.Query(ctx, sqlStatement, args...)
+	if err != nil {
+		return nil, db.ParseError(err)
+	}
+	defer rows.Close()
+
+	users := make([]usermodel.User, 0)
+	for rows.Next() {
+		var user usermodel.User
+		err := rows.Scan(
+			&user.ID,
+			&user.Name,
+			&user.Email,
+			&user.Roles,
+			&user.PocketRoles,
+			&user.Fcm,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&user.Version)
+		if err != nil {
+			return nil, db.ParseError(err)
+		}
+		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
 // GetByEmail get one user by email
 func (r Repo) GetByEmail(ctx context.Context, email string) (usermodel.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -252,7 +305,7 @@ func (r Repo) GetByEmail(ctx context.Context, email string) (usermodel.User, err
 		keyCreatedAt,
 		keyUpdatedAt,
 		keyVersion,
-	).From(keyTable).Where(squirrel.Eq{keyEmail: email}).ToSql()
+	).From(keyTable).Where(sq.Eq{keyEmail: email}).ToSql()
 
 	if err != nil {
 		return usermodel.User{}, fmt.Errorf("build query get user by email: %w", err)
@@ -305,7 +358,7 @@ func (r Repo) Find(ctx context.Context, name string, filter data.Filters) ([]use
 	).From(keyTable)
 
 	if len(name) > 0 {
-		sqlFrom = sqlFrom.Where(squirrel.ILike{keyName: fmt.Sprint("%", name, "%")})
+		sqlFrom = sqlFrom.Where(sq.ILike{keyName: fmt.Sprint("%", name, "%")})
 	}
 
 	sqlStatement, args, err := sqlFrom.OrderBy(filter.SortColumnDirection(), keyCreatedAt+" ASC").

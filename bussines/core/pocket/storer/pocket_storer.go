@@ -1,8 +1,9 @@
-package ptservice
+package storer
 
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/bussines/core/pocket/ptmodel"
 	"github.com/muchlist/moneymagnet/bussines/sys/data"
 )
@@ -20,5 +21,5 @@ type PocketSaver interface {
 
 type PocketReader interface {
 	GetByID(ctx context.Context, id uint64) (ptmodel.Pocket, error)
-	Find(ctx context.Context, name string, filter data.Filters) ([]ptmodel.Pocket, data.Metadata, error)
+	Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]ptmodel.Pocket, data.Metadata, error)
 }

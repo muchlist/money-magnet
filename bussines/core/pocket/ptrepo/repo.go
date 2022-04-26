@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Masterminds/squirrel"
+	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/muchlist/moneymagnet/bussines/core/pocket/ptmodel"
@@ -28,14 +28,14 @@ const (
 // Repo manages the set of APIs for pocket access.
 type Repo struct {
 	db *pgxpool.Pool
-	sb squirrel.StatementBuilderType
+	sb sq.StatementBuilderType
 }
 
 // NewRepo constructs a data for api access..
 func NewRepo(sqlDB *pgxpool.Pool) Repo {
 	return Repo{
 		db: sqlDB,
-		sb: squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar),
+		sb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
 	}
 }
 
@@ -85,7 +85,7 @@ func (r Repo) Edit(ctx context.Context, pocket *ptmodel.Pocket) error {
 	defer cancel()
 
 	sqlStatement, args, err := r.sb.Update(keyTable).
-		SetMap(squirrel.Eq{
+		SetMap(sq.Eq{
 			keyPocketName: pocket.PocketName,
 			keyOwner:      pocket.Owner,
 			keyWathcer:    pocket.Watcher,
@@ -93,7 +93,7 @@ func (r Repo) Edit(ctx context.Context, pocket *ptmodel.Pocket) error {
 			keyUpdatedAt:  time.Now(),
 			keyVersion:    pocket.Version + 1,
 		}).
-		Where(squirrel.Eq{keyID: pocket.ID}).
+		Where(sq.Eq{keyID: pocket.ID}).
 		Suffix(db.Returning(keyVersion)).
 		ToSql()
 
@@ -115,8 +115,8 @@ func (r Repo) Delete(ctx context.Context, id uint64) error {
 	defer cancel()
 
 	sqlStatement, args, err := r.sb.Delete(keyTable).
-		Where(squirrel.And{
-			squirrel.Eq{keyID: id},
+		Where(sq.And{
+			sq.Eq{keyID: id},
 		}).ToSql()
 	if err != nil {
 		return fmt.Errorf("build query delete pocket: %w", err)
@@ -151,7 +151,7 @@ func (r Repo) GetByID(ctx context.Context, id uint64) (ptmodel.Pocket, error) {
 		keyCreatedAt,
 		keyUpdatedAt,
 		keyVersion,
-	).From(keyTable).Where(squirrel.Eq{keyID: id}).ToSql()
+	).From(keyTable).Where(sq.Eq{keyID: id}).ToSql()
 
 	if err != nil {
 		return ptmodel.Pocket{}, fmt.Errorf("build query get pocket by id: %w", err)
@@ -199,7 +199,7 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 		keyVersion,
 	).
 		From(keyTable).
-		Where(squirrel.Eq{keyOwner: owner}).
+		Where(sq.Eq{keyOwner: owner}).
 		OrderBy(filter.SortColumnDirection()).
 		Limit(uint64(filter.Limit())).
 		Offset(uint64(filter.Offset())).

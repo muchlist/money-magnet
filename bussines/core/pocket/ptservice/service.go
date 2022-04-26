@@ -8,6 +8,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/bussines/core/pocket/ptmodel"
+	"github.com/muchlist/moneymagnet/bussines/core/pocket/storer"
+	"github.com/muchlist/moneymagnet/bussines/sys/db"
 	"github.com/muchlist/moneymagnet/bussines/sys/errr"
 	"github.com/muchlist/moneymagnet/foundation/mlogger"
 	"github.com/muchlist/moneymagnet/foundation/utils/slicer"
@@ -21,26 +23,48 @@ var (
 
 // Service manages the set of APIs for user access.
 type Service struct {
-	log  mlogger.Logger
-	repo PocketStorer
+	log      mlogger.Logger
+	repo     storer.PocketStorer
+	userRepo storer.UserReader
 }
 
 // NewService constructs a core for user api access.
 func NewService(
 	log mlogger.Logger,
-	repo PocketStorer,
+	repo storer.PocketStorer,
+	userRepo storer.UserReader,
 ) Service {
 	return Service{
-		log:  log,
-		repo: repo,
+		log:      log,
+		repo:     repo,
+		userRepo: userRepo,
 	}
 }
 
 func (s Service) CreatePocket(ctx context.Context, owner uuid.UUID, req ptmodel.PocketNew) (ptmodel.PocketResp, error) {
-	if req.Editor == nil {
+	// Validate editor and watcher uuids
+	combineUserUUIDs := append(req.Editor, req.Watcher...)
+	users, err := s.userRepo.GetByIDs(ctx, combineUserUUIDs)
+	if err != nil {
+		return ptmodel.PocketResp{}, fmt.Errorf("get users: %w", err)
+	}
+	for _, id := range combineUserUUIDs {
+		found := false
+		for _, user := range users {
+			if user.ID == id {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return ptmodel.PocketResp{}, errr.New(fmt.Sprintf("uuid %s is not have valid user", id), 400)
+		}
+	}
+
+	if req.Editor == nil || len(req.Editor) == 0 {
 		req.Editor = []uuid.UUID{owner}
 	}
-	if req.Watcher == nil {
+	if req.Watcher == nil || len(req.Watcher) == 0 {
 		req.Watcher = []uuid.UUID{owner}
 	}
 
@@ -56,7 +80,7 @@ func (s Service) CreatePocket(ctx context.Context, owner uuid.UUID, req ptmodel.
 		Version:    1,
 	}
 
-	err := s.repo.Insert(ctx, &pocket)
+	err = s.repo.Insert(ctx, &pocket)
 	if err != nil {
 		return ptmodel.PocketResp{}, fmt.Errorf("insert pocket to db: %w", err)
 	}
@@ -64,11 +88,30 @@ func (s Service) CreatePocket(ctx context.Context, owner uuid.UUID, req ptmodel.
 	return pocket.ToPocketResp(), nil
 }
 
-type AddPersonData struct {
-	Owner      uuid.UUID
-	Person     uuid.UUID
-	PocketID   uint64
-	IsReadOnly bool
+func (s Service) RenamePocket(ctx context.Context, owner uuid.UUID, pocketID uint64, newName string) (ptmodel.PocketResp, error) {
+
+	// Get existing Pocket
+	pocketExisting, err := s.repo.GetByID(ctx, pocketID)
+	if err != nil {
+		return ptmodel.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
+	}
+
+	// Check if owner not have access to pocket
+	if !(pocketExisting.Owner == owner ||
+		slicer.In(owner, pocketExisting.Editor)) {
+		return ptmodel.PocketResp{}, errr.New("not have access to this pocket", 400)
+	}
+
+	// Modify data
+	pocketExisting.PocketName = newName
+
+	// Edit
+	s.repo.Edit(ctx, &pocketExisting)
+	if err != nil {
+		return ptmodel.PocketResp{}, fmt.Errorf("edit pocket: %w", err)
+	}
+
+	return pocketExisting.ToPocketResp(), nil
 }
 
 func (s Service) AddPerson(ctx context.Context, data AddPersonData) (ptmodel.PocketResp, error) {
@@ -83,6 +126,15 @@ func (s Service) AddPerson(ctx context.Context, data AddPersonData) (ptmodel.Poc
 	if !(pocketExisting.Owner == data.Owner ||
 		slicer.In(data.Owner, pocketExisting.Editor)) {
 		return ptmodel.PocketResp{}, errr.New("not have access to this pocket", 400)
+	}
+
+	// Check if person to add is exist
+	_, err = s.userRepo.GetByID(ctx, data.Person)
+	if err != nil {
+		if errors.Is(err, db.ErrDBNotFound) {
+			return ptmodel.PocketResp{}, errr.New("account is not exist", 400)
+		}
+		return ptmodel.PocketResp{}, fmt.Errorf("get user by id : %w", err)
 	}
 
 	if data.IsReadOnly {
@@ -100,12 +152,6 @@ func (s Service) AddPerson(ctx context.Context, data AddPersonData) (ptmodel.Poc
 	}
 
 	return pocketExisting.ToPocketResp(), nil
-}
-
-type RemovePersonData struct {
-	Owner    uuid.UUID
-	Person   uuid.UUID
-	PocketID uint64
 }
 
 // RemovePerson will remove person from both editor and watcher

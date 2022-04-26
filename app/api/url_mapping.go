@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/muchlist/moneymagnet/app/api/handler"
+	"github.com/muchlist/moneymagnet/bussines/core/pocket/ptrepo"
+	"github.com/muchlist/moneymagnet/bussines/core/pocket/ptservice"
 	"github.com/muchlist/moneymagnet/bussines/core/user/userrepo"
 	"github.com/muchlist/moneymagnet/bussines/core/user/userservice"
 	"github.com/muchlist/moneymagnet/bussines/sys/mid"
@@ -23,6 +25,10 @@ func (app *application) routes() http.Handler {
 	userRepo := userrepo.NewRepo(app.db)
 	userService := userservice.NewService(app.logger, userRepo, bcrypt, jwt)
 	userHandler := handler.NewUserHandler(app.logger, userService)
+
+	pocketRepo := ptrepo.NewRepo(app.db)
+	pocketService := ptservice.NewService(app.logger, pocketRepo, userRepo)
+	pocketHandler := handler.NewPocketHandler(app.logger, pocketService)
 
 	// Endpoint with no auth required
 	r.Get("/healthcheck", handler.HealthCheckHandler)
@@ -44,6 +50,8 @@ func (app *application) routes() http.Handler {
 		r.Get("/user/{strID}", userHandler.GetByID)
 		r.Get("/user", userHandler.FindByName)
 		r.Post("/user/fcm/{strID}", userHandler.UpdateFCM)
+
+		r.Post("/pocket", pocketHandler.CreatePocket)
 	})
 
 	// Endpoint with fresh auth

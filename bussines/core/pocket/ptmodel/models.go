@@ -33,7 +33,7 @@ func (p *Pocket) ToPocketResp() PocketResp {
 }
 
 type PocketNew struct {
-	PocketName string      `json:"pocket_name"`
+	PocketName string      `json:"pocket_name" validate:"required"`
 	Editor     []uuid.UUID `json:"editor"`
 	Watcher    []uuid.UUID `json:"watcher"`
 }

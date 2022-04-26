@@ -41,7 +41,7 @@ func (usr userHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	errMessage, err := validate.Struct(req)
 	if err != nil {
-		usr.log.ErrorT(traceID, "bad json", err)
+		usr.log.ErrorT(traceID, "request not valid", err)
 		web.ErrorResponse(w, http.StatusBadRequest, errMessage)
 		return
 	}
@@ -75,7 +75,7 @@ func (usr userHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	errMessage, err := validate.Struct(req)
 	if err != nil {
-		usr.log.ErrorT(traceID, "bad json", err)
+		usr.log.ErrorT(traceID, "request not valid", err)
 		web.ErrorResponse(w, http.StatusBadRequest, errMessage)
 		return
 	}
@@ -262,7 +262,7 @@ func (usr userHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 	errMessage, err := validate.Struct(req)
 	if err != nil {
-		usr.log.ErrorT(traceID, "bad json", err)
+		usr.log.ErrorT(traceID, "request not valid", err)
 		web.ErrorResponse(w, http.StatusBadRequest, errMessage)
 		return
 	}
