@@ -52,6 +52,8 @@ func (app *application) routes() http.Handler {
 		r.Post("/user/fcm/{strID}", userHandler.UpdateFCM)
 
 		r.Post("/pocket", pocketHandler.CreatePocket)
+		r.Get("/pocket/{id}", pocketHandler.GetByID)
+		r.Put("/rename-pocket", pocketHandler.RenamePocket)
 	})
 
 	// Endpoint with fresh auth

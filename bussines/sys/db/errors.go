@@ -2,10 +2,11 @@ package db
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v4"
 )
 
 var (
@@ -19,8 +20,11 @@ var (
 
 func ParseError(err error) error {
 	if err == pgx.ErrNoRows {
+		fmt.Println("KENA DISITU")
 		return ErrDBNotFound
 	}
+
+	fmt.Println("KENA DISINI")
 
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {

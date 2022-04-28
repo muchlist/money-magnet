@@ -156,7 +156,6 @@ func (s Service) AddPerson(ctx context.Context, data AddPersonData) (ptmodel.Poc
 
 // RemovePerson will remove person from both editor and watcher
 func (s Service) RemovePerson(ctx context.Context, data RemovePersonData) (ptmodel.PocketResp, error) {
-
 	// Get existing Pocket
 	pocketExisting, err := s.repo.GetByID(ctx, data.PocketID)
 	if err != nil {
@@ -179,4 +178,26 @@ func (s Service) RemovePerson(ctx context.Context, data RemovePersonData) (ptmod
 	}
 
 	return pocketExisting.ToPocketResp(), nil
+}
+
+// GetDetail ...
+func (s Service) GetDetail(ctx context.Context, userID string, pocketID uint64) (ptmodel.PocketResp, error) {
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return ptmodel.PocketResp{}, ErrInvalidID
+	}
+
+	// Get existing Pocket
+	pocketDetail, err := s.repo.GetByID(ctx, pocketID)
+	if err != nil {
+		return ptmodel.PocketResp{}, fmt.Errorf("get pocket detail by id: %w", err)
+	}
+
+	// Check if owner not have access to pocket
+	if !(pocketDetail.Owner == userUUID ||
+		slicer.In(userUUID, pocketDetail.Watcher)) {
+		return ptmodel.PocketResp{}, errr.New("not have access to this pocket", 400)
+	}
+
+	return pocketDetail.ToPocketResp(), nil
 }

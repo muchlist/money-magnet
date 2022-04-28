@@ -17,8 +17,10 @@ const (
 	keyTable      = "pockets"
 	keyID         = "id"
 	keyOwner      = "owner"
-	keyWathcer    = "watcher"
+	keyEditor     = "editor"
+	keyWatcher    = "watcher"
 	keyPocketName = "pocket_name"
+	keyIcon       = "icon"
 	keyLevel      = "level"
 	keyCreatedAt  = "created_at"
 	keyUpdatedAt  = "updated_at"
@@ -51,8 +53,10 @@ func (r Repo) Insert(ctx context.Context, pocket *ptmodel.Pocket) error {
 		Columns(
 			keyPocketName,
 			keyOwner,
-			keyWathcer,
+			keyEditor,
+			keyWatcher,
 			keyVersion,
+			keyIcon,
 			keyLevel,
 			keyUpdatedAt,
 			keyCreatedAt,
@@ -60,8 +64,10 @@ func (r Repo) Insert(ctx context.Context, pocket *ptmodel.Pocket) error {
 		Values(
 			pocket.PocketName,
 			pocket.Owner,
+			pocket.Editor,
 			pocket.Watcher,
 			pocket.Version,
+			pocket.Icon,
 			pocket.Level,
 			pocket.CreatedAt,
 			pocket.UpdatedAt).
@@ -88,7 +94,9 @@ func (r Repo) Edit(ctx context.Context, pocket *ptmodel.Pocket) error {
 		SetMap(sq.Eq{
 			keyPocketName: pocket.PocketName,
 			keyOwner:      pocket.Owner,
-			keyWathcer:    pocket.Watcher,
+			keyEditor:     pocket.Editor,
+			keyWatcher:    pocket.Watcher,
+			keyIcon:       pocket.Icon,
 			keyLevel:      pocket.Level,
 			keyUpdatedAt:  time.Now(),
 			keyVersion:    pocket.Version + 1,
@@ -145,8 +153,10 @@ func (r Repo) GetByID(ctx context.Context, id uint64) (ptmodel.Pocket, error) {
 	sqlStatement, args, err := r.sb.Select(
 		keyID,
 		keyOwner,
-		keyWathcer,
+		keyEditor,
+		keyWatcher,
 		keyPocketName,
+		keyIcon,
 		keyLevel,
 		keyCreatedAt,
 		keyUpdatedAt,
@@ -162,8 +172,10 @@ func (r Repo) GetByID(ctx context.Context, id uint64) (ptmodel.Pocket, error) {
 		Scan(
 			&pocket.ID,
 			&pocket.Owner,
+			&pocket.Editor,
 			&pocket.Watcher,
 			&pocket.PocketName,
+			&pocket.Icon,
 			&pocket.Level,
 			&pocket.CreatedAt,
 			&pocket.UpdatedAt,
@@ -191,8 +203,10 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 		"count(*) OVER()",
 		keyID,
 		keyOwner,
-		keyWathcer,
+		keyEditor,
+		keyWatcher,
 		keyPocketName,
+		keyIcon,
 		keyLevel,
 		keyCreatedAt,
 		keyUpdatedAt,
@@ -223,8 +237,10 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 			&totalRecords,
 			&pocket.ID,
 			&pocket.Owner,
+			&pocket.Editor,
 			&pocket.Watcher,
 			&pocket.PocketName,
+			&pocket.Icon,
 			&pocket.Level,
 			&pocket.CreatedAt,
 			&pocket.UpdatedAt,
