@@ -51,8 +51,9 @@ func (app *application) routes() http.Handler {
 		r.Get("/user", userHandler.FindByName)
 		r.Post("/user/fcm/{strID}", userHandler.UpdateFCM)
 
-		r.Post("/pocket", pocketHandler.CreatePocket)
-		r.Get("/pocket/{id}", pocketHandler.GetByID)
+		r.Post("/pockets", pocketHandler.CreatePocket)
+		r.Get("/pockets/{id}", pocketHandler.GetByID)
+		r.Get("/pockets", pocketHandler.FindUserPocket)
 		r.Put("/rename-pocket", pocketHandler.RenamePocket)
 	})
 

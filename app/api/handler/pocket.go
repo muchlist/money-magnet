@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/bussines/core/pocket/ptmodel"
 	"github.com/muchlist/moneymagnet/bussines/core/pocket/ptservice"
+	"github.com/muchlist/moneymagnet/bussines/sys/data"
 	"github.com/muchlist/moneymagnet/bussines/sys/mid"
 	"github.com/muchlist/moneymagnet/bussines/sys/validate"
 	"github.com/muchlist/moneymagnet/foundation/mlogger"
@@ -139,6 +140,41 @@ func (pt pocketHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 	env := web.Envelope{
 		"data": result,
+	}
+	err = web.WriteJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+}
+
+func (pt pocketHandler) FindUserPocket(w http.ResponseWriter, r *http.Request) {
+	traceID := web.ReadTraceID(r.Context())
+	claims, err := mid.GetClaims(r.Context())
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	// extract url query
+	sort := web.ReadString(r.URL.Query(), "sort", "")
+	page := web.ReadInt(r.URL.Query(), "page", 0)
+	pageSize := web.ReadInt(r.URL.Query(), "page_size", 0)
+
+	result, metadata, err := pt.service.FindAllPocket(r.Context(), claims.Identity, data.Filters{
+		Page:     page,
+		PageSize: pageSize,
+		Sort:     sort,
+	})
+	if err != nil {
+		pt.log.ErrorT(traceID, "error find pocket", err)
+		statusCode, msg := parseError(err)
+		web.ErrorResponse(w, statusCode, msg)
+		return
+	}
+	env := web.Envelope{
+		"metadata": metadata,
+		"data":     result,
 	}
 	err = web.WriteJSON(w, http.StatusOK, env, nil)
 	if err != nil {

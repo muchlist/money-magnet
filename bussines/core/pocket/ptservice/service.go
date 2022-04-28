@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/bussines/core/pocket/ptmodel"
 	"github.com/muchlist/moneymagnet/bussines/core/pocket/storer"
+	"github.com/muchlist/moneymagnet/bussines/sys/data"
 	"github.com/muchlist/moneymagnet/bussines/sys/db"
 	"github.com/muchlist/moneymagnet/bussines/sys/errr"
 	"github.com/muchlist/moneymagnet/foundation/mlogger"
@@ -200,4 +201,25 @@ func (s Service) GetDetail(ctx context.Context, userID string, pocketID uint64) 
 	}
 
 	return pocketDetail.ToPocketResp(), nil
+}
+
+// FindAllPocket ...
+func (s Service) FindAllPocket(ctx context.Context, userID string, filter data.Filters) ([]ptmodel.PocketResp, data.Metadata, error) {
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, data.Metadata{}, ErrInvalidID
+	}
+
+	// Get existing Pocket
+	pockets, metadata, err := s.repo.FindUserPockets(ctx, userUUID, filter)
+	if err != nil {
+		return nil, data.Metadata{}, fmt.Errorf("find pocket user: %w", err)
+	}
+
+	pocketResult := make([]ptmodel.PocketResp, len(pockets))
+	for i := range pockets {
+		pocketResult[i] = pockets[i].ToPocketResp()
+	}
+
+	return pocketResult, metadata, nil
 }
