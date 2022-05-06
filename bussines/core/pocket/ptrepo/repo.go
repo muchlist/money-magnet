@@ -123,9 +123,7 @@ func (r Repo) Delete(ctx context.Context, id uint64) error {
 	defer cancel()
 
 	sqlStatement, args, err := r.sb.Delete(keyTable).
-		Where(sq.And{
-			sq.Eq{keyID: id},
-		}).ToSql()
+		Where(sq.Eq{keyID: id}).ToSql()
 	if err != nil {
 		return fmt.Errorf("build query delete pocket: %w", err)
 	}

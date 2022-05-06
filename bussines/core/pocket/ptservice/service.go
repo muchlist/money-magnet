@@ -13,6 +13,7 @@ import (
 	"github.com/muchlist/moneymagnet/bussines/sys/db"
 	"github.com/muchlist/moneymagnet/bussines/sys/errr"
 	"github.com/muchlist/moneymagnet/foundation/mlogger"
+	"github.com/muchlist/moneymagnet/foundation/utils/ds"
 	"github.com/muchlist/moneymagnet/foundation/utils/slicer"
 )
 
@@ -86,6 +87,17 @@ func (s Service) CreatePocket(ctx context.Context, owner uuid.UUID, req ptmodel.
 		return ptmodel.PocketResp{}, fmt.Errorf("insert pocket to db: %w", err)
 	}
 
+	// insert relation
+	uuidUserSet := ds.NewUUIDSet()
+	uuidUserSet.Add(owner)
+	uuidUserSet.AddAll(combineUserUUIDs)
+	uniqueUsers := uuidUserSet.Reveal()
+
+	err = s.repo.InsertPocketUser(ctx, uniqueUsers, pocket.ID)
+	if err != nil {
+		return pocket.ToPocketResp(), fmt.Errorf("loop insert pocket_user to db: %w", err)
+	}
+
 	return pocket.ToPocketResp(), nil
 }
 
@@ -152,6 +164,12 @@ func (s Service) AddPerson(ctx context.Context, data AddPersonData) (ptmodel.Poc
 		return ptmodel.PocketResp{}, fmt.Errorf("edit pocket: %w", err)
 	}
 
+	// insert to related table
+	err = s.repo.InsertPocketUser(ctx, []uuid.UUID{data.Person}, pocketExisting.ID)
+	if err != nil {
+		return pocketExisting.ToPocketResp(), fmt.Errorf("insert pocket_user to db: %w", err)
+	}
+
 	return pocketExisting.ToPocketResp(), nil
 }
 
@@ -176,6 +194,12 @@ func (s Service) RemovePerson(ctx context.Context, data RemovePersonData) (ptmod
 	s.repo.Edit(ctx, &pocketExisting)
 	if err != nil {
 		return ptmodel.PocketResp{}, fmt.Errorf("edit pocket: %w", err)
+	}
+
+	// delete from related table
+	err = s.repo.DeletePocketUser(ctx, data.Person, pocketExisting.ID)
+	if err != nil {
+		return pocketExisting.ToPocketResp(), fmt.Errorf("delete pocket_user from db: %w", err)
 	}
 
 	return pocketExisting.ToPocketResp(), nil
