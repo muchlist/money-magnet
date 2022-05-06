@@ -18,20 +18,23 @@ const (
 )
 
 // InsertPocketUser ...
-func (r Repo) InsertPocketUser(ctx context.Context, userID uuid.UUID, pocketID uint64) error {
+func (r Repo) InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketID uint64) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	sqlStatement, args, err := r.sb.Insert(keyTableUP).
+	query := r.sb.Insert(keyTableUP).
 		Columns(
 			keyUserUP,
 			keyPocketUP,
-		).
-		Values(
+		)
+
+	for _, userID := range userIDs {
+		query = query.Values(
 			userID,
 			pocketID,
-		).
-		ToSql()
+		)
+	}
+	sqlStatement, args, err := query.ToSql()
 
 	if err != nil {
 		return fmt.Errorf("build query insert pocket user relation: %w", err)

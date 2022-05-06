@@ -92,11 +92,9 @@ func (s Service) CreatePocket(ctx context.Context, owner uuid.UUID, req ptmodel.
 	uuidUserSet.AddAll(combineUserUUIDs)
 	uniqueUsers := uuidUserSet.Reveal()
 
-	for _, userID := range uniqueUsers {
-		err = s.repo.InsertPocketUser(ctx, userID, pocket.ID)
-		if err != nil {
-			return pocket.ToPocketResp(), fmt.Errorf("loop insert pocket_user to db: %w", err)
-		}
+	err = s.repo.InsertPocketUser(ctx, uniqueUsers, pocket.ID)
+	if err != nil {
+		return pocket.ToPocketResp(), fmt.Errorf("loop insert pocket_user to db: %w", err)
 	}
 
 	return pocket.ToPocketResp(), nil
@@ -166,7 +164,7 @@ func (s Service) AddPerson(ctx context.Context, data AddPersonData) (ptmodel.Poc
 	}
 
 	// insert to related table
-	err = s.repo.InsertPocketUser(ctx, data.Person, pocketExisting.ID)
+	err = s.repo.InsertPocketUser(ctx, []uuid.UUID{data.Person}, pocketExisting.ID)
 	if err != nil {
 		return pocketExisting.ToPocketResp(), fmt.Errorf("insert pocket_user to db: %w", err)
 	}
