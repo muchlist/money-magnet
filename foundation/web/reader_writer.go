@@ -16,9 +16,9 @@ import (
 
 type Envelope map[string]interface{}
 
-func ReadIDParam(r *http.Request) (int64, error) {
+func ReadIDParam(r *http.Request) (uint64, error) {
 	idParam := chi.URLParam(r, "id")
-	id, err := strconv.ParseInt(idParam, 10, 64)
+	id, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil || id < 1 {
 		return 0, errors.New("invalid id parameter")
 	}

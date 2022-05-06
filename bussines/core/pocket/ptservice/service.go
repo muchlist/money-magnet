@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/bussines/core/pocket/ptmodel"
 	"github.com/muchlist/moneymagnet/bussines/core/pocket/storer"
+	"github.com/muchlist/moneymagnet/bussines/sys/data"
 	"github.com/muchlist/moneymagnet/bussines/sys/db"
 	"github.com/muchlist/moneymagnet/bussines/sys/errr"
 	"github.com/muchlist/moneymagnet/foundation/mlogger"
@@ -156,7 +157,6 @@ func (s Service) AddPerson(ctx context.Context, data AddPersonData) (ptmodel.Poc
 
 // RemovePerson will remove person from both editor and watcher
 func (s Service) RemovePerson(ctx context.Context, data RemovePersonData) (ptmodel.PocketResp, error) {
-
 	// Get existing Pocket
 	pocketExisting, err := s.repo.GetByID(ctx, data.PocketID)
 	if err != nil {
@@ -179,4 +179,47 @@ func (s Service) RemovePerson(ctx context.Context, data RemovePersonData) (ptmod
 	}
 
 	return pocketExisting.ToPocketResp(), nil
+}
+
+// GetDetail ...
+func (s Service) GetDetail(ctx context.Context, userID string, pocketID uint64) (ptmodel.PocketResp, error) {
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return ptmodel.PocketResp{}, ErrInvalidID
+	}
+
+	// Get existing Pocket
+	pocketDetail, err := s.repo.GetByID(ctx, pocketID)
+	if err != nil {
+		return ptmodel.PocketResp{}, fmt.Errorf("get pocket detail by id: %w", err)
+	}
+
+	// Check if owner not have access to pocket
+	if !(pocketDetail.Owner == userUUID ||
+		slicer.In(userUUID, pocketDetail.Watcher)) {
+		return ptmodel.PocketResp{}, errr.New("not have access to this pocket", 400)
+	}
+
+	return pocketDetail.ToPocketResp(), nil
+}
+
+// FindAllPocket ...
+func (s Service) FindAllPocket(ctx context.Context, userID string, filter data.Filters) ([]ptmodel.PocketResp, data.Metadata, error) {
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, data.Metadata{}, ErrInvalidID
+	}
+
+	// Get existing Pocket
+	pockets, metadata, err := s.repo.FindUserPockets(ctx, userUUID, filter)
+	if err != nil {
+		return nil, data.Metadata{}, fmt.Errorf("find pocket user: %w", err)
+	}
+
+	pocketResult := make([]ptmodel.PocketResp, len(pockets))
+	for i := range pockets {
+		pocketResult[i] = pockets[i].ToPocketResp()
+	}
+
+	return pocketResult, metadata, nil
 }
