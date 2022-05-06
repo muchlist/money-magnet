@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS "pockets" (
   "editor" uuid[],
   "watcher" uuid[],
   "pocket_name" varchar(100) NOT NULL,
+  "icon" int NOT NULL DEFAULT 0,
   "level" int NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now()),
   "updated_at" timestamp NOT NULL DEFAULT (now()),

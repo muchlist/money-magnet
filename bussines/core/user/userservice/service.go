@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/muchlist/moneymagnet/bussines/core/user/storer"
 	"github.com/muchlist/moneymagnet/bussines/core/user/usermodel"
 	"github.com/muchlist/moneymagnet/bussines/sys/data"
 	"github.com/muchlist/moneymagnet/bussines/sys/errr"
@@ -30,7 +31,7 @@ const (
 // Service manages the set of APIs for user access.
 type Service struct {
 	log    mlogger.Logger
-	repo   UserStorer
+	repo   storer.UserStorer
 	crypto mcrypto.Crypter
 	jwt    mjwt.TokenHandler
 }
@@ -38,7 +39,7 @@ type Service struct {
 // NewService constructs a core for user api access.
 func NewService(
 	log mlogger.Logger,
-	repo UserStorer,
+	repo storer.UserStorer,
 	crypto mcrypto.Crypter,
 	jwt mjwt.TokenHandler,
 ) Service {

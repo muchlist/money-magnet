@@ -5,7 +5,7 @@ import (
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v4"
 )
 
 var (
