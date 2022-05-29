@@ -18,7 +18,7 @@ type PocketSaver interface {
 	Edit(ctx context.Context, Pocket *ptmodel.Pocket) error
 	Delete(ctx context.Context, id uint64) error
 
-	// many to many relation
+	/*many-to-many relation*/
 	InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketID uint64) error
 	DeletePocketUser(ctx context.Context, userID uuid.UUID, pocketID uint64) error
 }

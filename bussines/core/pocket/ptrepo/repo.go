@@ -334,3 +334,76 @@ func (r Repo) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.
 
 	return pockets, metadata, nil
 }
+
+// FindUserPockets2 get all pocket user has uuid in it, with join query
+func (r Repo) FindUserPockets2(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]ptmodel.Pocket, error) {
+
+	// Validation filter
+	filter.SortSafelist = []string{"pocket_name", "-pocket_name", "updated_at", "-updated_at"}
+	if err := filter.Validate(); err != nil {
+		return nil, db.ErrDBSortFilter
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	//SELECT pockets.id, owner, editor, watcher, pocket_name, icon, level, created_at, updated_at, version
+	//FROM pockets
+	//left JOIN user_pocket
+	//ON pockets.id = user_pocket.pocket_id
+	//WHERE user_pocket.user_id = '7bc83b50-6b89-43e9-a907-55aea12d1582'
+	//ORDER BY pocket_name ASC
+	sqlStatement, args, err := r.sb.Select(
+		db.A(keyID),
+		keyOwner,
+		keyEditor,
+		keyWatcher,
+		keyPocketName,
+		keyIcon,
+		keyLevel,
+		keyCreatedAt,
+		keyUpdatedAt,
+		keyVersion,
+	).
+		From(keyTable + " A").
+		LeftJoin(keyTableUP + " B ON A.id = B.pocket_id").
+		Where(sq.Eq{db.B(keyUserUP): owner}).
+		OrderBy(filter.SortColumnDirection()).
+		ToSql()
+
+	if err != nil {
+		return nil, fmt.Errorf("build query find user pocket: %w", err)
+	}
+
+	rows, err := r.db.Query(ctx, sqlStatement, args...)
+	if err != nil {
+		return nil, db.ParseError(err)
+	}
+	defer rows.Close()
+
+	pockets := make([]ptmodel.Pocket, 0)
+	for rows.Next() {
+		var pocket ptmodel.Pocket
+		err := rows.Scan(
+			&pocket.ID,
+			&pocket.Owner,
+			&pocket.Editor,
+			&pocket.Watcher,
+			&pocket.PocketName,
+			&pocket.Icon,
+			&pocket.Level,
+			&pocket.CreatedAt,
+			&pocket.UpdatedAt,
+			&pocket.Version)
+		if err != nil {
+			return nil, db.ParseError(err)
+		}
+		pockets = append(pockets, pocket)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return pockets, nil
+}
