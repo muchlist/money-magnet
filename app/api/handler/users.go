@@ -14,7 +14,6 @@ import (
 	"github.com/muchlist/moneymagnet/bussines/sys/validate"
 	"github.com/muchlist/moneymagnet/foundation/mlogger"
 	"github.com/muchlist/moneymagnet/foundation/web"
-	"go.uber.org/zap"
 )
 
 func NewUserHandler(log mlogger.Logger, userService userservice.Service) userHandler {
@@ -147,7 +146,7 @@ func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	// Get data from url path
 	id, err := web.ReadStrIDParam(r)
 	if err != nil {
-		usr.log.ErrorT(traceID, "error edit user", err, zap.String("identity", claims.Identity))
+		usr.log.ErrorT(traceID, "error edit user", err, mlogger.String("identity", claims.Identity))
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -191,7 +190,7 @@ func (usr userHandler) UpdateFCM(w http.ResponseWriter, r *http.Request) {
 	// Get data from url path
 	fcm, err := web.ReadStrIDParam(r)
 	if err != nil {
-		usr.log.ErrorT(traceID, "fcm required", err, zap.String("identity", claims.Identity))
+		usr.log.ErrorT(traceID, "fcm required", err, mlogger.String("identity", claims.Identity))
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -224,7 +223,7 @@ func (usr userHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	// Get data from url path
 	userIDToDelete, err := web.ReadStrIDParam(r)
 	if err != nil {
-		usr.log.ErrorT(traceID, err.Error(), err, zap.String("identity", claims.Identity))
+		usr.log.ErrorT(traceID, err.Error(), err, mlogger.String("identity", claims.Identity))
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
