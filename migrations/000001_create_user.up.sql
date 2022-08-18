@@ -1,3 +1,6 @@
+CREATE EXTENSION IF NOT EXISTS citext;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE IF NOT EXISTS "users" (
   "id" uuid PRIMARY KEY,
   "email" citext NOT NULL,

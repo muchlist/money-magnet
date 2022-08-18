@@ -21,7 +21,7 @@ brew install golang-migrate
 masukkan DSN database ke environment variable
 contoh dalam linux :
 ```shell
-export MONEYMAGNET_DB_DSN='postgres://postgres:postgres@172.20.96.1:5432/test_db?sslmode=disable'
+export MONEYMAGNET_DB_DSN='postgres://postgres:postgres@localhost:5432/money_magnet?sslmode=disable'
 ```  
 
 ## Migrate create
