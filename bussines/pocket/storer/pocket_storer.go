@@ -2,6 +2,7 @@ package storer
 
 import (
 	"context"
+
 	"github.com/muchlist/moneymagnet/bussines/pocket/ptmodel"
 	"github.com/muchlist/moneymagnet/pkg/data"
 
@@ -27,4 +28,5 @@ type PocketReader interface {
 	GetByID(ctx context.Context, id uint64) (ptmodel.Pocket, error)
 	Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]ptmodel.Pocket, data.Metadata, error)
 	FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]ptmodel.Pocket, data.Metadata, error)
+	FindUserPocketsByRelation(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]ptmodel.Pocket, data.Metadata, error)
 }

@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/muchlist/moneymagnet/bussines/pocket/ptmodel"
-	storer2 "github.com/muchlist/moneymagnet/bussines/pocket/storer"
+	"github.com/muchlist/moneymagnet/bussines/pocket/storer"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/errr"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -26,15 +27,15 @@ var (
 // Service manages the set of APIs for user access.
 type Service struct {
 	log      mlogger.Logger
-	repo     storer2.PocketStorer
-	userRepo storer2.UserReader
+	repo     storer.PocketStorer
+	userRepo storer.UserReader
 }
 
 // NewService constructs a core for user api access.
 func NewService(
 	log mlogger.Logger,
-	repo storer2.PocketStorer,
-	userRepo storer2.UserReader,
+	repo storer.PocketStorer,
+	userRepo storer.UserReader,
 ) Service {
 	return Service{
 		log:      log,
@@ -235,7 +236,7 @@ func (s Service) FindAllPocket(ctx context.Context, userID string, filter data.F
 	}
 
 	// Get existing Pocket
-	pockets, metadata, err := s.repo.FindUserPockets(ctx, userUUID, filter)
+	pockets, metadata, err := s.repo.FindUserPocketsByRelation(ctx, userUUID, filter)
 	if err != nil {
 		return nil, data.Metadata{}, fmt.Errorf("find pocket user: %w", err)
 	}
