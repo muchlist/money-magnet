@@ -4,17 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/muchlist/moneymagnet/bussines/pocket/ptmodel"
+	storer2 "github.com/muchlist/moneymagnet/bussines/pocket/storer"
+	"github.com/muchlist/moneymagnet/pkg/data"
+	"github.com/muchlist/moneymagnet/pkg/db"
+	"github.com/muchlist/moneymagnet/pkg/errr"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/muchlist/moneymagnet/bussines/core/pocket/ptmodel"
-	"github.com/muchlist/moneymagnet/bussines/core/pocket/storer"
-	"github.com/muchlist/moneymagnet/bussines/sys/data"
-	"github.com/muchlist/moneymagnet/bussines/sys/db"
-	"github.com/muchlist/moneymagnet/bussines/sys/errr"
-	"github.com/muchlist/moneymagnet/foundation/mlogger"
-	"github.com/muchlist/moneymagnet/foundation/utils/ds"
-	"github.com/muchlist/moneymagnet/foundation/utils/slicer"
+	"github.com/muchlist/moneymagnet/pkg/mlogger"
+	"github.com/muchlist/moneymagnet/pkg/utils/ds"
+	"github.com/muchlist/moneymagnet/pkg/utils/slicer"
 )
 
 // Set of error variables for CRUD operations.
@@ -26,15 +26,15 @@ var (
 // Service manages the set of APIs for user access.
 type Service struct {
 	log      mlogger.Logger
-	repo     storer.PocketStorer
-	userRepo storer.UserReader
+	repo     storer2.PocketStorer
+	userRepo storer2.UserReader
 }
 
 // NewService constructs a core for user api access.
 func NewService(
 	log mlogger.Logger,
-	repo storer.PocketStorer,
-	userRepo storer.UserReader,
+	repo storer2.PocketStorer,
+	userRepo storer2.UserReader,
 ) Service {
 	return Service{
 		log:      log,

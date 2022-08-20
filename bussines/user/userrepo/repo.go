@@ -3,14 +3,14 @@ package userrepo
 import (
 	"context"
 	"fmt"
+	"github.com/muchlist/moneymagnet/bussines/user/usermodel"
+	"github.com/muchlist/moneymagnet/pkg/data"
+	db2 "github.com/muchlist/moneymagnet/pkg/db"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/muchlist/moneymagnet/bussines/core/user/usermodel"
-	"github.com/muchlist/moneymagnet/bussines/sys/data"
-	"github.com/muchlist/moneymagnet/bussines/sys/db"
 )
 
 const (
@@ -70,7 +70,7 @@ func (r Repo) Insert(ctx context.Context, user *usermodel.User) error {
 			user.Fcm,
 			user.CreatedAt,
 			user.UpdatedAt).
-		Suffix(db.Returning(keyID)).ToSql()
+		Suffix(db2.Returning(keyID)).ToSql()
 
 	if err != nil {
 		return fmt.Errorf("build query insert user: %w", err)
@@ -78,7 +78,7 @@ func (r Repo) Insert(ctx context.Context, user *usermodel.User) error {
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&user.ID)
 	if err != nil {
-		return db.ParseError(err)
+		return db2.ParseError(err)
 	}
 
 	return nil
@@ -100,7 +100,7 @@ func (r Repo) Edit(ctx context.Context, user *usermodel.User) error {
 			keyVersion:     user.Version + 1,
 		}).
 		Where(sq.Eq{keyID: user.ID}).
-		Suffix(db.Returning(keyVersion)).
+		Suffix(db2.Returning(keyVersion)).
 		ToSql()
 
 	if err != nil {
@@ -109,7 +109,7 @@ func (r Repo) Edit(ctx context.Context, user *usermodel.User) error {
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&user.Version)
 	if err != nil {
-		return db.ParseError(err)
+		return db2.ParseError(err)
 	}
 
 	return nil
@@ -133,7 +133,7 @@ func (r Repo) EditFCM(ctx context.Context, id uuid.UUID, fcm string) error {
 
 	_, err = r.db.Exec(ctx, sqlStatement, args...)
 	if err != nil {
-		return db.ParseError(err)
+		return db2.ParseError(err)
 	}
 
 	return nil
@@ -154,11 +154,11 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 
 	res, err := r.db.Exec(ctx, sqlStatement, args...)
 	if err != nil {
-		return db.ParseError(err)
+		return db2.ParseError(err)
 	}
 
 	if res.RowsAffected() == 0 {
-		return db.ErrDBNotFound
+		return db2.ErrDBNotFound
 	}
 
 	return nil
@@ -176,7 +176,7 @@ func (r Repo) ChangePassword(ctx context.Context, user *usermodel.User) error {
 			keyVersion:   user.Version + 1,
 		}).
 		Where(sq.Eq{keyID: user.ID}).
-		Suffix(db.Returning(keyVersion)).
+		Suffix(db2.Returning(keyVersion)).
 		ToSql()
 
 	if err != nil {
@@ -185,7 +185,7 @@ func (r Repo) ChangePassword(ctx context.Context, user *usermodel.User) error {
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&user.Version)
 	if err != nil {
-		return db.ParseError(err)
+		return db2.ParseError(err)
 	}
 
 	return nil
@@ -230,7 +230,7 @@ func (r Repo) GetByID(ctx context.Context, uuid uuid.UUID) (usermodel.User, erro
 			&user.UpdatedAt,
 			&user.Version)
 	if err != nil {
-		return usermodel.User{}, db.ParseError(err)
+		return usermodel.User{}, db2.ParseError(err)
 	}
 
 	return user, nil
@@ -259,7 +259,7 @@ func (r Repo) GetByIDs(ctx context.Context, uuids []uuid.UUID) ([]usermodel.User
 
 	rows, err := r.db.Query(ctx, sqlStatement, args...)
 	if err != nil {
-		return nil, db.ParseError(err)
+		return nil, db2.ParseError(err)
 	}
 	defer rows.Close()
 
@@ -277,7 +277,7 @@ func (r Repo) GetByIDs(ctx context.Context, uuids []uuid.UUID) ([]usermodel.User
 			&user.UpdatedAt,
 			&user.Version)
 		if err != nil {
-			return nil, db.ParseError(err)
+			return nil, db2.ParseError(err)
 		}
 		users = append(users, user)
 	}
@@ -325,7 +325,7 @@ func (r Repo) GetByEmail(ctx context.Context, email string) (usermodel.User, err
 			&user.UpdatedAt,
 			&user.Version)
 	if err != nil {
-		return usermodel.User{}, db.ParseError(err)
+		return usermodel.User{}, db2.ParseError(err)
 	}
 
 	return user, nil
@@ -337,7 +337,7 @@ func (r Repo) Find(ctx context.Context, name string, filter data.Filters) ([]use
 	// Validation filter
 	filter.SortSafelist = []string{"name", "-name", "updated_at", "-updated_at"}
 	if err := filter.Validate(); err != nil {
-		return nil, data.Metadata{}, db.ErrDBSortFilter
+		return nil, data.Metadata{}, db2.ErrDBSortFilter
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -372,7 +372,7 @@ func (r Repo) Find(ctx context.Context, name string, filter data.Filters) ([]use
 
 	rows, err := r.db.Query(ctx, sqlStatement, args...)
 	if err != nil {
-		return nil, data.Metadata{}, db.ParseError(err)
+		return nil, data.Metadata{}, db2.ParseError(err)
 	}
 	defer rows.Close()
 
@@ -393,7 +393,7 @@ func (r Repo) Find(ctx context.Context, name string, filter data.Filters) ([]use
 			&user.UpdatedAt,
 			&user.Version)
 		if err != nil {
-			return nil, data.Metadata{}, db.ParseError(err)
+			return nil, data.Metadata{}, db2.ParseError(err)
 		}
 		users = append(users, user)
 	}

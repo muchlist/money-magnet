@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/muchlist/moneymagnet/foundation/mlogger"
+	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"go.uber.org/zap"
 )
 
@@ -25,7 +25,7 @@ func midLogger(l mlogger.Logger) func(next http.Handler) http.Handler {
 				l.Info("served",
 					zap.String("path", r.URL.Path),
 					zap.String("trace_id", ReadTraceID(r.Context())),
-					zap.Duration("latency", time.Since(t1)),
+					zap.String("latency", fmt.Sprint(time.Since(t1))),
 					zap.Int("status", ww.Status()),
 					zap.Int("size", ww.BytesWritten()),
 				)

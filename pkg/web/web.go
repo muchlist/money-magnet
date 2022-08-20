@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/muchlist/moneymagnet/foundation/mlogger"
+	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"go.uber.org/zap"
 )
 

@@ -2,18 +2,18 @@ package handler
 
 import (
 	"errors"
+	"github.com/muchlist/moneymagnet/bussines/user/usermodel"
+	"github.com/muchlist/moneymagnet/bussines/user/userservice"
+	"github.com/muchlist/moneymagnet/pkg/data"
+	"github.com/muchlist/moneymagnet/pkg/db"
+	"github.com/muchlist/moneymagnet/pkg/errr"
+	"github.com/muchlist/moneymagnet/pkg/mid"
+	"github.com/muchlist/moneymagnet/pkg/mjwt"
+	"github.com/muchlist/moneymagnet/pkg/validate"
 	"net/http"
 
-	"github.com/muchlist/moneymagnet/bussines/core/user/usermodel"
-	"github.com/muchlist/moneymagnet/bussines/core/user/userservice"
-	"github.com/muchlist/moneymagnet/bussines/sys/data"
-	"github.com/muchlist/moneymagnet/bussines/sys/db"
-	"github.com/muchlist/moneymagnet/bussines/sys/errr"
-	"github.com/muchlist/moneymagnet/bussines/sys/mid"
-	"github.com/muchlist/moneymagnet/bussines/sys/mjwt"
-	"github.com/muchlist/moneymagnet/bussines/sys/validate"
-	"github.com/muchlist/moneymagnet/foundation/mlogger"
-	"github.com/muchlist/moneymagnet/foundation/web"
+	"github.com/muchlist/moneymagnet/pkg/mlogger"
+	"github.com/muchlist/moneymagnet/pkg/web"
 )
 
 func NewUserHandler(log mlogger.Logger, userService userservice.Service) userHandler {

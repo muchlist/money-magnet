@@ -1,16 +1,16 @@
 package main
 
 import (
+	"github.com/muchlist/moneymagnet/bussines/pocket/ptrepo"
+	"github.com/muchlist/moneymagnet/bussines/pocket/ptservice"
+	"github.com/muchlist/moneymagnet/bussines/user/userrepo"
+	"github.com/muchlist/moneymagnet/bussines/user/userservice"
+	"github.com/muchlist/moneymagnet/pkg/mid"
+	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"net/http"
 
 	"github.com/muchlist/moneymagnet/app/api/handler"
-	"github.com/muchlist/moneymagnet/bussines/core/pocket/ptrepo"
-	"github.com/muchlist/moneymagnet/bussines/core/pocket/ptservice"
-	"github.com/muchlist/moneymagnet/bussines/core/user/userrepo"
-	"github.com/muchlist/moneymagnet/bussines/core/user/userservice"
-	"github.com/muchlist/moneymagnet/bussines/sys/mid"
-	"github.com/muchlist/moneymagnet/bussines/sys/mjwt"
-	"github.com/muchlist/moneymagnet/foundation/mcrypto"
+	"github.com/muchlist/moneymagnet/pkg/mcrypto"
 
 	"github.com/go-chi/chi/v5"
 )

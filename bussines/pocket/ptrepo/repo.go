@@ -3,14 +3,14 @@ package ptrepo
 import (
 	"context"
 	"fmt"
+	"github.com/muchlist/moneymagnet/bussines/pocket/ptmodel"
+	"github.com/muchlist/moneymagnet/pkg/data"
+	db2 "github.com/muchlist/moneymagnet/pkg/db"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/muchlist/moneymagnet/bussines/core/pocket/ptmodel"
-	"github.com/muchlist/moneymagnet/bussines/sys/data"
-	"github.com/muchlist/moneymagnet/bussines/sys/db"
 )
 
 const (
@@ -71,7 +71,7 @@ func (r Repo) Insert(ctx context.Context, pocket *ptmodel.Pocket) error {
 			pocket.Level,
 			pocket.CreatedAt,
 			pocket.UpdatedAt).
-		Suffix(db.Returning(keyID)).ToSql()
+		Suffix(db2.Returning(keyID)).ToSql()
 
 	if err != nil {
 		return fmt.Errorf("build query insert pocket: %w", err)
@@ -79,7 +79,7 @@ func (r Repo) Insert(ctx context.Context, pocket *ptmodel.Pocket) error {
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&pocket.ID)
 	if err != nil {
-		return db.ParseError(err)
+		return db2.ParseError(err)
 	}
 
 	return nil
@@ -102,7 +102,7 @@ func (r Repo) Edit(ctx context.Context, pocket *ptmodel.Pocket) error {
 			keyVersion:    pocket.Version + 1,
 		}).
 		Where(sq.Eq{keyID: pocket.ID}).
-		Suffix(db.Returning(keyVersion)).
+		Suffix(db2.Returning(keyVersion)).
 		ToSql()
 
 	if err != nil {
@@ -111,7 +111,7 @@ func (r Repo) Edit(ctx context.Context, pocket *ptmodel.Pocket) error {
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&pocket.Version)
 	if err != nil {
-		return db.ParseError(err)
+		return db2.ParseError(err)
 	}
 
 	return nil
@@ -130,11 +130,11 @@ func (r Repo) Delete(ctx context.Context, id uint64) error {
 
 	res, err := r.db.Exec(ctx, sqlStatement, args...)
 	if err != nil {
-		return db.ParseError(err)
+		return db2.ParseError(err)
 	}
 
 	if res.RowsAffected() == 0 {
-		return db.ErrDBNotFound
+		return db2.ErrDBNotFound
 	}
 
 	return nil
@@ -179,7 +179,7 @@ func (r Repo) GetByID(ctx context.Context, id uint64) (ptmodel.Pocket, error) {
 			&pocket.UpdatedAt,
 			&pocket.Version)
 	if err != nil {
-		return ptmodel.Pocket{}, db.ParseError(err)
+		return ptmodel.Pocket{}, db2.ParseError(err)
 	}
 
 	return pocket, nil
@@ -191,7 +191,7 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 	// Validation filter
 	filter.SortSafelist = []string{"name", "-name", "updated_at", "-updated_at"}
 	if err := filter.Validate(); err != nil {
-		return nil, data.Metadata{}, db.ErrDBSortFilter
+		return nil, data.Metadata{}, db2.ErrDBSortFilter
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -223,7 +223,7 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 
 	rows, err := r.db.Query(ctx, sqlStatement, args...)
 	if err != nil {
-		return nil, data.Metadata{}, db.ParseError(err)
+		return nil, data.Metadata{}, db2.ParseError(err)
 	}
 	defer rows.Close()
 
@@ -244,7 +244,7 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 			&pocket.UpdatedAt,
 			&pocket.Version)
 		if err != nil {
-			return nil, data.Metadata{}, db.ParseError(err)
+			return nil, data.Metadata{}, db2.ParseError(err)
 		}
 		pockets = append(pockets, pocket)
 	}
@@ -264,7 +264,7 @@ func (r Repo) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.
 	// Validation filter
 	filter.SortSafelist = []string{"pocket_name", "-pocket_name", "updated_at", "-updated_at"}
 	if err := filter.Validate(); err != nil {
-		return nil, data.Metadata{}, db.ErrDBSortFilter
+		return nil, data.Metadata{}, db2.ErrDBSortFilter
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -300,7 +300,7 @@ func (r Repo) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.
 
 	rows, err := r.db.Query(ctx, sqlStatement, args...)
 	if err != nil {
-		return nil, data.Metadata{}, db.ParseError(err)
+		return nil, data.Metadata{}, db2.ParseError(err)
 	}
 	defer rows.Close()
 
@@ -321,7 +321,7 @@ func (r Repo) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.
 			&pocket.UpdatedAt,
 			&pocket.Version)
 		if err != nil {
-			return nil, data.Metadata{}, db.ParseError(err)
+			return nil, data.Metadata{}, db2.ParseError(err)
 		}
 		pockets = append(pockets, pocket)
 	}

@@ -2,10 +2,10 @@ package storer
 
 import (
 	"context"
+	"github.com/muchlist/moneymagnet/bussines/user/usermodel"
+	"github.com/muchlist/moneymagnet/pkg/data"
 
 	"github.com/google/uuid"
-	"github.com/muchlist/moneymagnet/bussines/core/user/usermodel"
-	"github.com/muchlist/moneymagnet/bussines/sys/data"
 )
 
 type UserStorer interface {

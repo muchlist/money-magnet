@@ -2,10 +2,10 @@ package storer
 
 import (
 	"context"
+	"github.com/muchlist/moneymagnet/bussines/pocket/ptmodel"
+	"github.com/muchlist/moneymagnet/pkg/data"
 
 	"github.com/google/uuid"
-	"github.com/muchlist/moneymagnet/bussines/core/pocket/ptmodel"
-	"github.com/muchlist/moneymagnet/bussines/sys/data"
 )
 
 type PocketStorer interface {

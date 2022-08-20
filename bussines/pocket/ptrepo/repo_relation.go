@@ -3,11 +3,11 @@ package ptrepo
 import (
 	"context"
 	"fmt"
+	"github.com/muchlist/moneymagnet/pkg/db"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
-	"github.com/muchlist/moneymagnet/bussines/sys/db"
 )
 
 const (

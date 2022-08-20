@@ -2,9 +2,9 @@ package storer
 
 import (
 	"context"
+	"github.com/muchlist/moneymagnet/bussines/user/usermodel"
 
 	"github.com/google/uuid"
-	"github.com/muchlist/moneymagnet/bussines/core/user/usermodel"
 )
 
 type UserReader interface {

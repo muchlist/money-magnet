@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/go-playground/assert/v2"
-	"github.com/muchlist/moneymagnet/foundation/utils/slicer"
+	"github.com/muchlist/moneymagnet/pkg/utils/slicer"
 )
 
 func TestSlicer(t *testing.T) {

@@ -3,11 +3,11 @@ package data
 import (
 	"errors"
 	"fmt"
+	"github.com/muchlist/moneymagnet/pkg/validate"
 	"math"
 	"strings"
 
-	"github.com/muchlist/moneymagnet/bussines/sys/validate"
-	"github.com/muchlist/moneymagnet/foundation/utils/slicer"
+	"github.com/muchlist/moneymagnet/pkg/utils/slicer"
 )
 
 // ========================================================== Filter Pagination

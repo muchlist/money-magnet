@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/muchlist/moneymagnet/foundation/utils/slicer"
+	"github.com/muchlist/moneymagnet/pkg/utils/slicer"
 )
 
 const (

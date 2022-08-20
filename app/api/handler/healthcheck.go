@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/muchlist/moneymagnet/foundation/web"
+	"github.com/muchlist/moneymagnet/pkg/web"
 )
 
 func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
