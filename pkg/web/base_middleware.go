@@ -19,12 +19,26 @@ func midLogger(l mlogger.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
-
 			t1 := time.Now()
+
+			clientID := getFirstValueFromHeader(r, "X-Client-Id")
+			ipAddress := getFirstValueFromHeader(r, "X-Forwarded-For")
+
+			// log incomming request
+			l.Info("request started",
+				zap.String("path", r.URL.Path),
+				zap.String("trace_id", ReadTraceID(r.Context())),
+				zap.String("client_id", clientID),
+				zap.String("source_ip", ipAddress),
+			)
+
+			// log request end
 			defer func() {
-				l.Info("served",
+				l.Info("request completed",
 					zap.String("path", r.URL.Path),
 					zap.String("trace_id", ReadTraceID(r.Context())),
+					zap.String("client_id", clientID),
+					zap.String("source_ip", ipAddress),
 					zap.String("latency", fmt.Sprint(time.Since(t1))),
 					zap.Int("status", ww.Status()),
 					zap.Int("size", ww.BytesWritten()),
@@ -77,4 +91,14 @@ func panicRecovery(l mlogger.Logger) func(next http.Handler) http.Handler {
 		}
 		return http.HandlerFunc(fn)
 	}
+}
+
+func getFirstValueFromHeader(req *http.Request, key string) string {
+	vs, ok := req.Header[key]
+	if ok {
+		if len(vs) != 0 {
+			return vs[0]
+		}
+	}
+	return ""
 }

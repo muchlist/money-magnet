@@ -3,8 +3,9 @@ package ptrepo
 import (
 	"context"
 	"fmt"
-	"github.com/muchlist/moneymagnet/pkg/db"
 	"time"
+
+	"github.com/muchlist/moneymagnet/pkg/db"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -39,9 +40,6 @@ func (r Repo) InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketI
 	if err != nil {
 		return fmt.Errorf("build query insert pocket user relation: %w", err)
 	}
-
-	fmt.Println(sqlStatement)
-	fmt.Println(args)
 
 	_, err = r.db.Exec(ctx, sqlStatement, args...)
 	if err != nil {

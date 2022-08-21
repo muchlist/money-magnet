@@ -84,12 +84,12 @@ func (l *mlog) WarnT(traceID string, msg string, tags ...Field) {
 }
 
 func (l *mlog) Error(msg string, err error, tags ...Field) {
-	tags = append(tags, zap.NamedError("error", err))
+	tags = append(tags, zap.NamedError("error", err), zap.StackSkip("stacktrace", 1))
 	l.zap.Error(msg, tags...)
 }
 
 func (l *mlog) ErrorT(traceID string, msg string, err error, tags ...Field) {
-	tags = append(tags, zap.String("trace_id", traceID), zap.NamedError("error", err))
+	tags = append(tags, zap.String("trace_id", traceID), zap.NamedError("error", err), zap.StackSkip("stacktrace", 1))
 	l.zap.Error(msg, tags...)
 }
 
