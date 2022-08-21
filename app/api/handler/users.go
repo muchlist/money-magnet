@@ -2,8 +2,8 @@ package handler
 
 import (
 	"errors"
-	"github.com/muchlist/moneymagnet/bussines/user/usermodel"
-	"github.com/muchlist/moneymagnet/bussines/user/userservice"
+	"github.com/muchlist/moneymagnet/business/user/usermodel"
+	"github.com/muchlist/moneymagnet/business/user/userservice"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/errr"

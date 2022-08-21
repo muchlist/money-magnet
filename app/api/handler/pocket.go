@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/muchlist/moneymagnet/bussines/pocket/ptmodel"
-	"github.com/muchlist/moneymagnet/bussines/pocket/ptservice"
+	"github.com/muchlist/moneymagnet/business/pocket/ptmodel"
+	"github.com/muchlist/moneymagnet/business/pocket/ptservice"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/validate"

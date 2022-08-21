@@ -2,7 +2,7 @@ package storer
 
 import (
 	"context"
-	"github.com/muchlist/moneymagnet/bussines/user/usermodel"
+	"github.com/muchlist/moneymagnet/business/user/usermodel"
 	"github.com/muchlist/moneymagnet/pkg/data"
 
 	"github.com/google/uuid"

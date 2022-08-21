@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/muchlist/moneymagnet/bussines/user/storer"
-	"github.com/muchlist/moneymagnet/bussines/user/usermodel"
+	"time"
+
+	"github.com/muchlist/moneymagnet/business/user/storer"
+	"github.com/muchlist/moneymagnet/business/user/usermodel"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/errr"
-	mjwt2 "github.com/muchlist/moneymagnet/pkg/mjwt"
-	"time"
+	"github.com/muchlist/moneymagnet/pkg/mjwt"
 
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/pkg/mcrypto"
@@ -33,7 +34,7 @@ type Service struct {
 	log    mlogger.Logger
 	repo   storer.UserStorer
 	crypto mcrypto.Crypter
-	jwt    mjwt2.TokenHandler
+	jwt    mjwt.TokenHandler
 }
 
 // NewService constructs a core for user api access.
@@ -41,7 +42,7 @@ func NewService(
 	log mlogger.Logger,
 	repo storer.UserStorer,
 	crypto mcrypto.Crypter,
-	jwt mjwt2.TokenHandler,
+	jwt mjwt.TokenHandler,
 ) Service {
 	return Service{
 		log:    log,
@@ -64,22 +65,22 @@ func (s Service) Login(ctx context.Context, email, password string) (usermodel.U
 
 	expired := time.Now().Add(time.Minute * expiredJWTToken).Unix()
 
-	AccessClaims := mjwt2.CustomClaim{
+	AccessClaims := mjwt.CustomClaim{
 		Identity:    user.ID.String(),
 		Name:        user.Name,
 		Exp:         expired,
-		Type:        mjwt2.Access,
+		Type:        mjwt.Access,
 		Fresh:       true,
 		Roles:       user.Roles,
 		PocketRoles: user.PocketRoles,
 	}
 
 	expired = time.Now().Add(time.Minute * expiredJWTRefreshToken).Unix()
-	RefreshClaims := mjwt2.CustomClaim{
+	RefreshClaims := mjwt.CustomClaim{
 		Identity:    user.ID.String(),
 		Name:        user.Name,
 		Exp:         expired,
-		Type:        mjwt2.Refresh,
+		Type:        mjwt.Refresh,
 		Fresh:       false,
 		Roles:       user.Roles,
 		PocketRoles: user.PocketRoles,
@@ -237,8 +238,8 @@ func (s Service) Refresh(ctx context.Context, refreshToken string) (usermodel.Us
 	}
 
 	// cek claims type token
-	if claims.Type != mjwt2.Refresh {
-		return usermodel.UserResp{}, mjwt2.ErrInvalidToken
+	if claims.Type != mjwt.Refresh {
+		return usermodel.UserResp{}, mjwt.ErrInvalidToken
 	}
 
 	userID, _ := uuid.Parse(claims.Identity)
@@ -249,11 +250,11 @@ func (s Service) Refresh(ctx context.Context, refreshToken string) (usermodel.Us
 
 	expired := time.Now().Add(time.Minute * expiredJWTToken).Unix()
 
-	AccessClaims := mjwt2.CustomClaim{
+	AccessClaims := mjwt.CustomClaim{
 		Identity:    user.ID.String(),
 		Name:        user.Name,
 		Exp:         expired,
-		Type:        mjwt2.Access,
+		Type:        mjwt.Access,
 		Fresh:       false,
 		Roles:       user.Roles,
 		PocketRoles: user.PocketRoles,

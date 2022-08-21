@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/muchlist/moneymagnet/bussines/pocket/ptmodel"
-	"github.com/muchlist/moneymagnet/bussines/pocket/storer"
+	"github.com/muchlist/moneymagnet/business/pocket/ptmodel"
+	"github.com/muchlist/moneymagnet/business/pocket/storer"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/errr"
@@ -236,7 +236,7 @@ func (s Service) FindAllPocket(ctx context.Context, userID string, filter data.F
 	}
 
 	// Get existing Pocket
-	pockets, metadata, err := s.repo.FindUserPocketsByRelation(ctx, userUUID, filter)
+	pockets, metadata, err := s.repo.FindUserPockets(ctx, userUUID, filter)
 	if err != nil {
 		return nil, data.Metadata{}, fmt.Errorf("find pocket user: %w", err)
 	}
