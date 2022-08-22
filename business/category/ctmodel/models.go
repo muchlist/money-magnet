@@ -35,9 +35,8 @@ type NewCategory struct {
 
 type UpdateCategory struct {
 	ID           uuid.UUID
-	PocketID     *uint64 `json:"pocket_id" validate:"required"`
-	CategoryName *string `json:"category_name" validate:"required"`
-	IsIncome     *bool   `json:"is_income"`
+	CategoryName string `json:"category_name" validate:"required"`
+	IsIncome     bool   `json:"is_income"`
 }
 
 type CategoryResp struct {
