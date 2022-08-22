@@ -53,6 +53,13 @@ audit:
 	@echo 'Running tests...'
 	go test -race -vet=off ./...
 
+## test/coverage: test all code and generate coverage.html
+test/coverage:
+	@echo 'Running tests...'
+	go test -v -coverprofile cover.out ./...
+	@echo 'Generate test result.out...'
+	go tool cover -html=cover.out -o cover.html
+
 ## vendor: tidy and vendor dependencies
 vendor:
 	@echo 'Tidying and verifying module dependencies...'
@@ -62,4 +69,4 @@ vendor:
 	go mod vendor
 
 
-.PHONY: help confirm run/api run/api-log db/psql db/migrations/new db/migrations/up audit vendor
+.PHONY: help confirm run/api run/api-log db/psql db/migrations/new db/migrations/up audit vendor test/coverage

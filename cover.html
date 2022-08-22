@@ -1,0 +1,421 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>ptservice: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/muchlist/moneymagnet/business/pocket/ptservice/service.go (21.5%)</option>
+				
+				<option value="file1">github.com/muchlist/moneymagnet/pkg/utils/slicer/slicer.go (45.8%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package ptservice
+
+import (
+        "context"
+        "errors"
+        "fmt"
+        "time"
+
+        "github.com/muchlist/moneymagnet/business/pocket/ptmodel"
+        "github.com/muchlist/moneymagnet/business/pocket/storer"
+        "github.com/muchlist/moneymagnet/pkg/data"
+        "github.com/muchlist/moneymagnet/pkg/db"
+        "github.com/muchlist/moneymagnet/pkg/errr"
+
+        "github.com/google/uuid"
+        "github.com/muchlist/moneymagnet/pkg/mlogger"
+        "github.com/muchlist/moneymagnet/pkg/utils/ds"
+        "github.com/muchlist/moneymagnet/pkg/utils/slicer"
+)
+
+// Set of error variables for CRUD operations.
+var (
+        ErrNotFound  = errors.New("data not found")
+        ErrInvalidID = errors.New("ID is not in its proper form")
+)
+
+// Service manages the set of APIs for user access.
+type Service struct {
+        log      mlogger.Logger
+        repo     storer.PocketStorer
+        userRepo storer.UserReader
+}
+
+// NewService constructs a core for user api access.
+func NewService(
+        log mlogger.Logger,
+        repo storer.PocketStorer,
+        userRepo storer.UserReader,
+) Service <span class="cov8" title="1">{
+        return Service{
+                log:      log,
+                repo:     repo,
+                userRepo: userRepo,
+        }
+}</span>
+
+func (s Service) CreatePocket(ctx context.Context, owner uuid.UUID, req ptmodel.PocketNew) (ptmodel.PocketResp, error) <span class="cov8" title="1">{
+        // Validate editor and watcher uuids
+        combineUserUUIDs := append(req.Editor, req.Watcher...)
+        users, err := s.userRepo.GetByIDs(ctx, combineUserUUIDs)
+        if err != nil </span><span class="cov0" title="0">{
+                return ptmodel.PocketResp{}, fmt.Errorf("get users: %w", err)
+        }</span>
+        <span class="cov8" title="1">for _, id := range combineUserUUIDs </span><span class="cov0" title="0">{
+                found := false
+                for _, user := range users </span><span class="cov0" title="0">{
+                        if user.ID == id </span><span class="cov0" title="0">{
+                                found = true
+                                break</span>
+                        }
+                }
+                <span class="cov0" title="0">if !found </span><span class="cov0" title="0">{
+                        return ptmodel.PocketResp{}, errr.New(fmt.Sprintf("uuid %s is not have valid user", id), 400)
+                }</span>
+        }
+
+        <span class="cov8" title="1">if req.Editor == nil || len(req.Editor) == 0 </span><span class="cov8" title="1">{
+                req.Editor = []uuid.UUID{owner}
+        }</span>
+        <span class="cov8" title="1">if req.Watcher == nil || len(req.Watcher) == 0 </span><span class="cov8" title="1">{
+                req.Watcher = []uuid.UUID{owner}
+        }</span>
+
+        <span class="cov8" title="1">timeNow := time.Now()
+        pocket := ptmodel.Pocket{
+                Owner:      owner,
+                Editor:     req.Editor,
+                Watcher:    req.Watcher,
+                PocketName: req.PocketName,
+                Level:      1,
+                CreatedAt:  timeNow,
+                UpdatedAt:  timeNow,
+                Version:    1,
+        }
+
+        err = s.repo.Insert(ctx, &amp;pocket)
+        if err != nil </span><span class="cov0" title="0">{
+                return ptmodel.PocketResp{}, fmt.Errorf("insert pocket to db: %w", err)
+        }</span>
+
+        // insert relation
+        <span class="cov8" title="1">uuidUserSet := ds.NewUUIDSet()
+        uuidUserSet.Add(owner)
+        uuidUserSet.AddAll(combineUserUUIDs)
+        uniqueUsers := uuidUserSet.Reveal()
+
+        err = s.repo.InsertPocketUser(ctx, uniqueUsers, pocket.ID)
+        if err != nil </span><span class="cov0" title="0">{
+                return pocket.ToPocketResp(), fmt.Errorf("loop insert pocket_user to db: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return pocket.ToPocketResp(), nil</span>
+}
+
+func (s Service) RenamePocket(ctx context.Context, owner uuid.UUID, pocketID uint64, newName string) (ptmodel.PocketResp, error) <span class="cov0" title="0">{
+
+        // Get existing Pocket
+        pocketExisting, err := s.repo.GetByID(ctx, pocketID)
+        if err != nil </span><span class="cov0" title="0">{
+                return ptmodel.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
+        }</span>
+
+        // Check if owner not have access to pocket
+        <span class="cov0" title="0">if !(pocketExisting.Owner == owner ||
+                slicer.In(owner, pocketExisting.Editor)) </span><span class="cov0" title="0">{
+                return ptmodel.PocketResp{}, errr.New("not have access to this pocket", 400)
+        }</span>
+
+        // Modify data
+        <span class="cov0" title="0">pocketExisting.PocketName = newName
+
+        // Edit
+        s.repo.Edit(ctx, &amp;pocketExisting)
+        if err != nil </span><span class="cov0" title="0">{
+                return ptmodel.PocketResp{}, fmt.Errorf("edit pocket: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return pocketExisting.ToPocketResp(), nil</span>
+}
+
+func (s Service) AddPerson(ctx context.Context, data AddPersonData) (ptmodel.PocketResp, error) <span class="cov0" title="0">{
+
+        // Get existing Pocket
+        pocketExisting, err := s.repo.GetByID(ctx, data.PocketID)
+        if err != nil </span><span class="cov0" title="0">{
+                return ptmodel.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
+        }</span>
+
+        // Check if owner not have access to pocket
+        <span class="cov0" title="0">if !(pocketExisting.Owner == data.Owner ||
+                slicer.In(data.Owner, pocketExisting.Editor)) </span><span class="cov0" title="0">{
+                return ptmodel.PocketResp{}, errr.New("not have access to this pocket", 400)
+        }</span>
+
+        // Check if person to add is exist
+        <span class="cov0" title="0">_, err = s.userRepo.GetByID(ctx, data.Person)
+        if err != nil </span><span class="cov0" title="0">{
+                if errors.Is(err, db.ErrDBNotFound) </span><span class="cov0" title="0">{
+                        return ptmodel.PocketResp{}, errr.New("account is not exist", 400)
+                }</span>
+                <span class="cov0" title="0">return ptmodel.PocketResp{}, fmt.Errorf("get user by id : %w", err)</span>
+        }
+
+        <span class="cov0" title="0">if data.IsReadOnly </span><span class="cov0" title="0">{
+                // add to wathcer
+                pocketExisting.Watcher = append(pocketExisting.Watcher, data.Person)
+        }</span> else<span class="cov0" title="0"> {
+                // add to editor
+                pocketExisting.Editor = append(pocketExisting.Editor, data.Person)
+        }</span>
+
+        // Edit
+        <span class="cov0" title="0">s.repo.Edit(ctx, &amp;pocketExisting)
+        if err != nil </span><span class="cov0" title="0">{
+                return ptmodel.PocketResp{}, fmt.Errorf("edit pocket: %w", err)
+        }</span>
+
+        // insert to related table
+        <span class="cov0" title="0">err = s.repo.InsertPocketUser(ctx, []uuid.UUID{data.Person}, pocketExisting.ID)
+        if err != nil </span><span class="cov0" title="0">{
+                return pocketExisting.ToPocketResp(), fmt.Errorf("insert pocket_user to db: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return pocketExisting.ToPocketResp(), nil</span>
+}
+
+// RemovePerson will remove person from both editor and watcher
+func (s Service) RemovePerson(ctx context.Context, data RemovePersonData) (ptmodel.PocketResp, error) <span class="cov0" title="0">{
+        // Get existing Pocket
+        pocketExisting, err := s.repo.GetByID(ctx, data.PocketID)
+        if err != nil </span><span class="cov0" title="0">{
+                return ptmodel.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
+        }</span>
+
+        // Check if owner not have access to pocket
+        <span class="cov0" title="0">if !(pocketExisting.Owner == data.Owner ||
+                slicer.In(data.Owner, pocketExisting.Editor)) </span><span class="cov0" title="0">{
+                return ptmodel.PocketResp{}, errr.New("not have access to this pocket", 400)
+        }</span>
+
+        <span class="cov0" title="0">pocketExisting.Editor = slicer.RemoveFrom(data.Person, pocketExisting.Editor)
+        pocketExisting.Watcher = slicer.RemoveFrom(data.Person, pocketExisting.Watcher)
+
+        // Edit
+        s.repo.Edit(ctx, &amp;pocketExisting)
+        if err != nil </span><span class="cov0" title="0">{
+                return ptmodel.PocketResp{}, fmt.Errorf("edit pocket: %w", err)
+        }</span>
+
+        // delete from related table
+        <span class="cov0" title="0">err = s.repo.DeletePocketUser(ctx, data.Person, pocketExisting.ID)
+        if err != nil </span><span class="cov0" title="0">{
+                return pocketExisting.ToPocketResp(), fmt.Errorf("delete pocket_user from db: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return pocketExisting.ToPocketResp(), nil</span>
+}
+
+// GetDetail ...
+func (s Service) GetDetail(ctx context.Context, userID string, pocketID uint64) (ptmodel.PocketResp, error) <span class="cov0" title="0">{
+        userUUID, err := uuid.Parse(userID)
+        if err != nil </span><span class="cov0" title="0">{
+                return ptmodel.PocketResp{}, ErrInvalidID
+        }</span>
+
+        // Get existing Pocket
+        <span class="cov0" title="0">pocketDetail, err := s.repo.GetByID(ctx, pocketID)
+        if err != nil </span><span class="cov0" title="0">{
+                return ptmodel.PocketResp{}, fmt.Errorf("get pocket detail by id: %w", err)
+        }</span>
+
+        // Check if owner not have access to pocket
+        <span class="cov0" title="0">if !(pocketDetail.Owner == userUUID ||
+                slicer.In(userUUID, pocketDetail.Watcher)) </span><span class="cov0" title="0">{
+                return ptmodel.PocketResp{}, errr.New("not have access to this pocket", 400)
+        }</span>
+
+        <span class="cov0" title="0">return pocketDetail.ToPocketResp(), nil</span>
+}
+
+// FindAllPocket ...
+func (s Service) FindAllPocket(ctx context.Context, userID string, filter data.Filters) ([]ptmodel.PocketResp, data.Metadata, error) <span class="cov0" title="0">{
+        userUUID, err := uuid.Parse(userID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, data.Metadata{}, ErrInvalidID
+        }</span>
+
+        // Get existing Pocket
+        <span class="cov0" title="0">pockets, metadata, err := s.repo.FindUserPockets(ctx, userUUID, filter)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, data.Metadata{}, fmt.Errorf("find pocket user: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">pocketResult := make([]ptmodel.PocketResp, len(pockets))
+        for i := range pockets </span><span class="cov0" title="0">{
+                pocketResult[i] = pockets[i].ToPocketResp()
+        }</span>
+
+        <span class="cov0" title="0">return pocketResult, metadata, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package slicer
+
+import (
+        "fmt"
+        "strings"
+)
+
+// In do return true if value(1) available on list(2)
+func In[T comparable](value T, list []T) bool <span class="cov8" title="1">{
+        for i := range list </span><span class="cov8" title="1">{
+                if value == list[i] </span><span class="cov8" title="1">{
+                        return true
+                }</span>
+        }
+        <span class="cov8" title="1">return false</span>
+}
+
+// RemoveFrom do return new list with removed value(1) on list(2)
+func RemoveFrom[T comparable](value T, list []T) []T <span class="cov8" title="1">{
+        copyList := make([]T, len(list))
+        copy(copyList, list)
+
+        for i, v := range copyList </span><span class="cov8" title="1">{
+                if v == value </span><span class="cov8" title="1">{
+                        copyList = RemoveAtIndex(copyList, i)
+                }</span>
+        }
+        <span class="cov8" title="1">return copyList</span>
+}
+
+// RemoveAtIndex do return new list with removed item index(2) on list(1)
+func RemoveAtIndex[T comparable](list []T, index int) []T <span class="cov8" title="1">{
+        return append(list[:index], list[index+1:]...)
+}</span>
+
+// RemoveAtIndexNotSorted do return new list with removed item index(2) on list(1)
+// new list is not sorted as input but faster execution
+func RemoveAtIndexNotSorted[T comparable](list []T, index int) []T <span class="cov0" title="0">{
+        list[index] = list[len(list)-1]
+        return list[:len(list)-1]
+}</span>
+
+// ToStringSlice do convert interface{} to slice string if not error
+func ToStringSlice(i any) ([]string, error) <span class="cov0" title="0">{
+        var a []string
+
+        switch v := i.(type) </span>{
+        case []any:<span class="cov0" title="0">
+                for _, u := range v </span><span class="cov0" title="0">{
+                        str, ok := u.(string)
+                        if !ok </span><span class="cov0" title="0">{
+                                return a, fmt.Errorf("unable to cast %#v of type %T to string", u, u)
+                        }</span>
+                        <span class="cov0" title="0">a = append(a, str)</span>
+                }
+                <span class="cov0" title="0">return a, nil</span>
+        case []string:<span class="cov0" title="0">
+                return v, nil</span>
+        case string:<span class="cov0" title="0">
+                return strings.Fields(v), nil</span>
+        default:<span class="cov0" title="0">
+                return a, fmt.Errorf("unable to cast %#v of type %T to []string", i, i)</span>
+        }
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
