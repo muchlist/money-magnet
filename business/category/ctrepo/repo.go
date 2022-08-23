@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/muchlist/moneymagnet/business/category/ctmodel"
+	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 )
 
@@ -163,152 +164,67 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (ctmodel.Category, erro
 	return cat, nil
 }
 
-// // Find get all pocket
-// func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]ptmodel.Pocket, data.Metadata, error) {
+// Find get all category within user
+func (r Repo) Find(ctx context.Context, pocketID uint64, filter data.Filters) ([]ctmodel.Category, data.Metadata, error) {
 
-// 	// Validation filter
-// 	filter.SortSafelist = []string{"name", "-name", "updated_at", "-updated_at"}
-// 	if err := filter.Validate(); err != nil {
-// 		return nil, data.Metadata{}, db.ErrDBSortFilter
-// 	}
+	// Validation filter
+	filter.SortSafelist = []string{"category_name", "-category_name", "updated_at", "-updated_at"}
+	if err := filter.Validate(); err != nil {
+		return nil, data.Metadata{}, db.ErrDBSortFilter
+	}
 
-// 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-// 	defer cancel()
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
 
-// 	sqlStatement, args, err := r.sb.Select(
-// 		"count(*) OVER()",
-// 		keyID,
-// 		keyOwner,
-// 		keyEditor,
-// 		keyWatcher,
-// 		keyPocketName,
-// 		keyIcon,
-// 		keyLevel,
-// 		keyCreatedAt,
-// 		keyUpdatedAt,
-// 		keyVersion,
-// 	).
-// 		From(keyTable).
-// 		Where(sq.Eq{keyOwner: owner}).
-// 		OrderBy(filter.SortColumnDirection()).
-// 		Limit(uint64(filter.Limit())).
-// 		Offset(uint64(filter.Offset())).
-// 		ToSql()
+	sqlStatement, args, err := r.sb.Select(
+		"count(*) OVER()",
+		keyID,
+		keyCategoryName,
+		keyIsIncome,
+		keyPocket,
+		keyCreatedAt,
+		keyUpdatedAt,
+	).
+		From(keyTable).
+		Where(sq.Eq{keyPocket: pocketID}).
+		OrderBy(filter.SortColumnDirection()).
+		Limit(uint64(filter.Limit())).
+		Offset(uint64(filter.Offset())).
+		ToSql()
 
-// 	if err != nil {
-// 		return nil, data.Metadata{}, fmt.Errorf("build query find pocket: %w", err)
-// 	}
+	if err != nil {
+		return nil, data.Metadata{}, fmt.Errorf("build query find category: %w", err)
+	}
 
-// 	rows, err := r.db.Query(ctx, sqlStatement, args...)
-// 	if err != nil {
-// 		return nil, data.Metadata{}, db.ParseError(err)
-// 	}
-// 	defer rows.Close()
+	rows, err := r.db.Query(ctx, sqlStatement, args...)
+	if err != nil {
+		return nil, data.Metadata{}, db.ParseError(err)
+	}
+	defer rows.Close()
 
-// 	totalRecords := 0
-// 	pockets := make([]ptmodel.Pocket, 0)
-// 	for rows.Next() {
-// 		var pocket ptmodel.Pocket
-// 		err := rows.Scan(
-// 			&totalRecords,
-// 			&pocket.ID,
-// 			&pocket.Owner,
-// 			&pocket.Editor,
-// 			&pocket.Watcher,
-// 			&pocket.PocketName,
-// 			&pocket.Icon,
-// 			&pocket.Level,
-// 			&pocket.CreatedAt,
-// 			&pocket.UpdatedAt,
-// 			&pocket.Version)
-// 		if err != nil {
-// 			return nil, data.Metadata{}, db.ParseError(err)
-// 		}
-// 		pockets = append(pockets, pocket)
-// 	}
+	totalRecords := 0
+	cats := make([]ctmodel.Category, 0)
+	for rows.Next() {
+		var cat ctmodel.Category
+		err := rows.Scan(
+			&totalRecords,
+			&cat.ID,
+			&cat.CategoryName,
+			&cat.IsIncome,
+			&cat.Pocket,
+			&cat.CreatedAt,
+			&cat.UpdatedAt)
+		if err != nil {
+			return nil, data.Metadata{}, db.ParseError(err)
+		}
+		cats = append(cats, cat)
+	}
 
-// 	if err := rows.Err(); err != nil {
-// 		return nil, data.Metadata{}, err
-// 	}
+	if err := rows.Err(); err != nil {
+		return nil, data.Metadata{}, err
+	}
 
-// 	metadata := data.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
+	metadata := data.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
 
-// 	return pockets, metadata, nil
-// }
-
-// // FindUserPockets get all pocket user has uuid in it
-// func (r Repo) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]ptmodel.Pocket, data.Metadata, error) {
-
-// 	// Validation filter
-// 	filter.SortSafelist = []string{"pocket_name", "-pocket_name", "updated_at", "-updated_at"}
-// 	if err := filter.Validate(); err != nil {
-// 		return nil, data.Metadata{}, db.ErrDBSortFilter
-// 	}
-
-// 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-// 	defer cancel()
-
-// 	// SELECT count(*) OVER(), id, owner, editor, watcher, pocket_name, icon, level, created_at, updated_at, version
-// 	// FROM pockets
-// 	// WHERE 'a502f2bf-f813-40e2-b39a-bec07374076f'=ANY(watcher)
-// 	// ORDER BY pocket_name ASC LIMIT 50 OFFSET 0
-// 	sqlStatement, args, err := r.sb.Select(
-// 		"count(*) OVER()",
-// 		keyID,
-// 		keyOwner,
-// 		keyEditor,
-// 		keyWatcher,
-// 		keyPocketName,
-// 		keyIcon,
-// 		keyLevel,
-// 		keyCreatedAt,
-// 		keyUpdatedAt,
-// 		keyVersion,
-// 	).
-// 		From(keyTable).
-// 		Where(fmt.Sprintf("'%s' = ANY(%s)", owner.String(), keyWatcher)).
-// 		OrderBy(filter.SortColumnDirection()).
-// 		Limit(uint64(filter.Limit())).
-// 		Offset(uint64(filter.Offset())).
-// 		ToSql()
-
-// 	if err != nil {
-// 		return nil, data.Metadata{}, fmt.Errorf("build query find user pocket: %w", err)
-// 	}
-
-// 	rows, err := r.db.Query(ctx, sqlStatement, args...)
-// 	if err != nil {
-// 		return nil, data.Metadata{}, db.ParseError(err)
-// 	}
-// 	defer rows.Close()
-
-// 	totalRecords := 0
-// 	pockets := make([]ptmodel.Pocket, 0)
-// 	for rows.Next() {
-// 		var pocket ptmodel.Pocket
-// 		err := rows.Scan(
-// 			&totalRecords,
-// 			&pocket.ID,
-// 			&pocket.Owner,
-// 			&pocket.Editor,
-// 			&pocket.Watcher,
-// 			&pocket.PocketName,
-// 			&pocket.Icon,
-// 			&pocket.Level,
-// 			&pocket.CreatedAt,
-// 			&pocket.UpdatedAt,
-// 			&pocket.Version)
-// 		if err != nil {
-// 			return nil, data.Metadata{}, db.ParseError(err)
-// 		}
-// 		pockets = append(pockets, pocket)
-// 	}
-
-// 	if err := rows.Err(); err != nil {
-// 		return nil, data.Metadata{}, err
-// 	}
-
-// 	metadata := data.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
-
-// 	return pockets, metadata, nil
-// }
+	return cats, metadata, nil
+}
