@@ -24,14 +24,14 @@ var (
 	ErrInvalidID = errors.New("ID is not in its proper form")
 )
 
-// Service manages the set of APIs for user access.
+// Service manages the set of APIs for pocket access.
 type Service struct {
 	log      mlogger.Logger
 	repo     storer.PocketStorer
 	userRepo storer.UserReader
 }
 
-// NewService constructs a core for user api access.
+// NewService constructs a core for pocket api access.
 func NewService(
 	log mlogger.Logger,
 	repo storer.PocketStorer,
