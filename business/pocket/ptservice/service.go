@@ -236,7 +236,7 @@ func (s Service) FindAllPocket(ctx context.Context, userID string, filter data.F
 	}
 
 	// Get existing Pocket
-	pockets, metadata, err := s.repo.FindUserPockets(ctx, userUUID, filter)
+	pockets, metadata, err := s.repo.FindUserPocketsByRelation(ctx, userUUID, filter)
 	if err != nil {
 		return nil, data.Metadata{}, fmt.Errorf("find pocket user: %w", err)
 	}

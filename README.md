@@ -5,7 +5,7 @@ Aplikasi managemen keuangan online yang bisa dikelola banyak orang sekaligus. Me
 # How to mock
 ```bash
 # example
-mockgen -source=business/pocket/storer/user_storer.go -destination=business/pocket/mock_storer/user_storer.go
+mockgen -source=business/pocket/storer/pocket_storer.go -destination=business/pocket/mock_storer/pocket_storer.go
 ```
 
 # How to test coverage
