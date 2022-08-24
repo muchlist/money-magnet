@@ -3,10 +3,10 @@ package main
 import (
 	"net/http"
 
-	"github.com/muchlist/moneymagnet/business/pocket/ptrepo"
-	"github.com/muchlist/moneymagnet/business/pocket/ptservice"
-	"github.com/muchlist/moneymagnet/business/user/userrepo"
-	"github.com/muchlist/moneymagnet/business/user/userservice"
+	ptrepo "github.com/muchlist/moneymagnet/business/pocket/repo"
+	ptserv "github.com/muchlist/moneymagnet/business/pocket/service"
+	urrepo "github.com/muchlist/moneymagnet/business/user/repo"
+	urserv "github.com/muchlist/moneymagnet/business/user/service"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 
@@ -23,12 +23,12 @@ func (app *application) routes() http.Handler {
 	jwt := mjwt.New(app.config.secret)
 	bcrypt := mcrypto.New()
 
-	userRepo := userrepo.NewRepo(app.db)
-	userService := userservice.NewService(app.logger, userRepo, bcrypt, jwt)
+	userRepo := urrepo.NewRepo(app.db)
+	userService := urserv.NewService(app.logger, userRepo, bcrypt, jwt)
 	userHandler := handler.NewUserHandler(app.logger, userService)
 
 	pocketRepo := ptrepo.NewRepo(app.db)
-	pocketService := ptservice.NewService(app.logger, pocketRepo, userRepo)
+	pocketService := ptserv.NewService(app.logger, pocketRepo, userRepo)
 	pocketHandler := handler.NewPocketHandler(app.logger, pocketService)
 
 	// Endpoint with no auth required

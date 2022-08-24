@@ -1,4 +1,4 @@
-package ctrepo
+package repo
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/muchlist/moneymagnet/business/category/ctmodel"
+	"github.com/muchlist/moneymagnet/business/category/model"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 )
@@ -41,7 +41,7 @@ func NewRepo(sqlDB *pgxpool.Pool) Repo {
 // MANIPULATOR
 
 // Insert ...
-func (r Repo) Insert(ctx context.Context, category *ctmodel.Category) error {
+func (r Repo) Insert(ctx context.Context, category *model.Category) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -75,7 +75,7 @@ func (r Repo) Insert(ctx context.Context, category *ctmodel.Category) error {
 }
 
 // Edit ...
-func (r Repo) Edit(ctx context.Context, category *ctmodel.Category) error {
+func (r Repo) Edit(ctx context.Context, category *model.Category) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -130,7 +130,7 @@ func (r Repo) Delete(ctx context.Context, id uint64) error {
 // GETTER
 
 // GetByID get one category by email
-func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (ctmodel.Category, error) {
+func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Category, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -144,10 +144,10 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (ctmodel.Category, erro
 	).From(keyTable).Where(sq.Eq{keyID: id}).ToSql()
 
 	if err != nil {
-		return ctmodel.Category{}, fmt.Errorf("build query get category by id: %w", err)
+		return model.Category{}, fmt.Errorf("build query get category by id: %w", err)
 	}
 
-	var cat ctmodel.Category
+	var cat model.Category
 	err = r.db.QueryRow(ctx, sqlStatement, args...).
 		Scan(
 			&cat.ID,
@@ -158,14 +158,14 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (ctmodel.Category, erro
 			&cat.UpdatedAt,
 		)
 	if err != nil {
-		return ctmodel.Category{}, db.ParseError(err)
+		return model.Category{}, db.ParseError(err)
 	}
 
 	return cat, nil
 }
 
 // Find get all category within user
-func (r Repo) Find(ctx context.Context, pocketID uint64, filter data.Filters) ([]ctmodel.Category, data.Metadata, error) {
+func (r Repo) Find(ctx context.Context, pocketID uint64, filter data.Filters) ([]model.Category, data.Metadata, error) {
 
 	// Validation filter
 	filter.SortSafelist = []string{"category_name", "-category_name", "updated_at", "-updated_at"}
@@ -203,9 +203,9 @@ func (r Repo) Find(ctx context.Context, pocketID uint64, filter data.Filters) ([
 	defer rows.Close()
 
 	totalRecords := 0
-	cats := make([]ctmodel.Category, 0)
+	cats := make([]model.Category, 0)
 	for rows.Next() {
-		var cat ctmodel.Category
+		var cat model.Category
 		err := rows.Scan(
 			&totalRecords,
 			&cat.ID,

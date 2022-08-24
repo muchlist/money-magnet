@@ -1,16 +1,15 @@
-package userservice
+package service
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
-
+	"github.com/muchlist/moneymagnet/business/user/model"
 	"github.com/muchlist/moneymagnet/business/user/storer"
-	"github.com/muchlist/moneymagnet/business/user/usermodel"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/errr"
-	"github.com/muchlist/moneymagnet/pkg/mjwt"
+	mjwt2 "github.com/muchlist/moneymagnet/pkg/mjwt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/pkg/mcrypto"
@@ -34,7 +33,7 @@ type Service struct {
 	log    mlogger.Logger
 	repo   storer.UserStorer
 	crypto mcrypto.Crypter
-	jwt    mjwt.TokenHandler
+	jwt    mjwt2.TokenHandler
 }
 
 // NewService constructs a core for user api access.
@@ -42,7 +41,7 @@ func NewService(
 	log mlogger.Logger,
 	repo storer.UserStorer,
 	crypto mcrypto.Crypter,
-	jwt mjwt.TokenHandler,
+	jwt mjwt2.TokenHandler,
 ) Service {
 	return Service{
 		log:    log,
@@ -53,34 +52,34 @@ func NewService(
 }
 
 // Login return detail user with access token and refresh token
-func (s Service) Login(ctx context.Context, email, password string) (usermodel.UserResp, error) {
+func (s Service) Login(ctx context.Context, email, password string) (model.UserResp, error) {
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
-		return usermodel.UserResp{}, fmt.Errorf("%v: %w", err, ErrInvalidEmailOrPass)
+		return model.UserResp{}, fmt.Errorf("%v: %w", err, ErrInvalidEmailOrPass)
 	}
 
 	if !s.crypto.IsPWAndHashPWMatch([]byte(password), user.Password) {
-		return usermodel.UserResp{}, fmt.Errorf("%v: %w", err, ErrInvalidEmailOrPass)
+		return model.UserResp{}, fmt.Errorf("%v: %w", err, ErrInvalidEmailOrPass)
 	}
 
 	expired := time.Now().Add(time.Minute * expiredJWTToken).Unix()
 
-	AccessClaims := mjwt.CustomClaim{
+	AccessClaims := mjwt2.CustomClaim{
 		Identity:    user.ID.String(),
 		Name:        user.Name,
 		Exp:         expired,
-		Type:        mjwt.Access,
+		Type:        mjwt2.Access,
 		Fresh:       true,
 		Roles:       user.Roles,
 		PocketRoles: user.PocketRoles,
 	}
 
 	expired = time.Now().Add(time.Minute * expiredJWTRefreshToken).Unix()
-	RefreshClaims := mjwt.CustomClaim{
+	RefreshClaims := mjwt2.CustomClaim{
 		Identity:    user.ID.String(),
 		Name:        user.Name,
 		Exp:         expired,
-		Type:        mjwt.Refresh,
+		Type:        mjwt2.Refresh,
 		Fresh:       false,
 		Roles:       user.Roles,
 		PocketRoles: user.PocketRoles,
@@ -88,14 +87,14 @@ func (s Service) Login(ctx context.Context, email, password string) (usermodel.U
 
 	accessToken, err := s.jwt.GenerateToken(AccessClaims)
 	if err != nil {
-		return usermodel.UserResp{}, fmt.Errorf("fail to generate token when login: %w", err)
+		return model.UserResp{}, fmt.Errorf("fail to generate token when login: %w", err)
 	}
 	refreshToken, err := s.jwt.GenerateToken(RefreshClaims)
 	if err != nil {
-		return usermodel.UserResp{}, fmt.Errorf("fail to generate token when login: %w", err)
+		return model.UserResp{}, fmt.Errorf("fail to generate token when login: %w", err)
 	}
 
-	response := usermodel.UserResp{
+	response := model.UserResp{
 		ID:           user.ID,
 		Email:        user.Email,
 		Name:         user.Name,
@@ -112,11 +111,11 @@ func (s Service) Login(ctx context.Context, email, password string) (usermodel.U
 }
 
 // InsertUser used for register user
-func (s Service) InsertUser(ctx context.Context, req usermodel.UserRegisterReq) (usermodel.UserResp, error) {
+func (s Service) InsertUser(ctx context.Context, req model.UserRegisterReq) (model.UserResp, error) {
 
 	hashPassword, err := s.crypto.GenerateHash(req.Password)
 	if err != nil {
-		return usermodel.UserResp{}, fmt.Errorf("generate hashpw when insert user: %w", err)
+		return model.UserResp{}, fmt.Errorf("generate hashpw when insert user: %w", err)
 	}
 
 	if req.Roles == nil {
@@ -127,7 +126,7 @@ func (s Service) InsertUser(ctx context.Context, req usermodel.UserRegisterReq) 
 	}
 
 	timeNow := time.Now()
-	user := usermodel.User{
+	user := model.User{
 		ID:          uuid.New(),
 		Email:       req.Email,
 		Name:        req.Name,
@@ -142,10 +141,10 @@ func (s Service) InsertUser(ctx context.Context, req usermodel.UserRegisterReq) 
 
 	err = s.repo.Insert(ctx, &user)
 	if err != nil {
-		return usermodel.UserResp{}, fmt.Errorf("insert user to db: %w", err)
+		return model.UserResp{}, fmt.Errorf("insert user to db: %w", err)
 	}
 
-	return usermodel.UserResp{
+	return model.UserResp{
 		ID:          user.ID,
 		Email:       user.Email,
 		Name:        user.Email,
@@ -159,15 +158,15 @@ func (s Service) InsertUser(ctx context.Context, req usermodel.UserRegisterReq) 
 
 // FetchUser do edit user with ignoring nil field
 // ID is required
-func (s Service) FetchUser(ctx context.Context, req usermodel.UserUpdate) (usermodel.UserResp, error) {
+func (s Service) FetchUser(ctx context.Context, req model.UserUpdate) (model.UserResp, error) {
 	userID, err := uuid.Parse(req.ID)
 	if err != nil {
-		return usermodel.UserResp{}, ErrInvalidID
+		return model.UserResp{}, ErrInvalidID
 	}
 
 	userExisting, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
-		return usermodel.UserResp{}, fmt.Errorf("get user: %w", err)
+		return model.UserResp{}, fmt.Errorf("get user: %w", err)
 	}
 
 	if req.Email != nil {
@@ -185,7 +184,7 @@ func (s Service) FetchUser(ctx context.Context, req usermodel.UserUpdate) (userm
 	if req.Password != nil {
 		hashPassword, err := s.crypto.GenerateHash(*req.Password)
 		if err != nil {
-			return usermodel.UserResp{}, fmt.Errorf("generate hashpw when edit user: %w", err)
+			return model.UserResp{}, fmt.Errorf("generate hashpw when edit user: %w", err)
 		}
 		userExisting.Password = hashPassword
 	}
@@ -194,7 +193,7 @@ func (s Service) FetchUser(ctx context.Context, req usermodel.UserUpdate) (userm
 	}
 
 	if err := s.repo.Edit(ctx, &userExisting); err != nil {
-		return usermodel.UserResp{}, fmt.Errorf("edit user: %w", err)
+		return model.UserResp{}, fmt.Errorf("edit user: %w", err)
 	}
 
 	return userExisting.ToUserResp(), nil
@@ -226,35 +225,35 @@ func (s Service) Delete(ctx context.Context, userIDToDelete string, userIDExecut
 
 // Refresh do refresh token,
 // access token in reslt is new but tagged as not fresh
-func (s Service) Refresh(ctx context.Context, refreshToken string) (usermodel.UserResp, error) {
+func (s Service) Refresh(ctx context.Context, refreshToken string) (model.UserResp, error) {
 	// validate token, signature and exp etc...
 	token, err := s.jwt.ValidateToken(refreshToken)
 	if err != nil {
-		return usermodel.UserResp{}, err
+		return model.UserResp{}, err
 	}
 	claims, err := s.jwt.ReadToken(token)
 	if err != nil {
-		return usermodel.UserResp{}, err
+		return model.UserResp{}, err
 	}
 
 	// cek claims type token
-	if claims.Type != mjwt.Refresh {
-		return usermodel.UserResp{}, mjwt.ErrInvalidToken
+	if claims.Type != mjwt2.Refresh {
+		return model.UserResp{}, mjwt2.ErrInvalidToken
 	}
 
 	userID, _ := uuid.Parse(claims.Identity)
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
-		return usermodel.UserResp{}, fmt.Errorf("%v: %w", err, ErrInvalidEmailOrPass)
+		return model.UserResp{}, fmt.Errorf("%v: %w", err, ErrInvalidEmailOrPass)
 	}
 
 	expired := time.Now().Add(time.Minute * expiredJWTToken).Unix()
 
-	AccessClaims := mjwt.CustomClaim{
+	AccessClaims := mjwt2.CustomClaim{
 		Identity:    user.ID.String(),
 		Name:        user.Name,
 		Exp:         expired,
-		Type:        mjwt.Access,
+		Type:        mjwt2.Access,
 		Fresh:       false,
 		Roles:       user.Roles,
 		PocketRoles: user.PocketRoles,
@@ -262,10 +261,10 @@ func (s Service) Refresh(ctx context.Context, refreshToken string) (usermodel.Us
 
 	accessToken, err := s.jwt.GenerateToken(AccessClaims)
 	if err != nil {
-		return usermodel.UserResp{}, fmt.Errorf("fail to generate token when login: %w", err)
+		return model.UserResp{}, fmt.Errorf("fail to generate token when login: %w", err)
 	}
 
-	response := usermodel.UserResp{
+	response := model.UserResp{
 		ID:           user.ID,
 		Email:        user.Email,
 		Name:         user.Name,
@@ -282,26 +281,26 @@ func (s Service) Refresh(ctx context.Context, refreshToken string) (usermodel.Us
 }
 
 // GetProfile do load user by id
-func (s Service) GetProfile(ctx context.Context, id string) (usermodel.UserResp, error) {
+func (s Service) GetProfile(ctx context.Context, id string) (model.UserResp, error) {
 	userID, err := uuid.Parse(id)
 	if err != nil {
-		return usermodel.UserResp{}, ErrInvalidID
+		return model.UserResp{}, ErrInvalidID
 	}
 
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
-		return usermodel.UserResp{}, fmt.Errorf("get by id: %w", err)
+		return model.UserResp{}, fmt.Errorf("get by id: %w", err)
 	}
 	return user.ToUserResp(), nil
 }
 
 // FindUserByName do find user filter by *name*
-func (s Service) FindUserByName(ctx context.Context, name string, filter data.Filters) ([]usermodel.UserResp, data.Metadata, error) {
+func (s Service) FindUserByName(ctx context.Context, name string, filter data.Filters) ([]model.UserResp, data.Metadata, error) {
 	users, metadata, err := s.repo.Find(ctx, name, filter)
 	if err != nil {
 		return nil, data.Metadata{}, fmt.Errorf("find user: %w", err)
 	}
-	usersResult := make([]usermodel.UserResp, len(users))
+	usersResult := make([]model.UserResp, len(users))
 	for i := range users {
 		usersResult[i] = users[i].ToUserResp()
 	}

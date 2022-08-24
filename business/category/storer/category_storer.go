@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/muchlist/moneymagnet/business/category/ctmodel"
+	"github.com/muchlist/moneymagnet/business/category/model"
 	"github.com/muchlist/moneymagnet/pkg/data"
 )
 
@@ -14,12 +14,12 @@ type CategoryStorer interface {
 }
 
 type CategorySaver interface {
-	Insert(ctx context.Context, category *ctmodel.Category) error
-	Edit(ctx context.Context, category *ctmodel.Category) error
+	Insert(ctx context.Context, category *model.Category) error
+	Edit(ctx context.Context, category *model.Category) error
 	Delete(ctx context.Context, id uint64) error
 }
 
 type CategoryReader interface {
-	GetByID(ctx context.Context, id uuid.UUID) (ctmodel.Category, error)
-	Find(ctx context.Context, pocketID uint64, filter data.Filters) ([]ctmodel.Category, data.Metadata, error)
+	GetByID(ctx context.Context, id uuid.UUID) (model.Category, error)
+	Find(ctx context.Context, pocketID uint64, filter data.Filters) ([]model.Category, data.Metadata, error)
 }

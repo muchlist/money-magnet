@@ -2,8 +2,8 @@ package handler
 
 import (
 	"errors"
-	"github.com/muchlist/moneymagnet/business/user/usermodel"
-	"github.com/muchlist/moneymagnet/business/user/userservice"
+	"github.com/muchlist/moneymagnet/business/user/model"
+	"github.com/muchlist/moneymagnet/business/user/service"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/errr"
@@ -16,7 +16,7 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/web"
 )
 
-func NewUserHandler(log mlogger.Logger, userService userservice.Service) userHandler {
+func NewUserHandler(log mlogger.Logger, userService service.Service) userHandler {
 	return userHandler{
 		log:     log,
 		service: userService,
@@ -25,12 +25,12 @@ func NewUserHandler(log mlogger.Logger, userService userservice.Service) userHan
 
 type userHandler struct {
 	log     mlogger.Logger
-	service userservice.Service
+	service service.Service
 }
 
 func (usr userHandler) Register(w http.ResponseWriter, r *http.Request) {
 	traceID := web.ReadTraceID(r.Context())
-	var req usermodel.UserRegisterReq
+	var req model.UserRegisterReq
 	err := web.ReadJSON(w, r, &req)
 	if err != nil {
 		usr.log.ErrorT(traceID, "bad json", err)
@@ -64,7 +64,7 @@ func (usr userHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 func (usr userHandler) Login(w http.ResponseWriter, r *http.Request) {
 	traceID := web.ReadTraceID(r.Context())
-	var req usermodel.UserLoginReq
+	var req model.UserLoginReq
 	err := web.ReadJSON(w, r, &req)
 	if err != nil {
 		usr.log.ErrorT(traceID, "bad json", err)
@@ -106,7 +106,7 @@ func (usr userHandler) EditSelfUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req usermodel.UserUpdate
+	var req model.UserUpdate
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
 		usr.log.ErrorT(traceID, "bad json", err)
@@ -151,7 +151,7 @@ func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req usermodel.UserUpdate
+	var req model.UserUpdate
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
 		usr.log.ErrorT(traceID, "bad json", err)
@@ -379,7 +379,7 @@ func parseError(err error) (int, string) {
 		if errors.Is(err, db.ErrDBDuplicatedEntry) ||
 			errors.Is(err, db.ErrDBNotFound) ||
 			errors.Is(err, db.ErrDBParentNotFound) ||
-			errors.Is(err, userservice.ErrInvalidID) ||
+			errors.Is(err, service.ErrInvalidID) ||
 			errors.Is(err, db.ErrDBSortFilter) {
 			return http.StatusBadRequest, err.Error()
 		}
@@ -388,7 +388,7 @@ func parseError(err error) (int, string) {
 			return http.StatusUnauthorized, err.Error()
 		}
 
-		if errors.Is(err, userservice.ErrInvalidEmailOrPass) {
+		if errors.Is(err, service.ErrInvalidEmailOrPass) {
 			return http.StatusBadRequest, "invalid email or password"
 		}
 

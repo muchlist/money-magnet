@@ -1,4 +1,4 @@
-package ctmodel
+package model
 
 import (
 	"time"

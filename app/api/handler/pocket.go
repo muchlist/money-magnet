@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/muchlist/moneymagnet/business/pocket/ptmodel"
-	"github.com/muchlist/moneymagnet/business/pocket/ptservice"
+	"github.com/muchlist/moneymagnet/business/pocket/model"
+	"github.com/muchlist/moneymagnet/business/pocket/service"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/validate"
@@ -13,7 +13,7 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/web"
 )
 
-func NewPocketHandler(log mlogger.Logger, pocketService ptservice.Service) pocketHandler {
+func NewPocketHandler(log mlogger.Logger, pocketService service.Service) pocketHandler {
 	return pocketHandler{
 		log:     log,
 		service: pocketService,
@@ -22,7 +22,7 @@ func NewPocketHandler(log mlogger.Logger, pocketService ptservice.Service) pocke
 
 type pocketHandler struct {
 	log     mlogger.Logger
-	service ptservice.Service
+	service service.Service
 }
 
 func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +33,7 @@ func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req ptmodel.PocketNew
+	var req model.PocketNew
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
 		pt.log.ErrorT(traceID, "bad json", err)

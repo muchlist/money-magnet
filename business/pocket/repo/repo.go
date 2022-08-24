@@ -1,11 +1,11 @@
-package ptrepo
+package repo
 
 import (
 	"context"
 	"fmt"
 	"time"
 
-	"github.com/muchlist/moneymagnet/business/pocket/ptmodel"
+	"github.com/muchlist/moneymagnet/business/pocket/model"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 
@@ -46,7 +46,7 @@ func NewRepo(sqlDB *pgxpool.Pool) Repo {
 // MANIPULATOR
 
 // Insert ...
-func (r Repo) Insert(ctx context.Context, pocket *ptmodel.Pocket) error {
+func (r Repo) Insert(ctx context.Context, pocket *model.Pocket) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -87,7 +87,7 @@ func (r Repo) Insert(ctx context.Context, pocket *ptmodel.Pocket) error {
 }
 
 // Edit ...
-func (r Repo) Edit(ctx context.Context, pocket *ptmodel.Pocket) error {
+func (r Repo) Edit(ctx context.Context, pocket *model.Pocket) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -145,7 +145,7 @@ func (r Repo) Delete(ctx context.Context, id uint64) error {
 // GETTER
 
 // GetByID get one pocket by email
-func (r Repo) GetByID(ctx context.Context, id uint64) (ptmodel.Pocket, error) {
+func (r Repo) GetByID(ctx context.Context, id uint64) (model.Pocket, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -163,10 +163,10 @@ func (r Repo) GetByID(ctx context.Context, id uint64) (ptmodel.Pocket, error) {
 	).From(keyTable).Where(sq.Eq{keyID: id}).ToSql()
 
 	if err != nil {
-		return ptmodel.Pocket{}, fmt.Errorf("build query get pocket by id: %w", err)
+		return model.Pocket{}, fmt.Errorf("build query get pocket by id: %w", err)
 	}
 
-	var pocket ptmodel.Pocket
+	var pocket model.Pocket
 	err = r.db.QueryRow(ctx, sqlStatement, args...).
 		Scan(
 			&pocket.ID,
@@ -180,14 +180,14 @@ func (r Repo) GetByID(ctx context.Context, id uint64) (ptmodel.Pocket, error) {
 			&pocket.UpdatedAt,
 			&pocket.Version)
 	if err != nil {
-		return ptmodel.Pocket{}, db.ParseError(err)
+		return model.Pocket{}, db.ParseError(err)
 	}
 
 	return pocket, nil
 }
 
 // Find get all pocket
-func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]ptmodel.Pocket, data.Metadata, error) {
+func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
 
 	// Validation filter
 	filter.SortSafelist = []string{"name", "-name", "updated_at", "-updated_at"}
@@ -229,9 +229,9 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 	defer rows.Close()
 
 	totalRecords := 0
-	pockets := make([]ptmodel.Pocket, 0)
+	pockets := make([]model.Pocket, 0)
 	for rows.Next() {
-		var pocket ptmodel.Pocket
+		var pocket model.Pocket
 		err := rows.Scan(
 			&totalRecords,
 			&pocket.ID,
@@ -260,7 +260,7 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 }
 
 // FindUserPockets get all pocket user has uuid in it
-func (r Repo) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]ptmodel.Pocket, data.Metadata, error) {
+func (r Repo) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
 
 	// Validation filter
 	filter.SortSafelist = []string{"pocket_name", "-pocket_name", "updated_at", "-updated_at"}
@@ -306,9 +306,9 @@ func (r Repo) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.
 	defer rows.Close()
 
 	totalRecords := 0
-	pockets := make([]ptmodel.Pocket, 0)
+	pockets := make([]model.Pocket, 0)
 	for rows.Next() {
-		var pocket ptmodel.Pocket
+		var pocket model.Pocket
 		err := rows.Scan(
 			&totalRecords,
 			&pocket.ID,
@@ -337,7 +337,7 @@ func (r Repo) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.
 }
 
 // FindUserPockets get all pocket user has uuid in it by relation constrain
-func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]ptmodel.Pocket, data.Metadata, error) {
+func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
 
 	// Validation filter
 	filter.SortSafelist = []string{"pocket_name", "-pocket_name", "updated_at", "-updated_at"}
@@ -385,9 +385,9 @@ func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner uuid.UUID, fi
 	defer rows.Close()
 
 	totalRecords := 0
-	pockets := make([]ptmodel.Pocket, 0)
+	pockets := make([]model.Pocket, 0)
 	for rows.Next() {
-		var pocket ptmodel.Pocket
+		var pocket model.Pocket
 		err := rows.Scan(
 			&totalRecords,
 			&pocket.ID,

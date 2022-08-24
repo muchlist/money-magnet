@@ -1,4 +1,4 @@
-package ptservice
+package service
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	mstore "github.com/muchlist/moneymagnet/business/pocket/mock_storer"
-	"github.com/muchlist/moneymagnet/business/pocket/ptmodel"
-	"github.com/muchlist/moneymagnet/business/user/usermodel"
+	"github.com/muchlist/moneymagnet/business/pocket/model"
+	urmodel "github.com/muchlist/moneymagnet/business/user/model"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/stretchr/testify/assert"
 )
@@ -20,7 +20,7 @@ func TestCreatePocketSuccess(t *testing.T) {
 	// input output
 	ctx := context.Background()
 	ownerUUID := uuid.New()
-	payload := ptmodel.PocketNew{
+	payload := model.PocketNew{
 		PocketName: "example pocket",
 		Editor:     []uuid.UUID{},
 		Watcher:    []uuid.UUID{},
@@ -28,7 +28,7 @@ func TestCreatePocketSuccess(t *testing.T) {
 	}
 
 	timeNow := time.Now()
-	expect := ptmodel.PocketResp{
+	expect := model.PocketResp{
 		ID:         1,
 		Owner:      ownerUUID,
 		Editor:     []uuid.UUID{ownerUUID},
@@ -48,7 +48,7 @@ func TestCreatePocketSuccess(t *testing.T) {
 	// mock user
 	userRepo := mstore.NewMockUserReader(ctrl)
 	userRepo.EXPECT().GetByIDs(gomock.Any(), gomock.Any()).Return(
-		[]usermodel.User{
+		[]urmodel.User{
 			{
 				ID: ownerUUID,
 			},
@@ -56,7 +56,7 @@ func TestCreatePocketSuccess(t *testing.T) {
 	)
 
 	// mock pocket
-	pocketReplacePtr := ptmodel.Pocket{
+	pocketReplacePtr := model.Pocket{
 		ID:         1,
 		Owner:      ownerUUID,
 		Editor:     []uuid.UUID{ownerUUID},

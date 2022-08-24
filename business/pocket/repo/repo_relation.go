@@ -1,4 +1,4 @@
-package ptrepo
+package repo
 
 import (
 	"context"

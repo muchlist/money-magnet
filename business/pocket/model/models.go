@@ -1,4 +1,4 @@
-package ptmodel
+package model
 
 import (
 	"time"

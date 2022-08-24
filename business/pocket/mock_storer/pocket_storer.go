@@ -10,7 +10,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	uuid "github.com/google/uuid"
-	ptmodel "github.com/muchlist/moneymagnet/business/pocket/ptmodel"
+	model "github.com/muchlist/moneymagnet/business/pocket/model"
 	data "github.com/muchlist/moneymagnet/pkg/data"
 )
 
@@ -66,7 +66,7 @@ func (mr *MockPocketStorerMockRecorder) DeletePocketUser(ctx, userID, pocketID i
 }
 
 // Edit mocks base method.
-func (m *MockPocketStorer) Edit(ctx context.Context, Pocket *ptmodel.Pocket) error {
+func (m *MockPocketStorer) Edit(ctx context.Context, Pocket *model.Pocket) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Edit", ctx, Pocket)
 	ret0, _ := ret[0].(error)
@@ -80,10 +80,10 @@ func (mr *MockPocketStorerMockRecorder) Edit(ctx, Pocket interface{}) *gomock.Ca
 }
 
 // Find mocks base method.
-func (m *MockPocketStorer) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]ptmodel.Pocket, data.Metadata, error) {
+func (m *MockPocketStorer) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Find", ctx, owner, filter)
-	ret0, _ := ret[0].([]ptmodel.Pocket)
+	ret0, _ := ret[0].([]model.Pocket)
 	ret1, _ := ret[1].(data.Metadata)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -96,10 +96,10 @@ func (mr *MockPocketStorerMockRecorder) Find(ctx, owner, filter interface{}) *go
 }
 
 // FindUserPockets mocks base method.
-func (m *MockPocketStorer) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]ptmodel.Pocket, data.Metadata, error) {
+func (m *MockPocketStorer) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindUserPockets", ctx, owner, filter)
-	ret0, _ := ret[0].([]ptmodel.Pocket)
+	ret0, _ := ret[0].([]model.Pocket)
 	ret1, _ := ret[1].(data.Metadata)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -111,27 +111,11 @@ func (mr *MockPocketStorerMockRecorder) FindUserPockets(ctx, owner, filter inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserPockets", reflect.TypeOf((*MockPocketStorer)(nil).FindUserPockets), ctx, owner, filter)
 }
 
-// FindUserPocketsByRelation mocks base method.
-func (m *MockPocketStorer) FindUserPocketsByRelation(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]ptmodel.Pocket, data.Metadata, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindUserPocketsByRelation", ctx, owner, filter)
-	ret0, _ := ret[0].([]ptmodel.Pocket)
-	ret1, _ := ret[1].(data.Metadata)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// FindUserPocketsByRelation indicates an expected call of FindUserPocketsByRelation.
-func (mr *MockPocketStorerMockRecorder) FindUserPocketsByRelation(ctx, owner, filter interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserPocketsByRelation", reflect.TypeOf((*MockPocketStorer)(nil).FindUserPocketsByRelation), ctx, owner, filter)
-}
-
 // GetByID mocks base method.
-func (m *MockPocketStorer) GetByID(ctx context.Context, id uint64) (ptmodel.Pocket, error) {
+func (m *MockPocketStorer) GetByID(ctx context.Context, id uint64) (model.Pocket, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByID", ctx, id)
-	ret0, _ := ret[0].(ptmodel.Pocket)
+	ret0, _ := ret[0].(model.Pocket)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -143,7 +127,7 @@ func (mr *MockPocketStorerMockRecorder) GetByID(ctx, id interface{}) *gomock.Cal
 }
 
 // Insert mocks base method.
-func (m *MockPocketStorer) Insert(ctx context.Context, Pocket *ptmodel.Pocket) error {
+func (m *MockPocketStorer) Insert(ctx context.Context, Pocket *model.Pocket) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, Pocket)
 	ret0, _ := ret[0].(error)
@@ -222,7 +206,7 @@ func (mr *MockPocketSaverMockRecorder) DeletePocketUser(ctx, userID, pocketID in
 }
 
 // Edit mocks base method.
-func (m *MockPocketSaver) Edit(ctx context.Context, Pocket *ptmodel.Pocket) error {
+func (m *MockPocketSaver) Edit(ctx context.Context, Pocket *model.Pocket) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Edit", ctx, Pocket)
 	ret0, _ := ret[0].(error)
@@ -236,7 +220,7 @@ func (mr *MockPocketSaverMockRecorder) Edit(ctx, Pocket interface{}) *gomock.Cal
 }
 
 // Insert mocks base method.
-func (m *MockPocketSaver) Insert(ctx context.Context, Pocket *ptmodel.Pocket) error {
+func (m *MockPocketSaver) Insert(ctx context.Context, Pocket *model.Pocket) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, Pocket)
 	ret0, _ := ret[0].(error)
@@ -287,10 +271,10 @@ func (m *MockPocketReader) EXPECT() *MockPocketReaderMockRecorder {
 }
 
 // Find mocks base method.
-func (m *MockPocketReader) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]ptmodel.Pocket, data.Metadata, error) {
+func (m *MockPocketReader) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Find", ctx, owner, filter)
-	ret0, _ := ret[0].([]ptmodel.Pocket)
+	ret0, _ := ret[0].([]model.Pocket)
 	ret1, _ := ret[1].(data.Metadata)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -303,10 +287,10 @@ func (mr *MockPocketReaderMockRecorder) Find(ctx, owner, filter interface{}) *go
 }
 
 // FindUserPockets mocks base method.
-func (m *MockPocketReader) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]ptmodel.Pocket, data.Metadata, error) {
+func (m *MockPocketReader) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindUserPockets", ctx, owner, filter)
-	ret0, _ := ret[0].([]ptmodel.Pocket)
+	ret0, _ := ret[0].([]model.Pocket)
 	ret1, _ := ret[1].(data.Metadata)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -318,27 +302,11 @@ func (mr *MockPocketReaderMockRecorder) FindUserPockets(ctx, owner, filter inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserPockets", reflect.TypeOf((*MockPocketReader)(nil).FindUserPockets), ctx, owner, filter)
 }
 
-// FindUserPocketsByRelation mocks base method.
-func (m *MockPocketReader) FindUserPocketsByRelation(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]ptmodel.Pocket, data.Metadata, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindUserPocketsByRelation", ctx, owner, filter)
-	ret0, _ := ret[0].([]ptmodel.Pocket)
-	ret1, _ := ret[1].(data.Metadata)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// FindUserPocketsByRelation indicates an expected call of FindUserPocketsByRelation.
-func (mr *MockPocketReaderMockRecorder) FindUserPocketsByRelation(ctx, owner, filter interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserPocketsByRelation", reflect.TypeOf((*MockPocketReader)(nil).FindUserPocketsByRelation), ctx, owner, filter)
-}
-
 // GetByID mocks base method.
-func (m *MockPocketReader) GetByID(ctx context.Context, id uint64) (ptmodel.Pocket, error) {
+func (m *MockPocketReader) GetByID(ctx context.Context, id uint64) (model.Pocket, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByID", ctx, id)
-	ret0, _ := ret[0].(ptmodel.Pocket)
+	ret0, _ := ret[0].(model.Pocket)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

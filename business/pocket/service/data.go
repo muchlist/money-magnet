@@ -1,4 +1,4 @@
-package ptservice
+package service
 
 import "github.com/google/uuid"
 
