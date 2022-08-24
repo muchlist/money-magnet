@@ -74,12 +74,13 @@ func (l *mlog) InfoT(traceID string, msg string, tags ...Field) {
 	l.zap.Info(msg, tags...)
 }
 
-func (l *mlog) Warn(msg string, tags ...Field) {
+func (l *mlog) Warn(msg string, err error, tags ...Field) {
+	tags = append(tags, zap.NamedError("error", err))
 	l.zap.Warn(msg, tags...)
 }
 
-func (l *mlog) WarnT(traceID string, msg string, tags ...Field) {
-	tags = append(tags, zap.String("trace_id", traceID))
+func (l *mlog) WarnT(traceID string, msg string, err error, tags ...Field) {
+	tags = append(tags, zap.String("trace_id", traceID), zap.NamedError("error", err))
 	l.zap.Info(msg, tags...)
 }
 

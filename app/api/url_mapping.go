@@ -3,6 +3,8 @@ package main
 import (
 	"net/http"
 
+	cyrepo "github.com/muchlist/moneymagnet/business/category/repo"
+	cyserv "github.com/muchlist/moneymagnet/business/category/service"
 	ptrepo "github.com/muchlist/moneymagnet/business/pocket/repo"
 	ptserv "github.com/muchlist/moneymagnet/business/pocket/service"
 	urrepo "github.com/muchlist/moneymagnet/business/user/repo"
@@ -24,12 +26,16 @@ func (app *application) routes() http.Handler {
 	bcrypt := mcrypto.New()
 
 	userRepo := urrepo.NewRepo(app.db)
-	userService := urserv.NewService(app.logger, userRepo, bcrypt, jwt)
+	userService := urserv.NewCore(app.logger, userRepo, bcrypt, jwt)
 	userHandler := handler.NewUserHandler(app.logger, userService)
 
 	pocketRepo := ptrepo.NewRepo(app.db)
-	pocketService := ptserv.NewService(app.logger, pocketRepo, userRepo)
+	pocketService := ptserv.NewCore(app.logger, pocketRepo, userRepo)
 	pocketHandler := handler.NewPocketHandler(app.logger, pocketService)
+
+	categoryRepo := cyrepo.NewRepo(app.db)
+	categoryService := cyserv.NewCore(app.logger, categoryRepo)
+	categoryHandler := handler.NewCatHandler(app.logger, categoryService)
 
 	// Endpoint with no auth required
 	r.Get("/healthcheck", handler.HealthCheckHandler)
@@ -47,15 +53,26 @@ func (app *application) routes() http.Handler {
 	// Endpoint with auth
 	r.Group(func(r chi.Router) {
 		r.Use(mid.RequiredRoles())
-		r.Get("/user/profile", userHandler.Profile)
-		r.Get("/user/{strID}", userHandler.GetByID)
-		r.Get("/user", userHandler.FindByName)
-		r.Post("/user/fcm/{strID}", userHandler.UpdateFCM)
+		r.Route("/user", func(r chi.Router) {
+			r.Get("/profile", userHandler.Profile)
+			r.Get("/{strID}", userHandler.GetByID)
+			r.Get("/", userHandler.FindByName)
+			r.Post("/fcm/{strID}", userHandler.UpdateFCM)
+		})
 
-		r.Post("/pockets", pocketHandler.CreatePocket)
-		r.Get("/pockets/{id}", pocketHandler.GetByID)
-		r.Get("/pockets", pocketHandler.FindUserPocket)
-		r.Put("/rename-pocket", pocketHandler.RenamePocket)
+		r.Route("/pockets", func(r chi.Router) {
+			r.Post("/", pocketHandler.CreatePocket)
+			r.Get("/{id}", pocketHandler.GetByID)
+			r.Get("/", pocketHandler.FindUserPocket)
+			r.Put("/", pocketHandler.RenamePocket)
+		})
+
+		r.Route("/categories", func(r chi.Router) {
+			r.Post("/", categoryHandler.CreateCategory)
+			r.Get("/from-pocket/{id}", categoryHandler.FindPocketCategory)
+			r.Put("/", categoryHandler.EditCategory)
+			r.Delete("/{strID}", categoryHandler.DeleteCategory)
+		})
 	})
 
 	// Endpoint with fresh auth

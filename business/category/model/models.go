@@ -34,9 +34,8 @@ type NewCategory struct {
 }
 
 type UpdateCategory struct {
-	ID           uuid.UUID
-	CategoryName string `json:"category_name" validate:"required"`
-	IsIncome     bool   `json:"is_income"`
+	ID           uuid.UUID `json:"id" validate:"required"`
+	CategoryName string    `json:"category_name" validate:"required"`
 }
 
 type CategoryResp struct {

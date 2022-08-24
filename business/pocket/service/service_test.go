@@ -73,7 +73,7 @@ func TestCreatePocketSuccess(t *testing.T) {
 	pocketRepo.EXPECT().InsertPocketUser(gomock.Any(), gomock.Any(), gomock.Eq(pocketReplacePtr.ID)).Return(nil)
 
 	// init service
-	service := NewService(log, pocketRepo, userRepo)
+	service := NewCore(log, pocketRepo, userRepo)
 
 	// Assertion
 	result, err := service.CreatePocket(ctx, ownerUUID, payload)

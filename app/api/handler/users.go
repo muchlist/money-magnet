@@ -2,6 +2,8 @@ package handler
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/muchlist/moneymagnet/business/user/model"
 	"github.com/muchlist/moneymagnet/business/user/service"
 	"github.com/muchlist/moneymagnet/pkg/data"
@@ -10,13 +12,12 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/validate"
-	"net/http"
 
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/web"
 )
 
-func NewUserHandler(log mlogger.Logger, userService service.Service) userHandler {
+func NewUserHandler(log mlogger.Logger, userService service.Core) userHandler {
 	return userHandler{
 		log:     log,
 		service: userService,
@@ -25,7 +26,7 @@ func NewUserHandler(log mlogger.Logger, userService service.Service) userHandler
 
 type userHandler struct {
 	log     mlogger.Logger
-	service service.Service
+	service service.Core
 }
 
 func (usr userHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -33,14 +34,14 @@ func (usr userHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req model.UserRegisterReq
 	err := web.ReadJSON(w, r, &req)
 	if err != nil {
-		usr.log.ErrorT(traceID, "bad json", err)
+		usr.log.WarnT(traceID, "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	errMessage, err := validate.Struct(req)
 	if err != nil {
-		usr.log.ErrorT(traceID, "request not valid", err)
+		usr.log.WarnT(traceID, "request not valid", err)
 		web.ErrorResponse(w, http.StatusBadRequest, errMessage)
 		return
 	}
@@ -67,14 +68,14 @@ func (usr userHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req model.UserLoginReq
 	err := web.ReadJSON(w, r, &req)
 	if err != nil {
-		usr.log.ErrorT(traceID, "bad json", err)
+		usr.log.WarnT(traceID, "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	errMessage, err := validate.Struct(req)
 	if err != nil {
-		usr.log.ErrorT(traceID, "request not valid", err)
+		usr.log.WarnT(traceID, "request not valid", err)
 		web.ErrorResponse(w, http.StatusBadRequest, errMessage)
 		return
 	}
@@ -109,7 +110,7 @@ func (usr userHandler) EditSelfUser(w http.ResponseWriter, r *http.Request) {
 	var req model.UserUpdate
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
-		usr.log.ErrorT(traceID, "bad json", err)
+		usr.log.WarnT(traceID, "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -146,7 +147,7 @@ func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	// Get data from url path
 	id, err := web.ReadStrIDParam(r)
 	if err != nil {
-		usr.log.ErrorT(traceID, "error edit user", err, mlogger.String("identity", claims.Identity))
+		usr.log.WarnT(traceID, "error edit user", err, mlogger.String("identity", claims.Identity))
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -154,7 +155,7 @@ func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	var req model.UserUpdate
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
-		usr.log.ErrorT(traceID, "bad json", err)
+		usr.log.WarnT(traceID, "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -190,7 +191,7 @@ func (usr userHandler) UpdateFCM(w http.ResponseWriter, r *http.Request) {
 	// Get data from url path
 	fcm, err := web.ReadStrIDParam(r)
 	if err != nil {
-		usr.log.ErrorT(traceID, "fcm required", err, mlogger.String("identity", claims.Identity))
+		usr.log.WarnT(traceID, "fcm required", err, mlogger.String("identity", claims.Identity))
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -223,7 +224,7 @@ func (usr userHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	// Get data from url path
 	userIDToDelete, err := web.ReadStrIDParam(r)
 	if err != nil {
-		usr.log.ErrorT(traceID, err.Error(), err, mlogger.String("identity", claims.Identity))
+		usr.log.WarnT(traceID, err.Error(), err, mlogger.String("identity", claims.Identity))
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -255,13 +256,13 @@ func (usr userHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	var req refresh
 	err := web.ReadJSON(w, r, &req)
 	if err != nil {
-		usr.log.ErrorT(traceID, "bad json", err)
+		usr.log.WarnT(traceID, "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	errMessage, err := validate.Struct(req)
 	if err != nil {
-		usr.log.ErrorT(traceID, "request not valid", err)
+		usr.log.WarnT(traceID, "request not valid", err)
 		web.ErrorResponse(w, http.StatusBadRequest, errMessage)
 		return
 	}
@@ -316,7 +317,7 @@ func (usr userHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	// extract url path
 	userID, err := web.ReadStrIDParam(r)
 	if err != nil {
-		usr.log.ErrorT(traceID, err.Error(), err)
+		usr.log.WarnT(traceID, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}

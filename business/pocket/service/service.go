@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/muchlist/moneymagnet/business/pocket/model"
-	storer2 "github.com/muchlist/moneymagnet/business/pocket/storer"
+	"github.com/muchlist/moneymagnet/business/pocket/storer"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/errr"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -23,27 +24,27 @@ var (
 	ErrInvalidID = errors.New("ID is not in its proper form")
 )
 
-// Service manages the set of APIs for user access.
-type Service struct {
+// Core manages the set of APIs for user access.
+type Core struct {
 	log      mlogger.Logger
-	repo     storer2.PocketStorer
-	userRepo storer2.UserReader
+	repo     storer.PocketStorer
+	userRepo storer.UserReader
 }
 
-// NewService constructs a core for user api access.
-func NewService(
+// NewCore constructs a core for user api access.
+func NewCore(
 	log mlogger.Logger,
-	repo storer2.PocketStorer,
-	userRepo storer2.UserReader,
-) Service {
-	return Service{
+	repo storer.PocketStorer,
+	userRepo storer.UserReader,
+) Core {
+	return Core{
 		log:      log,
 		repo:     repo,
 		userRepo: userRepo,
 	}
 }
 
-func (s Service) CreatePocket(ctx context.Context, owner uuid.UUID, req model.PocketNew) (model.PocketResp, error) {
+func (s Core) CreatePocket(ctx context.Context, owner uuid.UUID, req model.PocketNew) (model.PocketResp, error) {
 	// Validate editor and watcher uuids
 	combineUserUUIDs := append(req.Editor, req.Watcher...)
 	users, err := s.userRepo.GetByIDs(ctx, combineUserUUIDs)
@@ -101,7 +102,7 @@ func (s Service) CreatePocket(ctx context.Context, owner uuid.UUID, req model.Po
 	return pocket.ToPocketResp(), nil
 }
 
-func (s Service) RenamePocket(ctx context.Context, owner uuid.UUID, pocketID uint64, newName string) (model.PocketResp, error) {
+func (s Core) RenamePocket(ctx context.Context, owner uuid.UUID, pocketID uint64, newName string) (model.PocketResp, error) {
 
 	// Get existing Pocket
 	pocketExisting, err := s.repo.GetByID(ctx, pocketID)
@@ -127,7 +128,7 @@ func (s Service) RenamePocket(ctx context.Context, owner uuid.UUID, pocketID uin
 	return pocketExisting.ToPocketResp(), nil
 }
 
-func (s Service) AddPerson(ctx context.Context, data AddPersonData) (model.PocketResp, error) {
+func (s Core) AddPerson(ctx context.Context, data AddPersonData) (model.PocketResp, error) {
 
 	// Get existing Pocket
 	pocketExisting, err := s.repo.GetByID(ctx, data.PocketID)
@@ -174,7 +175,7 @@ func (s Service) AddPerson(ctx context.Context, data AddPersonData) (model.Pocke
 }
 
 // RemovePerson will remove person from both editor and watcher
-func (s Service) RemovePerson(ctx context.Context, data RemovePersonData) (model.PocketResp, error) {
+func (s Core) RemovePerson(ctx context.Context, data RemovePersonData) (model.PocketResp, error) {
 	// Get existing Pocket
 	pocketExisting, err := s.repo.GetByID(ctx, data.PocketID)
 	if err != nil {
@@ -206,7 +207,7 @@ func (s Service) RemovePerson(ctx context.Context, data RemovePersonData) (model
 }
 
 // GetDetail ...
-func (s Service) GetDetail(ctx context.Context, userID string, pocketID uint64) (model.PocketResp, error) {
+func (s Core) GetDetail(ctx context.Context, userID string, pocketID uint64) (model.PocketResp, error) {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
 		return model.PocketResp{}, ErrInvalidID
@@ -228,7 +229,7 @@ func (s Service) GetDetail(ctx context.Context, userID string, pocketID uint64) 
 }
 
 // FindAllPocket ...
-func (s Service) FindAllPocket(ctx context.Context, userID string, filter data.Filters) ([]model.PocketResp, data.Metadata, error) {
+func (s Core) FindAllPocket(ctx context.Context, userID string, filter data.Filters) ([]model.PocketResp, data.Metadata, error) {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
 		return nil, data.Metadata{}, ErrInvalidID

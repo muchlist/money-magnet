@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/muchlist/moneymagnet/business/user/model"
 	"github.com/muchlist/moneymagnet/business/user/storer"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/errr"
-	mjwt2 "github.com/muchlist/moneymagnet/pkg/mjwt"
-	"time"
+	"github.com/muchlist/moneymagnet/pkg/mjwt"
 
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/pkg/mcrypto"
@@ -28,22 +29,22 @@ const (
 	expiredJWTRefreshToken = 15 * 24 * 10 // 15 days
 )
 
-// Service manages the set of APIs for user access.
-type Service struct {
+// Core manages the set of APIs for user access.
+type Core struct {
 	log    mlogger.Logger
 	repo   storer.UserStorer
 	crypto mcrypto.Crypter
-	jwt    mjwt2.TokenHandler
+	jwt    mjwt.TokenHandler
 }
 
-// NewService constructs a core for user api access.
-func NewService(
+// NewCore constructs a core for user api access.
+func NewCore(
 	log mlogger.Logger,
 	repo storer.UserStorer,
 	crypto mcrypto.Crypter,
-	jwt mjwt2.TokenHandler,
-) Service {
-	return Service{
+	jwt mjwt.TokenHandler,
+) Core {
+	return Core{
 		log:    log,
 		repo:   repo,
 		crypto: crypto,
@@ -52,7 +53,7 @@ func NewService(
 }
 
 // Login return detail user with access token and refresh token
-func (s Service) Login(ctx context.Context, email, password string) (model.UserResp, error) {
+func (s Core) Login(ctx context.Context, email, password string) (model.UserResp, error) {
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
 		return model.UserResp{}, fmt.Errorf("%v: %w", err, ErrInvalidEmailOrPass)
@@ -64,22 +65,22 @@ func (s Service) Login(ctx context.Context, email, password string) (model.UserR
 
 	expired := time.Now().Add(time.Minute * expiredJWTToken).Unix()
 
-	AccessClaims := mjwt2.CustomClaim{
+	AccessClaims := mjwt.CustomClaim{
 		Identity:    user.ID.String(),
 		Name:        user.Name,
 		Exp:         expired,
-		Type:        mjwt2.Access,
+		Type:        mjwt.Access,
 		Fresh:       true,
 		Roles:       user.Roles,
 		PocketRoles: user.PocketRoles,
 	}
 
 	expired = time.Now().Add(time.Minute * expiredJWTRefreshToken).Unix()
-	RefreshClaims := mjwt2.CustomClaim{
+	RefreshClaims := mjwt.CustomClaim{
 		Identity:    user.ID.String(),
 		Name:        user.Name,
 		Exp:         expired,
-		Type:        mjwt2.Refresh,
+		Type:        mjwt.Refresh,
 		Fresh:       false,
 		Roles:       user.Roles,
 		PocketRoles: user.PocketRoles,
@@ -111,7 +112,7 @@ func (s Service) Login(ctx context.Context, email, password string) (model.UserR
 }
 
 // InsertUser used for register user
-func (s Service) InsertUser(ctx context.Context, req model.UserRegisterReq) (model.UserResp, error) {
+func (s Core) InsertUser(ctx context.Context, req model.UserRegisterReq) (model.UserResp, error) {
 
 	hashPassword, err := s.crypto.GenerateHash(req.Password)
 	if err != nil {
@@ -158,7 +159,7 @@ func (s Service) InsertUser(ctx context.Context, req model.UserRegisterReq) (mod
 
 // FetchUser do edit user with ignoring nil field
 // ID is required
-func (s Service) FetchUser(ctx context.Context, req model.UserUpdate) (model.UserResp, error) {
+func (s Core) FetchUser(ctx context.Context, req model.UserUpdate) (model.UserResp, error) {
 	userID, err := uuid.Parse(req.ID)
 	if err != nil {
 		return model.UserResp{}, ErrInvalidID
@@ -200,7 +201,7 @@ func (s Service) FetchUser(ctx context.Context, req model.UserUpdate) (model.Use
 }
 
 // UpdateFCM do save fcm to database
-func (s Service) UpdateFCM(ctx context.Context, id string, fcm string) error {
+func (s Core) UpdateFCM(ctx context.Context, id string, fcm string) error {
 	userID, err := uuid.Parse(id)
 	if err != nil {
 		return ErrInvalidID
@@ -212,7 +213,7 @@ func (s Service) UpdateFCM(ctx context.Context, id string, fcm string) error {
 }
 
 // Delete ...
-func (s Service) Delete(ctx context.Context, userIDToDelete string, userIDExecutor string) error {
+func (s Core) Delete(ctx context.Context, userIDToDelete string, userIDExecutor string) error {
 	userID, err := uuid.Parse(userIDToDelete)
 	if err != nil {
 		return ErrInvalidID
@@ -225,7 +226,7 @@ func (s Service) Delete(ctx context.Context, userIDToDelete string, userIDExecut
 
 // Refresh do refresh token,
 // access token in reslt is new but tagged as not fresh
-func (s Service) Refresh(ctx context.Context, refreshToken string) (model.UserResp, error) {
+func (s Core) Refresh(ctx context.Context, refreshToken string) (model.UserResp, error) {
 	// validate token, signature and exp etc...
 	token, err := s.jwt.ValidateToken(refreshToken)
 	if err != nil {
@@ -237,8 +238,8 @@ func (s Service) Refresh(ctx context.Context, refreshToken string) (model.UserRe
 	}
 
 	// cek claims type token
-	if claims.Type != mjwt2.Refresh {
-		return model.UserResp{}, mjwt2.ErrInvalidToken
+	if claims.Type != mjwt.Refresh {
+		return model.UserResp{}, mjwt.ErrInvalidToken
 	}
 
 	userID, _ := uuid.Parse(claims.Identity)
@@ -249,11 +250,11 @@ func (s Service) Refresh(ctx context.Context, refreshToken string) (model.UserRe
 
 	expired := time.Now().Add(time.Minute * expiredJWTToken).Unix()
 
-	AccessClaims := mjwt2.CustomClaim{
+	AccessClaims := mjwt.CustomClaim{
 		Identity:    user.ID.String(),
 		Name:        user.Name,
 		Exp:         expired,
-		Type:        mjwt2.Access,
+		Type:        mjwt.Access,
 		Fresh:       false,
 		Roles:       user.Roles,
 		PocketRoles: user.PocketRoles,
@@ -281,7 +282,7 @@ func (s Service) Refresh(ctx context.Context, refreshToken string) (model.UserRe
 }
 
 // GetProfile do load user by id
-func (s Service) GetProfile(ctx context.Context, id string) (model.UserResp, error) {
+func (s Core) GetProfile(ctx context.Context, id string) (model.UserResp, error) {
 	userID, err := uuid.Parse(id)
 	if err != nil {
 		return model.UserResp{}, ErrInvalidID
@@ -295,7 +296,7 @@ func (s Service) GetProfile(ctx context.Context, id string) (model.UserResp, err
 }
 
 // FindUserByName do find user filter by *name*
-func (s Service) FindUserByName(ctx context.Context, name string, filter data.Filters) ([]model.UserResp, data.Metadata, error) {
+func (s Core) FindUserByName(ctx context.Context, name string, filter data.Filters) ([]model.UserResp, data.Metadata, error) {
 	users, metadata, err := s.repo.Find(ctx, name, filter)
 	if err != nil {
 		return nil, data.Metadata{}, fmt.Errorf("find user: %w", err)

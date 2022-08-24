@@ -47,6 +47,7 @@ func (r Repo) Insert(ctx context.Context, category *model.Category) error {
 
 	sqlStatement, args, err := r.sb.Insert(keyTable).
 		Columns(
+			keyID,
 			keyCategoryName,
 			keyPocket,
 			keyIsIncome,
@@ -54,6 +55,7 @@ func (r Repo) Insert(ctx context.Context, category *model.Category) error {
 			keyCreatedAt,
 		).
 		Values(
+			category.ID,
 			category.CategoryName,
 			category.Pocket,
 			category.IsIncome,
@@ -82,7 +84,6 @@ func (r Repo) Edit(ctx context.Context, category *model.Category) error {
 	sqlStatement, args, err := r.sb.Update(keyTable).
 		SetMap(sq.Eq{
 			keyCategoryName: category.CategoryName,
-			keyIsIncome:     category.IsIncome,
 			keyUpdatedAt:    time.Now(),
 		}).
 		Where(sq.Eq{keyID: category.ID}).
@@ -104,7 +105,7 @@ func (r Repo) Edit(ctx context.Context, category *model.Category) error {
 }
 
 // Delete ...
-func (r Repo) Delete(ctx context.Context, id uint64) error {
+func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
