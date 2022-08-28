@@ -1,9 +1,10 @@
 CREATE TABLE IF NOT EXISTS "requests" (
   "id" BIGSERIAL PRIMARY KEY,
   "requester" uuid,
-  "pocket" bigint,
+  "approver" uuid DEFAULT NULL,
+  "pocket" uuid,
   "pocket_name" varchar(100) NOT NULL,
-  "is_approved" boolean NOT NULL DEFAULT false,
+  "is_approved" boolean DEFAULT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now()),
   "updated_at" timestamp NOT NULL DEFAULT (now())
 );

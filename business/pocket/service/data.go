@@ -5,12 +5,12 @@ import "github.com/google/uuid"
 type AddPersonData struct {
 	Owner      uuid.UUID
 	Person     uuid.UUID
-	PocketID   uint64
+	PocketID   uuid.UUID
 	IsReadOnly bool
 }
 
 type RemovePersonData struct {
 	Owner    uuid.UUID
 	Person   uuid.UUID
-	PocketID uint64
+	PocketID uuid.UUID
 }

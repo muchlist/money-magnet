@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "pockets" (
-  "id" BIGSERIAL PRIMARY KEY,
+  "id" uuid DEFAULT gen_random_uuid(),
   "owner" uuid,
   "editor" uuid[],
   "watcher" uuid[],

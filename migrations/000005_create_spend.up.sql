@@ -1,7 +1,7 @@
 CREATE TABLE  IF NOT EXISTS "spends" (
   "id" uuid PRIMARY KEY,
   "user" uuid,
-  "pocket" bigint,
+  "pocket" uuid,
   "category" uuid,
   "category_name" varchar(100),
   "category_x" uuid,

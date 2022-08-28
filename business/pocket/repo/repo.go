@@ -119,7 +119,7 @@ func (r Repo) Edit(ctx context.Context, pocket *model.Pocket) error {
 }
 
 // Delete ...
-func (r Repo) Delete(ctx context.Context, id uint64) error {
+func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -145,7 +145,7 @@ func (r Repo) Delete(ctx context.Context, id uint64) error {
 // GETTER
 
 // GetByID get one pocket by email
-func (r Repo) GetByID(ctx context.Context, id uint64) (model.Pocket, error) {
+func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Pocket, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 

@@ -77,8 +77,8 @@ func (pt pocketHandler) RenamePocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type Req struct {
-		ID         uint64 `json:"id" validate:"required"`
-		PocketName string `json:"pocket_name" validate:"required"`
+		ID         uuid.UUID `json:"id" validate:"required"`
+		PocketName string    `json:"pocket_name" validate:"required"`
 	}
 
 	var req Req
@@ -125,14 +125,20 @@ func (pt pocketHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// extract url path
-	pocketID, err := web.ReadIDParam(r)
+	pocketID, err := web.ReadStrIDParam(r)
+	if err != nil {
+		pt.log.WarnT(traceID, err.Error(), err)
+		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	pocketUUID, err := uuid.Parse(pocketID)
 	if err != nil {
 		pt.log.WarnT(traceID, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	result, err := pt.service.GetDetail(r.Context(), claims.Identity, pocketID)
+	result, err := pt.service.GetDetail(r.Context(), claims.Identity, pocketUUID)
 	if err != nil {
 		pt.log.ErrorT(traceID, "error get pocket by id", err)
 		statusCode, msg := parseError(err)

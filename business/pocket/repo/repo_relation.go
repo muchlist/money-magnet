@@ -19,7 +19,7 @@ const (
 )
 
 // InsertPocketUser ...
-func (r Repo) InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketID uint64) error {
+func (r Repo) InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketID uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -50,7 +50,7 @@ func (r Repo) InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketI
 }
 
 // DeletePocketUser ...
-func (r Repo) DeletePocketUser(ctx context.Context, userID uuid.UUID, pocketID uint64) error {
+func (r Repo) DeletePocketUser(ctx context.Context, userID uuid.UUID, pocketID uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 

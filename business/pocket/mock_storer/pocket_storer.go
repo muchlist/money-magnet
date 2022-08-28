@@ -38,7 +38,7 @@ func (m *MockPocketStorer) EXPECT() *MockPocketStorerMockRecorder {
 }
 
 // Delete mocks base method.
-func (m *MockPocketStorer) Delete(ctx context.Context, id uint64) error {
+func (m *MockPocketStorer) Delete(ctx context.Context, id uuid.UUID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", ctx, id)
 	ret0, _ := ret[0].(error)
@@ -52,7 +52,7 @@ func (mr *MockPocketStorerMockRecorder) Delete(ctx, id interface{}) *gomock.Call
 }
 
 // DeletePocketUser mocks base method.
-func (m *MockPocketStorer) DeletePocketUser(ctx context.Context, userID uuid.UUID, pocketID uint64) error {
+func (m *MockPocketStorer) DeletePocketUser(ctx context.Context, userID, pocketID uuid.UUID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeletePocketUser", ctx, userID, pocketID)
 	ret0, _ := ret[0].(error)
@@ -112,7 +112,7 @@ func (mr *MockPocketStorerMockRecorder) FindUserPockets(ctx, owner, filter inter
 }
 
 // GetByID mocks base method.
-func (m *MockPocketStorer) GetByID(ctx context.Context, id uint64) (model.Pocket, error) {
+func (m *MockPocketStorer) GetByID(ctx context.Context, id uuid.UUID) (model.Pocket, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByID", ctx, id)
 	ret0, _ := ret[0].(model.Pocket)
@@ -141,7 +141,7 @@ func (mr *MockPocketStorerMockRecorder) Insert(ctx, Pocket interface{}) *gomock.
 }
 
 // InsertPocketUser mocks base method.
-func (m *MockPocketStorer) InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketID uint64) error {
+func (m *MockPocketStorer) InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketID uuid.UUID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InsertPocketUser", ctx, userIDs, pocketID)
 	ret0, _ := ret[0].(error)
@@ -178,7 +178,7 @@ func (m *MockPocketSaver) EXPECT() *MockPocketSaverMockRecorder {
 }
 
 // Delete mocks base method.
-func (m *MockPocketSaver) Delete(ctx context.Context, id uint64) error {
+func (m *MockPocketSaver) Delete(ctx context.Context, id uuid.UUID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", ctx, id)
 	ret0, _ := ret[0].(error)
@@ -192,7 +192,7 @@ func (mr *MockPocketSaverMockRecorder) Delete(ctx, id interface{}) *gomock.Call 
 }
 
 // DeletePocketUser mocks base method.
-func (m *MockPocketSaver) DeletePocketUser(ctx context.Context, userID uuid.UUID, pocketID uint64) error {
+func (m *MockPocketSaver) DeletePocketUser(ctx context.Context, userID, pocketID uuid.UUID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeletePocketUser", ctx, userID, pocketID)
 	ret0, _ := ret[0].(error)
@@ -234,7 +234,7 @@ func (mr *MockPocketSaverMockRecorder) Insert(ctx, Pocket interface{}) *gomock.C
 }
 
 // InsertPocketUser mocks base method.
-func (m *MockPocketSaver) InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketID uint64) error {
+func (m *MockPocketSaver) InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketID uuid.UUID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InsertPocketUser", ctx, userIDs, pocketID)
 	ret0, _ := ret[0].(error)
@@ -303,7 +303,7 @@ func (mr *MockPocketReaderMockRecorder) FindUserPockets(ctx, owner, filter inter
 }
 
 // GetByID mocks base method.
-func (m *MockPocketReader) GetByID(ctx context.Context, id uint64) (model.Pocket, error) {
+func (m *MockPocketReader) GetByID(ctx context.Context, id uuid.UUID) (model.Pocket, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByID", ctx, id)
 	ret0, _ := ret[0].(model.Pocket)

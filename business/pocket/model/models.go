@@ -7,7 +7,7 @@ import (
 )
 
 type Pocket struct {
-	ID         uint64
+	ID         uuid.UUID
 	Owner      uuid.UUID
 	Editor     []uuid.UUID
 	Watcher    []uuid.UUID
@@ -42,7 +42,7 @@ type PocketNew struct {
 }
 
 type PocketUpdate struct {
-	ID         uint64      `json:"-"`
+	ID         uuid.UUID   `json:"-"`
 	Owner      *uuid.UUID  `json:"owner"`
 	Editor     []uuid.UUID `json:"editor"`
 	Watcher    []uuid.UUID `json:"watcher"`
@@ -52,7 +52,7 @@ type PocketUpdate struct {
 }
 
 type PocketResp struct {
-	ID         uint64      `json:"id"`
+	ID         uuid.UUID   `json:"id"`
 	Owner      uuid.UUID   `json:"owner"`
 	Editor     []uuid.UUID `json:"editor"`
 	Watcher    []uuid.UUID `json:"watcher"`

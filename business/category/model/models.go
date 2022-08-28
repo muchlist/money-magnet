@@ -9,7 +9,7 @@ import (
 // Category is simple struct so can be unified with model
 type Category struct {
 	ID           uuid.UUID
-	Pocket       uint64
+	Pocket       uuid.UUID
 	CategoryName string
 	IsIncome     bool
 	CreatedAt    time.Time
@@ -28,9 +28,9 @@ func (c *Category) ToCategoryResp() CategoryResp {
 }
 
 type NewCategory struct {
-	PocketID     uint64 `json:"pocket_id" validate:"required"`
-	CategoryName string `json:"category_name" validate:"required"`
-	IsIncome     bool   `json:"is_income"`
+	PocketID     uuid.UUID `json:"pocket_id" validate:"required"`
+	CategoryName string    `json:"category_name" validate:"required"`
+	IsIncome     bool      `json:"is_income"`
 }
 
 type UpdateCategory struct {
@@ -40,7 +40,7 @@ type UpdateCategory struct {
 
 type CategoryResp struct {
 	ID           uuid.UUID `json:"id"`
-	Pocket       uint64    `json:"pocket_id"`
+	Pocket       uuid.UUID `json:"pocket_id"`
 	CategoryName string    `json:"category_name"`
 	IsIncome     bool      `json:"is_income"`
 	CreatedAt    time.Time `json:"created_at"`

@@ -102,7 +102,7 @@ func (s Core) CreatePocket(ctx context.Context, owner uuid.UUID, req model.Pocke
 	return pocket.ToPocketResp(), nil
 }
 
-func (s Core) RenamePocket(ctx context.Context, owner uuid.UUID, pocketID uint64, newName string) (model.PocketResp, error) {
+func (s Core) RenamePocket(ctx context.Context, owner uuid.UUID, pocketID uuid.UUID, newName string) (model.PocketResp, error) {
 
 	// Get existing Pocket
 	pocketExisting, err := s.repo.GetByID(ctx, pocketID)
@@ -207,7 +207,7 @@ func (s Core) RemovePerson(ctx context.Context, data RemovePersonData) (model.Po
 }
 
 // GetDetail ...
-func (s Core) GetDetail(ctx context.Context, userID string, pocketID uint64) (model.PocketResp, error) {
+func (s Core) GetDetail(ctx context.Context, userID string, pocketID uuid.UUID) (model.PocketResp, error) {
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
 		return model.PocketResp{}, ErrInvalidID
