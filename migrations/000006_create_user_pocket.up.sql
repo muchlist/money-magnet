@@ -4,5 +4,5 @@ CREATE TABLE "user_pocket" (
   "pocket_id" uuid
 );
 
-ALTER TABLE "user_pocket" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
-ALTER TABLE "user_pocket" ADD FOREIGN KEY ("pocket_id") REFERENCES "pockets" ("id");
+ALTER TABLE "user_pocket" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE;
+ALTER TABLE "user_pocket" ADD FOREIGN KEY ("pocket_id") REFERENCES "pockets" ("id") ON DELETE CASCADE;

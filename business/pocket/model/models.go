@@ -8,9 +8,9 @@ import (
 
 type Pocket struct {
 	ID         uuid.UUID
-	Owner      uuid.UUID
-	Editor     []uuid.UUID
-	Watcher    []uuid.UUID
+	OwnerID    uuid.UUID
+	EditorID   []uuid.UUID
+	WatcherID  []uuid.UUID
 	PocketName string
 	Icon       int
 	Level      int
@@ -22,9 +22,9 @@ type Pocket struct {
 func (p *Pocket) ToPocketResp() PocketResp {
 	return PocketResp{
 		ID:         p.ID,
-		Owner:      p.Owner,
-		Editor:     p.Editor,
-		Watcher:    p.Watcher,
+		OwnerID:    p.OwnerID,
+		EditorID:   p.EditorID,
+		WatcherID:  p.WatcherID,
 		PocketName: p.PocketName,
 		Icon:       p.Icon,
 		Level:      p.Level,
@@ -36,16 +36,16 @@ func (p *Pocket) ToPocketResp() PocketResp {
 
 type PocketNew struct {
 	PocketName string      `json:"pocket_name" validate:"required"`
-	Editor     []uuid.UUID `json:"editor"`
-	Watcher    []uuid.UUID `json:"watcher"`
+	EditorID   []uuid.UUID `json:"editor_id"`
+	WatcherID  []uuid.UUID `json:"watcher_id"`
 	Icon       int         `json:"icon"`
 }
 
 type PocketUpdate struct {
 	ID         uuid.UUID   `json:"-"`
-	Owner      *uuid.UUID  `json:"owner"`
-	Editor     []uuid.UUID `json:"editor"`
-	Watcher    []uuid.UUID `json:"watcher"`
+	OwnerID    *uuid.UUID  `json:"owner_id"`
+	EditorID   []uuid.UUID `json:"editor_id"`
+	WatcherID  []uuid.UUID `json:"watcher_id"`
 	PocketName *string     `json:"pocket_name"`
 	Icon       *int        `json:"icon"`
 	Version    *int        `json:"version"`
@@ -53,9 +53,9 @@ type PocketUpdate struct {
 
 type PocketResp struct {
 	ID         uuid.UUID   `json:"id"`
-	Owner      uuid.UUID   `json:"owner"`
-	Editor     []uuid.UUID `json:"editor"`
-	Watcher    []uuid.UUID `json:"watcher"`
+	OwnerID    uuid.UUID   `json:"owner_id"`
+	EditorID   []uuid.UUID `json:"editor_id"`
+	WatcherID  []uuid.UUID `json:"watcher_id"`
 	PocketName string      `json:"pocket_name"`
 	Icon       int         `json:"icon"`
 	Level      int         `json:"level"`

@@ -46,7 +46,7 @@ func NewCore(
 
 func (s Core) CreatePocket(ctx context.Context, owner uuid.UUID, req model.PocketNew) (model.PocketResp, error) {
 	// Validate editor and watcher uuids
-	combineUserUUIDs := append(req.Editor, req.Watcher...)
+	combineUserUUIDs := append(req.EditorID, req.WatcherID...)
 	users, err := s.userRepo.GetByIDs(ctx, combineUserUUIDs)
 	if err != nil {
 		return model.PocketResp{}, fmt.Errorf("get users: %w", err)
@@ -64,18 +64,18 @@ func (s Core) CreatePocket(ctx context.Context, owner uuid.UUID, req model.Pocke
 		}
 	}
 
-	if req.Editor == nil || len(req.Editor) == 0 {
-		req.Editor = []uuid.UUID{owner}
+	if req.EditorID == nil || len(req.EditorID) == 0 {
+		req.EditorID = []uuid.UUID{owner}
 	}
-	if req.Watcher == nil || len(req.Watcher) == 0 {
-		req.Watcher = []uuid.UUID{owner}
+	if req.WatcherID == nil || len(req.WatcherID) == 0 {
+		req.WatcherID = []uuid.UUID{owner}
 	}
 
 	timeNow := time.Now()
 	pocket := model.Pocket{
-		Owner:      owner,
-		Editor:     req.Editor,
-		Watcher:    req.Watcher,
+		OwnerID:    owner,
+		EditorID:   req.EditorID,
+		WatcherID:  req.WatcherID,
 		PocketName: req.PocketName,
 		Level:      1,
 		CreatedAt:  timeNow,
@@ -111,8 +111,8 @@ func (s Core) RenamePocket(ctx context.Context, owner uuid.UUID, pocketID uuid.U
 	}
 
 	// Check if owner not have access to pocket
-	if !(pocketExisting.Owner == owner ||
-		slicer.In(owner, pocketExisting.Editor)) {
+	if !(pocketExisting.OwnerID == owner ||
+		slicer.In(owner, pocketExisting.EditorID)) {
 		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
 	}
 
@@ -137,8 +137,8 @@ func (s Core) AddPerson(ctx context.Context, data AddPersonData) (model.PocketRe
 	}
 
 	// Check if owner not have access to pocket
-	if !(pocketExisting.Owner == data.Owner ||
-		slicer.In(data.Owner, pocketExisting.Editor)) {
+	if !(pocketExisting.OwnerID == data.Owner ||
+		slicer.In(data.Owner, pocketExisting.EditorID)) {
 		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
 	}
 
@@ -153,10 +153,10 @@ func (s Core) AddPerson(ctx context.Context, data AddPersonData) (model.PocketRe
 
 	if data.IsReadOnly {
 		// add to wathcer
-		pocketExisting.Watcher = append(pocketExisting.Watcher, data.Person)
+		pocketExisting.WatcherID = append(pocketExisting.WatcherID, data.Person)
 	} else {
 		// add to editor
-		pocketExisting.Editor = append(pocketExisting.Editor, data.Person)
+		pocketExisting.EditorID = append(pocketExisting.EditorID, data.Person)
 	}
 
 	// Edit
@@ -183,13 +183,13 @@ func (s Core) RemovePerson(ctx context.Context, data RemovePersonData) (model.Po
 	}
 
 	// Check if owner not have access to pocket
-	if !(pocketExisting.Owner == data.Owner ||
-		slicer.In(data.Owner, pocketExisting.Editor)) {
+	if !(pocketExisting.OwnerID == data.Owner ||
+		slicer.In(data.Owner, pocketExisting.EditorID)) {
 		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
 	}
 
-	pocketExisting.Editor = slicer.RemoveFrom(data.Person, pocketExisting.Editor)
-	pocketExisting.Watcher = slicer.RemoveFrom(data.Person, pocketExisting.Watcher)
+	pocketExisting.EditorID = slicer.RemoveFrom(data.Person, pocketExisting.EditorID)
+	pocketExisting.WatcherID = slicer.RemoveFrom(data.Person, pocketExisting.WatcherID)
 
 	// Edit
 	s.repo.Edit(ctx, &pocketExisting)
@@ -220,8 +220,8 @@ func (s Core) GetDetail(ctx context.Context, userID string, pocketID uuid.UUID) 
 	}
 
 	// Check if owner not have access to pocket
-	if !(pocketDetail.Owner == userUUID ||
-		slicer.In(userUUID, pocketDetail.Watcher)) {
+	if !(pocketDetail.OwnerID == userUUID ||
+		slicer.In(userUUID, pocketDetail.WatcherID)) {
 		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
 	}
 

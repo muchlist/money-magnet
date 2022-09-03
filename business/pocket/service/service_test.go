@@ -23,17 +23,17 @@ func TestCreatePocketSuccess(t *testing.T) {
 	pocketUUID := uuid.New()
 	payload := model.PocketNew{
 		PocketName: "example pocket",
-		Editor:     []uuid.UUID{},
-		Watcher:    []uuid.UUID{},
+		EditorID:   []uuid.UUID{},
+		WatcherID:  []uuid.UUID{},
 		Icon:       1,
 	}
 
 	timeNow := time.Now()
 	expect := model.PocketResp{
 		ID:         pocketUUID,
-		Owner:      ownerUUID,
-		Editor:     []uuid.UUID{ownerUUID},
-		Watcher:    []uuid.UUID{ownerUUID},
+		OwnerID:    ownerUUID,
+		EditorID:   []uuid.UUID{ownerUUID},
+		WatcherID:  []uuid.UUID{ownerUUID},
 		PocketName: "example pocket",
 		Icon:       1,
 		Level:      1,
@@ -59,9 +59,9 @@ func TestCreatePocketSuccess(t *testing.T) {
 	// mock pocket
 	pocketReplacePtr := model.Pocket{
 		ID:         pocketUUID,
-		Owner:      ownerUUID,
-		Editor:     []uuid.UUID{ownerUUID},
-		Watcher:    []uuid.UUID{ownerUUID},
+		OwnerID:    ownerUUID,
+		EditorID:   []uuid.UUID{ownerUUID},
+		WatcherID:  []uuid.UUID{ownerUUID},
 		PocketName: "example pocket",
 		Icon:       1,
 		Level:      1,

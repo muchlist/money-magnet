@@ -1,14 +1,15 @@
 CREATE TABLE IF NOT EXISTS "requests" (
   "id" BIGSERIAL PRIMARY KEY,
-  "requester" uuid,
-  "approver" uuid DEFAULT NULL,
-  "pocket" uuid,
+  "requester_id" uuid,
+  "approver_id" uuid DEFAULT NULL,
+  "pocket_id" uuid,
   "pocket_name" varchar(100) NOT NULL,
-  "is_approved" boolean DEFAULT NULL,
+  "is_approved" boolean DEFAULT false,
+  "is_rejected" boolean DEFAULT false,
   "created_at" timestamp NOT NULL DEFAULT (now()),
   "updated_at" timestamp NOT NULL DEFAULT (now())
 );
 
-ALTER TABLE "requests" ADD FOREIGN KEY ("requester") REFERENCES "users" ("id");
-
-ALTER TABLE "requests" ADD FOREIGN KEY ("pocket") REFERENCES "pockets" ("id") ON DELETE CASCADE;
+ALTER TABLE "requests" ADD FOREIGN KEY ("requester_id") REFERENCES "users" ("id") ON DELETE CASCADE;
+ALTER TABLE "requests" ADD FOREIGN KEY ("approver_id") REFERENCES "users" ("id") ON DELETE CASCADE;
+ALTER TABLE "requests" ADD FOREIGN KEY ("pocket_id") REFERENCES "pockets" ("id") ON DELETE CASCADE;

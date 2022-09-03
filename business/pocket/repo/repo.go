@@ -17,9 +17,9 @@ import (
 const (
 	keyTable      = "pockets"
 	keyID         = "id"
-	keyOwner      = "owner"
-	keyEditor     = "editor"
-	keyWatcher    = "watcher"
+	keyOwnerID    = "owner_id"
+	keyEditorID   = "editor_id"
+	keyWatcherID  = "watcher_id"
 	keyPocketName = "pocket_name"
 	keyIcon       = "icon"
 	keyLevel      = "level"
@@ -53,9 +53,9 @@ func (r Repo) Insert(ctx context.Context, pocket *model.Pocket) error {
 	sqlStatement, args, err := r.sb.Insert(keyTable).
 		Columns(
 			keyPocketName,
-			keyOwner,
-			keyEditor,
-			keyWatcher,
+			keyOwnerID,
+			keyEditorID,
+			keyWatcherID,
 			keyVersion,
 			keyIcon,
 			keyLevel,
@@ -64,9 +64,9 @@ func (r Repo) Insert(ctx context.Context, pocket *model.Pocket) error {
 		).
 		Values(
 			pocket.PocketName,
-			pocket.Owner,
-			pocket.Editor,
-			pocket.Watcher,
+			pocket.OwnerID,
+			pocket.EditorID,
+			pocket.WatcherID,
 			pocket.Version,
 			pocket.Icon,
 			pocket.Level,
@@ -94,9 +94,9 @@ func (r Repo) Edit(ctx context.Context, pocket *model.Pocket) error {
 	sqlStatement, args, err := r.sb.Update(keyTable).
 		SetMap(sq.Eq{
 			keyPocketName: pocket.PocketName,
-			keyOwner:      pocket.Owner,
-			keyEditor:     pocket.Editor,
-			keyWatcher:    pocket.Watcher,
+			keyOwnerID:    pocket.OwnerID,
+			keyEditorID:   pocket.EditorID,
+			keyWatcherID:  pocket.WatcherID,
 			keyIcon:       pocket.Icon,
 			keyLevel:      pocket.Level,
 			keyUpdatedAt:  time.Now(),
@@ -151,9 +151,9 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Pocket, error) {
 
 	sqlStatement, args, err := r.sb.Select(
 		keyID,
-		keyOwner,
-		keyEditor,
-		keyWatcher,
+		keyOwnerID,
+		keyEditorID,
+		keyWatcherID,
 		keyPocketName,
 		keyIcon,
 		keyLevel,
@@ -170,9 +170,9 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Pocket, error) {
 	err = r.db.QueryRow(ctx, sqlStatement, args...).
 		Scan(
 			&pocket.ID,
-			&pocket.Owner,
-			&pocket.Editor,
-			&pocket.Watcher,
+			&pocket.OwnerID,
+			&pocket.EditorID,
+			&pocket.WatcherID,
 			&pocket.PocketName,
 			&pocket.Icon,
 			&pocket.Level,
@@ -201,9 +201,9 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 	sqlStatement, args, err := r.sb.Select(
 		"count(*) OVER()",
 		keyID,
-		keyOwner,
-		keyEditor,
-		keyWatcher,
+		keyOwnerID,
+		keyEditorID,
+		keyWatcherID,
 		keyPocketName,
 		keyIcon,
 		keyLevel,
@@ -212,7 +212,7 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 		keyVersion,
 	).
 		From(keyTable).
-		Where(sq.Eq{keyOwner: owner}).
+		Where(sq.Eq{keyOwnerID: owner}).
 		OrderBy(filter.SortColumnDirection()).
 		Limit(uint64(filter.Limit())).
 		Offset(uint64(filter.Offset())).
@@ -235,9 +235,9 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 		err := rows.Scan(
 			&totalRecords,
 			&pocket.ID,
-			&pocket.Owner,
-			&pocket.Editor,
-			&pocket.Watcher,
+			&pocket.OwnerID,
+			&pocket.EditorID,
+			&pocket.WatcherID,
 			&pocket.PocketName,
 			&pocket.Icon,
 			&pocket.Level,
@@ -260,6 +260,7 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 }
 
 // FindUserPockets get all pocket user has uuid in it
+// DEPRECATED
 func (r Repo) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
 
 	// Validation filter
@@ -278,9 +279,9 @@ func (r Repo) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.
 	sqlStatement, args, err := r.sb.Select(
 		"count(*) OVER()",
 		keyID,
-		keyOwner,
-		keyEditor,
-		keyWatcher,
+		keyOwnerID,
+		keyEditorID,
+		keyWatcherID,
 		keyPocketName,
 		keyIcon,
 		keyLevel,
@@ -289,7 +290,7 @@ func (r Repo) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.
 		keyVersion,
 	).
 		From(keyTable).
-		Where(fmt.Sprintf("'%s' = ANY(%s)", owner.String(), keyWatcher)).
+		Where(fmt.Sprintf("'%s' = ANY(%s)", owner.String(), keyWatcherID)).
 		OrderBy(filter.SortColumnDirection()).
 		Limit(uint64(filter.Limit())).
 		Offset(uint64(filter.Offset())).
@@ -312,9 +313,9 @@ func (r Repo) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.
 		err := rows.Scan(
 			&totalRecords,
 			&pocket.ID,
-			&pocket.Owner,
-			&pocket.Editor,
-			&pocket.Watcher,
+			&pocket.OwnerID,
+			&pocket.EditorID,
+			&pocket.WatcherID,
 			&pocket.PocketName,
 			&pocket.Icon,
 			&pocket.Level,
@@ -355,9 +356,9 @@ func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner uuid.UUID, fi
 	sqlStatement, args, err := r.sb.Select(
 		"count(*) OVER()",
 		db.A(keyID),
-		db.A(keyOwner),
-		db.A(keyEditor),
-		db.A(keyWatcher),
+		db.A(keyOwnerID),
+		db.A(keyEditorID),
+		db.A(keyWatcherID),
 		db.A(keyPocketName),
 		db.A(keyIcon),
 		db.A(keyLevel),
@@ -391,9 +392,9 @@ func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner uuid.UUID, fi
 		err := rows.Scan(
 			&totalRecords,
 			&pocket.ID,
-			&pocket.Owner,
-			&pocket.Editor,
-			&pocket.Watcher,
+			&pocket.OwnerID,
+			&pocket.EditorID,
+			&pocket.WatcherID,
 			&pocket.PocketName,
 			&pocket.Icon,
 			&pocket.Level,
