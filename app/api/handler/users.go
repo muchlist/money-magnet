@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/business/user/model"
 	"github.com/muchlist/moneymagnet/business/user/service"
 	"github.com/muchlist/moneymagnet/pkg/data"
@@ -116,8 +117,12 @@ func (usr userHandler) EditSelfUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Not have validate, because no field required
-
-	req.ID = claims.Identity
+	req.ID, err = uuid.Parse(claims.Identity)
+	if err != nil {
+		usr.log.ErrorT(traceID, "uuid from claims must be uuid", err)
+		web.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
 	result, err := usr.service.FetchUser(r.Context(), req)
 	if err != nil {
@@ -145,7 +150,7 @@ func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get data from url path
-	id, err := web.ReadStrIDParam(r)
+	id, err := web.ReadUUIDParam(r)
 	if err != nil {
 		usr.log.WarnT(traceID, "error edit user", err, mlogger.String("identity", claims.Identity))
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -222,14 +227,21 @@ func (usr userHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get data from url path
-	userIDToDelete, err := web.ReadStrIDParam(r)
+	userIDToDelete, err := web.ReadUUIDParam(r)
 	if err != nil {
 		usr.log.WarnT(traceID, err.Error(), err, mlogger.String("identity", claims.Identity))
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	err = usr.service.Delete(r.Context(), userIDToDelete, claims.Identity)
+	claimsUUID, err := uuid.Parse(claims.Identity)
+	if err != nil {
+		usr.log.ErrorT(traceID, "uuid from claims must be uuid", err)
+		web.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	err = usr.service.Delete(r.Context(), userIDToDelete, claimsUUID)
 	if err != nil {
 		usr.log.ErrorT(traceID, "error delete user", err)
 		statusCode, msg := parseError(err)

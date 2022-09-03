@@ -76,11 +76,11 @@ type UserResp struct {
 }
 
 type UserUpdate struct {
-	ID          string   `json:"-"`
-	Email       *string  `json:"email"`
-	Name        *string  `json:"name"`
-	Password    *string  `json:"password"`
-	Roles       []string `json:"roles"`
-	PocketRoles []string `json:"pocket_roles"`
-	Fcm         *string  `json:"fcm"`
+	ID          uuid.UUID `json:"-"`
+	Email       *string   `json:"email"`
+	Name        *string   `json:"name"`
+	Password    *string   `json:"password"`
+	Roles       []string  `json:"roles"`
+	PocketRoles []string  `json:"pocket_roles"`
+	Fcm         *string   `json:"fcm"`
 }

@@ -21,5 +21,5 @@ type CategorySaver interface {
 
 type CategoryReader interface {
 	GetByID(ctx context.Context, id uuid.UUID) (model.Category, error)
-	Find(ctx context.Context, pocketID uint64, filter data.Filters) ([]model.Category, data.Metadata, error)
+	Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters) ([]model.Category, data.Metadata, error)
 }

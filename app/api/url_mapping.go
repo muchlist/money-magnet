@@ -46,8 +46,8 @@ func (app *application) routes() http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Use(mid.RequiredFreshRoles("admin"))
 		r.Post("/register", userHandler.Register)
-		r.Patch("/edit-user/{strID}", userHandler.EditUser)
-		r.Delete("/user/{strID}", userHandler.DeleteUser)
+		r.Patch("/edit-user/{id}", userHandler.EditUser)
+		r.Delete("/user/{id}", userHandler.DeleteUser)
 	})
 
 	// Endpoint with auth
@@ -55,23 +55,23 @@ func (app *application) routes() http.Handler {
 		r.Use(mid.RequiredRoles())
 		r.Route("/user", func(r chi.Router) {
 			r.Get("/profile", userHandler.Profile)
-			r.Get("/{strID}", userHandler.GetByID)
+			r.Get("/{id}", userHandler.GetByID)
 			r.Get("/", userHandler.FindByName)
-			r.Post("/fcm/{strID}", userHandler.UpdateFCM)
+			r.Post("/fcm/{id}", userHandler.UpdateFCM)
 		})
 
 		r.Route("/pockets", func(r chi.Router) {
 			r.Post("/", pocketHandler.CreatePocket)
 			r.Get("/{id}", pocketHandler.GetByID)
 			r.Get("/", pocketHandler.FindUserPocket)
-			r.Put("/", pocketHandler.RenamePocket)
+			r.Put("/rename", pocketHandler.RenamePocket)
 		})
 
 		r.Route("/categories", func(r chi.Router) {
 			r.Post("/", categoryHandler.CreateCategory)
 			r.Get("/from-pocket/{id}", categoryHandler.FindPocketCategory)
 			r.Put("/", categoryHandler.EditCategory)
-			r.Delete("/{strID}", categoryHandler.DeleteCategory)
+			r.Delete("/{id}", categoryHandler.DeleteCategory)
 		})
 	})
 

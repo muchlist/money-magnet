@@ -35,7 +35,7 @@ func (s Core) CreateCategory(ctx context.Context, owner uuid.UUID, req model.New
 	timeNow := time.Now()
 	cat := model.Category{
 		ID:           uuid.New(),
-		Pocket:       req.PocketID,
+		PocketID:     req.PocketID,
 		CategoryName: req.CategoryName,
 		IsIncome:     req.IsIncome,
 		CreatedAt:    timeNow,
@@ -72,7 +72,7 @@ func (s Core) EditCategory(ctx context.Context, owner uuid.UUID, newData model.U
 }
 
 // FindAllCategory ...
-func (s Core) FindAllCategory(ctx context.Context, pocketID uint64, filter data.Filters) ([]model.CategoryResp, data.Metadata, error) {
+func (s Core) FindAllCategory(ctx context.Context, pocketID uuid.UUID, filter data.Filters) ([]model.CategoryResp, data.Metadata, error) {
 
 	// Get category
 	cats, metadata, err := s.repo.Find(ctx, pocketID, filter)

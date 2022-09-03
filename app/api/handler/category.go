@@ -118,7 +118,7 @@ func (ch catHandler) FindPocketCategory(w http.ResponseWriter, r *http.Request) 
 	// }
 
 	// extract url query
-	pocketID, err := web.ReadIDParam(r)
+	pocketID, err := web.ReadUUIDParam(r)
 	if err != nil {
 		ch.log.WarnT(traceID, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -154,20 +154,14 @@ func (ch catHandler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
 	traceID := web.ReadTraceID(r.Context())
 
 	// extract url query
-	categoryID, err := web.ReadStrIDParam(r)
-	if err != nil {
-		ch.log.WarnT(traceID, err.Error(), err)
-		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	categoryUUID, err := uuid.Parse(categoryID)
+	categoryID, err := web.ReadUUIDParam(r)
 	if err != nil {
 		ch.log.WarnT(traceID, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	err = ch.service.DeleteCategory(r.Context(), categoryUUID)
+	err = ch.service.DeleteCategory(r.Context(), categoryID)
 	if err != nil {
 		ch.log.ErrorT(traceID, "error delete categories", err)
 		statusCode, msg := parseError(err)

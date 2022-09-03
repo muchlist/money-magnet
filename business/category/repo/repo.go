@@ -17,7 +17,7 @@ const (
 	keyTable        = "categories"
 	keyID           = "id"
 	keyCategoryName = "category_name"
-	keyPocket       = "pocket"
+	keyPocketID     = "pocket_id"
 	keyIsIncome     = "is_income"
 	keyCreatedAt    = "created_at"
 	keyUpdatedAt    = "updated_at"
@@ -49,7 +49,7 @@ func (r Repo) Insert(ctx context.Context, category *model.Category) error {
 		Columns(
 			keyID,
 			keyCategoryName,
-			keyPocket,
+			keyPocketID,
 			keyIsIncome,
 			keyUpdatedAt,
 			keyCreatedAt,
@@ -57,7 +57,7 @@ func (r Repo) Insert(ctx context.Context, category *model.Category) error {
 		Values(
 			category.ID,
 			category.CategoryName,
-			category.Pocket,
+			category.PocketID,
 			category.IsIncome,
 			category.CreatedAt,
 			category.UpdatedAt).
@@ -139,7 +139,7 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Category, error)
 		keyID,
 		keyCategoryName,
 		keyIsIncome,
-		keyPocket,
+		keyPocketID,
 		keyCreatedAt,
 		keyUpdatedAt,
 	).From(keyTable).Where(sq.Eq{keyID: id}).ToSql()
@@ -154,7 +154,7 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Category, error)
 			&cat.ID,
 			&cat.CategoryName,
 			&cat.IsIncome,
-			&cat.Pocket,
+			&cat.PocketID,
 			&cat.CreatedAt,
 			&cat.UpdatedAt,
 		)
@@ -166,7 +166,7 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Category, error)
 }
 
 // Find get all category within user
-func (r Repo) Find(ctx context.Context, pocketID uint64, filter data.Filters) ([]model.Category, data.Metadata, error) {
+func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters) ([]model.Category, data.Metadata, error) {
 
 	// Validation filter
 	filter.SortSafelist = []string{"category_name", "-category_name", "updated_at", "-updated_at"}
@@ -182,12 +182,12 @@ func (r Repo) Find(ctx context.Context, pocketID uint64, filter data.Filters) ([
 		keyID,
 		keyCategoryName,
 		keyIsIncome,
-		keyPocket,
+		keyPocketID,
 		keyCreatedAt,
 		keyUpdatedAt,
 	).
 		From(keyTable).
-		Where(sq.Eq{keyPocket: pocketID}).
+		Where(sq.Eq{keyPocketID: pocketID}).
 		OrderBy(filter.SortColumnDirection()).
 		Limit(uint64(filter.Limit())).
 		Offset(uint64(filter.Offset())).
@@ -212,7 +212,7 @@ func (r Repo) Find(ctx context.Context, pocketID uint64, filter data.Filters) ([
 			&cat.ID,
 			&cat.CategoryName,
 			&cat.IsIncome,
-			&cat.Pocket,
+			&cat.PocketID,
 			&cat.CreatedAt,
 			&cat.UpdatedAt)
 		if err != nil {

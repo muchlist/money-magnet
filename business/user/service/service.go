@@ -160,12 +160,8 @@ func (s Core) InsertUser(ctx context.Context, req model.UserRegisterReq) (model.
 // FetchUser do edit user with ignoring nil field
 // ID is required
 func (s Core) FetchUser(ctx context.Context, req model.UserUpdate) (model.UserResp, error) {
-	userID, err := uuid.Parse(req.ID)
-	if err != nil {
-		return model.UserResp{}, ErrInvalidID
-	}
 
-	userExisting, err := s.repo.GetByID(ctx, userID)
+	userExisting, err := s.repo.GetByID(ctx, req.ID)
 	if err != nil {
 		return model.UserResp{}, fmt.Errorf("get user: %w", err)
 	}
@@ -213,15 +209,11 @@ func (s Core) UpdateFCM(ctx context.Context, id string, fcm string) error {
 }
 
 // Delete ...
-func (s Core) Delete(ctx context.Context, userIDToDelete string, userIDExecutor string) error {
-	userID, err := uuid.Parse(userIDToDelete)
-	if err != nil {
-		return ErrInvalidID
-	}
+func (s Core) Delete(ctx context.Context, userIDToDelete uuid.UUID, userIDExecutor uuid.UUID) error {
 	if userIDExecutor == userIDToDelete {
 		return errr.New("cannot delete self profile", 400)
 	}
-	return s.repo.Delete(ctx, userID)
+	return s.repo.Delete(ctx, userIDToDelete)
 }
 
 // Refresh do refresh token,

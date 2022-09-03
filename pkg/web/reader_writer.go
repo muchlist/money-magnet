@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type Envelope map[string]interface{}
@@ -26,11 +27,20 @@ func ReadIDParam(r *http.Request) (uint64, error) {
 }
 
 func ReadStrIDParam(r *http.Request) (string, error) {
-	idParam := chi.URLParam(r, "strID")
+	idParam := chi.URLParam(r, "id")
 	if idParam == "" {
-		return "", errors.New("invalid strID parameter")
+		return "", errors.New("invalid id parameter")
 	}
 	return idParam, nil
+}
+
+func ReadUUIDParam(r *http.Request) (uuid.UUID, error) {
+	idParam := chi.URLParam(r, "id")
+	uuidFormatID, err := uuid.Parse(idParam)
+	if err != nil {
+		return uuid.New(), errors.New("invalid uuid parameter")
+	}
+	return uuidFormatID, nil
 }
 
 // WriteJSON untuk keperluan mengirimkan response JSON seperti marshaling body JSON,
