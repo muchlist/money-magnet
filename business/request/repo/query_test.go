@@ -15,13 +15,12 @@ func TestComplexQuery(t *testing.T) {
 		PocketIDs:   []string{"1", "2"},
 		ApproverID:  "approverIDExample",
 		RequesterID: "",
-		UseOR:       true,
 	}
 	expected := `SELECT count(*) OVER(), id, requester_id, approver_id, pocket_id, pocket_name, is_approved, is_rejected, created_at, updated_at FROM requests WHERE (approver_id = $1 OR pocket_id IN ($2,$3))`
 
 	// where builder
 	var orBuilder sq.Or
-	andBuilder := sq.Eq{}
+	andBuilder := sq.Eq{} // NOT used in this test
 	var orValidCount int
 	if findBy.ApproverID != "" {
 		orBuilder = append(orBuilder, sq.Eq{keyApproverID: findBy.ApproverID})
@@ -39,18 +38,7 @@ func TestComplexQuery(t *testing.T) {
 		orValidCount++
 	}
 
-	// IF use or but input less than 2 return not valid
-	if findBy.UseOR && orValidCount < 2 {
-		t.Error("use [or] but input less than 2:")
-		return
-	}
-
-	var whereUsed interface{}
-	if findBy.UseOR {
-		whereUsed = orBuilder
-	} else {
-		whereUsed = andBuilder
-	}
+	// IF use or but input less than 2 return not vali
 
 	sqlStatement, args, err := sb.Select(
 		"count(*) OVER()",
@@ -65,7 +53,7 @@ func TestComplexQuery(t *testing.T) {
 		keyUpdatedAt,
 	).
 		From(keyTable).
-		Where(whereUsed).
+		Where(orBuilder).
 		ToSql()
 
 	if err != nil {

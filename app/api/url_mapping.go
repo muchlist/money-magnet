@@ -7,6 +7,8 @@ import (
 	cyserv "github.com/muchlist/moneymagnet/business/category/service"
 	ptrepo "github.com/muchlist/moneymagnet/business/pocket/repo"
 	ptserv "github.com/muchlist/moneymagnet/business/pocket/service"
+	reqrepo "github.com/muchlist/moneymagnet/business/request/repo"
+	reqserv "github.com/muchlist/moneymagnet/business/request/service"
 	urrepo "github.com/muchlist/moneymagnet/business/user/repo"
 	urserv "github.com/muchlist/moneymagnet/business/user/service"
 	"github.com/muchlist/moneymagnet/pkg/mid"
@@ -36,6 +38,10 @@ func (app *application) routes() http.Handler {
 	categoryRepo := cyrepo.NewRepo(app.db)
 	categoryService := cyserv.NewCore(app.logger, categoryRepo)
 	categoryHandler := handler.NewCatHandler(app.logger, categoryService)
+
+	requestRepo := reqrepo.NewRepo(app.db)
+	requestService := reqserv.NewCore(app.logger, requestRepo, pocketRepo)
+	requestHandler := handler.NewRequestHandler(app.logger, requestService)
 
 	// Endpoint with no auth required
 	r.Get("/healthcheck", handler.HealthCheckHandler)
@@ -73,6 +79,14 @@ func (app *application) routes() http.Handler {
 			r.Put("/", categoryHandler.EditCategory)
 			r.Delete("/{id}", categoryHandler.DeleteCategory)
 		})
+
+		r.Route("/request", func(r chi.Router) {
+			r.Post("/{id}/action", requestHandler.ApproveOrRejectRequest)
+			r.Post("/", requestHandler.CreateRequest)
+			r.Get("/in", requestHandler.FindRequestByApprover)
+			r.Get("/out", requestHandler.FindByRequester)
+		})
+
 	})
 
 	// Endpoint with fresh auth

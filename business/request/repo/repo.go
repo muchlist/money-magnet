@@ -55,7 +55,7 @@ func NewRepo(sqlDB *pgxpool.Pool) Repo {
 // MANIPULATOR
 
 // Insert ...
-func (r Repo) Insert(ctx context.Context, pocket *model.RequestPocket) error {
+func (r Repo) Insert(ctx context.Context, request *model.RequestPocket) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -69,19 +69,19 @@ func (r Repo) Insert(ctx context.Context, pocket *model.RequestPocket) error {
 			keyUpdatedAt,
 		).
 		Values(
-			pocket.RequesterID,
-			pocket.ApproverID,
-			pocket.PocketID,
-			pocket.PocketName,
-			pocket.CreatedAt,
-			pocket.UpdatedAt).
+			request.RequesterID,
+			request.ApproverID,
+			request.PocketID,
+			request.PocketName,
+			request.CreatedAt,
+			request.UpdatedAt).
 		Suffix(db.Returning(keyID)).ToSql()
 
 	if err != nil {
 		return fmt.Errorf("build query insert request: %w", err)
 	}
 
-	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&pocket.ID)
+	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&request.ID)
 	if err != nil {
 		return db.ParseError(err)
 	}
@@ -90,23 +90,16 @@ func (r Repo) Insert(ctx context.Context, pocket *model.RequestPocket) error {
 }
 
 // UpdateStatus update approver, is_approved and udpdated_at
-func (r Repo) UpdateStatus(ctx context.Context, pocket *model.RequestPocket) error {
+func (r Repo) UpdateStatus(ctx context.Context, request *model.RequestPocket) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	sqlStatement, args, err := r.sb.Insert(keyTable).
-		Columns(
-			keyApproverID,
-			keyIsApproved,
-			keyIsRejected,
-			keyUpdatedAt,
-		).
-		Values(
-			pocket.ApproverID,
-			pocket.IsApproved,
-			pocket.IsRejected,
-			time.Now(),
-		).
+	sqlStatement, args, err := r.sb.Update(keyTable).
+		SetMap(sq.Eq{
+			keyIsApproved: request.IsApproved,
+			keyIsRejected: request.IsRejected,
+			keyUpdatedAt:  time.Now(),
+		}).
 		Suffix(db.Returning(keyID,
 			keyRequesterID,
 			keyApproverID,
@@ -123,15 +116,15 @@ func (r Repo) UpdateStatus(ctx context.Context, pocket *model.RequestPocket) err
 	}
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(
-		&pocket.ID,
-		&pocket.RequesterID,
-		&pocket.ApproverID,
-		&pocket.PocketID,
-		&pocket.PocketName,
-		&pocket.IsApproved,
-		&pocket.IsRejected,
-		&pocket.CreatedAt,
-		&pocket.UpdatedAt,
+		&request.ID,
+		&request.RequesterID,
+		&request.ApproverID,
+		&request.PocketID,
+		&request.PocketName,
+		&request.IsApproved,
+		&request.IsRejected,
+		&request.CreatedAt,
+		&request.UpdatedAt,
 	)
 	if err != nil {
 		return db.ParseError(err)

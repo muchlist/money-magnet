@@ -35,7 +35,7 @@ func (r Repo) InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketI
 			pocketID,
 		)
 	}
-	sqlStatement, args, err := query.ToSql()
+	sqlStatement, args, err := query.Suffix("ON CONFLICT DO NOTHING").ToSql()
 
 	if err != nil {
 		return fmt.Errorf("build query insert pocket user relation: %w", err)

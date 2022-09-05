@@ -50,6 +50,8 @@ func (r Repo) Insert(ctx context.Context, pocket *model.Pocket) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
+	pocket.Sanitize()
+
 	sqlStatement, args, err := r.sb.Insert(keyTable).
 		Columns(
 			keyPocketName,
@@ -90,6 +92,8 @@ func (r Repo) Insert(ctx context.Context, pocket *model.Pocket) error {
 func (r Repo) Edit(ctx context.Context, pocket *model.Pocket) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
+
+	pocket.Sanitize()
 
 	sqlStatement, args, err := r.sb.Update(keyTable).
 		SetMap(sq.Eq{

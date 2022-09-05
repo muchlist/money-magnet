@@ -10,7 +10,7 @@ import (
 type RequestPocket struct {
 	ID          uint64     `json:"id"`
 	RequesterID uuid.UUID  `json:"requester_id"`
-	PocketID    uint64     `json:"pocket_id"`
+	PocketID    uuid.UUID  `json:"pocket_id"`
 	PocketName  string     `json:"pocket_name"`
 	ApproverID  *uuid.UUID `json:"approver_id"`
 	IsApproved  bool       `json:"is_approved"`
@@ -27,5 +27,4 @@ type FindBy struct {
 	PocketIDs   []string
 	ApproverID  string
 	RequesterID string
-	UseOR       bool // Use [Or] statement or and
 }

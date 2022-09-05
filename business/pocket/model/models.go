@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/muchlist/moneymagnet/pkg/utils/ds"
 )
 
 type Pocket struct {
@@ -17,6 +18,17 @@ type Pocket struct {
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	Version    int
+}
+
+func (p *Pocket) Sanitize() {
+	editorSet := ds.NewUUIDSet()
+	editorSet.AddAll(p.EditorID)
+
+	watcherSet := ds.NewUUIDSet()
+	watcherSet.AddAll(p.WatcherID)
+
+	p.EditorID = editorSet.Reveal()
+	p.WatcherID = watcherSet.Reveal()
 }
 
 func (p *Pocket) ToPocketResp() PocketResp {
