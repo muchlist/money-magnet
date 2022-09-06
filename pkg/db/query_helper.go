@@ -38,6 +38,20 @@ func C(text string) string {
 	return fmt.Sprintf("C.%s", text)
 }
 
+// D return D.text for helping join query
+// input : updated_at
+// output : "D.updated_at"
+func D(text string) string {
+	return fmt.Sprintf("D.%s", text)
+}
+
+// E return E.text for helping join query
+// input : updated_at
+// output : "E.updated_at"
+func E(text string) string {
+	return fmt.Sprintf("E.%s", text)
+}
+
 // Dot return table.column for helping join query
 // input : (user , updated_at)
 // output : "user.updated_at"
