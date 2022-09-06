@@ -27,6 +27,29 @@ type Spend struct {
 	Version       int
 }
 
+func (s *Spend) ToResp() SpendResp {
+	return SpendResp{
+		ID:            s.ID,
+		UserID:        s.UserID,
+		UserName:      s.UserName,
+		PocketID:      s.PocketID,
+		PocketName:    s.PocketName,
+		CategoryID:    s.CategoryID,
+		CategoryName:  s.CategoryName,
+		CategoryID2:   s.CategoryID2,
+		CategoryName2: s.CategoryName2,
+		Name:          s.Name,
+		Price:         s.Price,
+		Balance:       s.Balance,
+		IsIncome:      s.IsIncome,
+		SpendType:     s.SpendType,
+		Date:          s.Date,
+		CreatedAt:     s.CreatedAt,
+		UpdatedAt:     s.UpdatedAt,
+		Version:       s.Version,
+	}
+}
+
 type SpendResp struct {
 	ID            uuid.UUID `json:"id"`
 	UserID        uuid.UUID `json:"user_id"`
@@ -60,11 +83,12 @@ type NewSpend struct {
 }
 
 type UpdateSpend struct {
-	CategoryID  uuid.UUID `json:"category_id"`
-	CategoryID2 uuid.UUID `json:"category_id_2"`
-	Name        string    `json:"name"`
-	Price       int64     `json:"price"`
-	IsIncome    bool      `json:"is_income"`
-	SpendType   int       `json:"type"`
-	Date        time.Time `json:"date"`
+	ID          uuid.UUID     `json:"-"`
+	CategoryID2 uuid.NullUUID `json:"category_id_2"`
+	CategoryID  uuid.NullUUID `json:"category_id"`
+	Name        *string       `json:"name"`
+	Price       *int64        `json:"price"`
+	IsIncome    *bool         `json:"is_income"`
+	SpendType   *int          `json:"type"`
+	Date        *time.Time    `json:"date"`
 }
