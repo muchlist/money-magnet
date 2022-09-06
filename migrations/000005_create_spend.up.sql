@@ -1,5 +1,5 @@
 CREATE TABLE  IF NOT EXISTS "spends" (
-  "id" uuid PRIMARY KEY,
+  "id" uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   "user_id" uuid NULL,
   "pocket_id" uuid NULL,
   "category_id" uuid NULL,
