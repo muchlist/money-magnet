@@ -312,10 +312,14 @@ func (s Core) getPocketRoles(ctx context.Context, userID uuid.UUID) ([]string, e
 	pocketRoles := make([]string, 0)
 	for _, v := range pockets {
 		for _, edit := range v.EditorID {
-			pocketRoles = append(pocketRoles, fmt.Sprintf("%s:%s", edit.String(), "edit"))
+			if userID == edit {
+				pocketRoles = append(pocketRoles, fmt.Sprintf("%s:%s", v.ID.String(), "edit"))
+			}
 		}
 		for _, watch := range v.WatcherID {
-			pocketRoles = append(pocketRoles, fmt.Sprintf("%s:%s", watch.String(), "watch"))
+			if userID == watch {
+				pocketRoles = append(pocketRoles, fmt.Sprintf("%s:%s", v.ID.String(), "watch"))
+			}
 		}
 	}
 	return pocketRoles, nil

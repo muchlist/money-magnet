@@ -9,12 +9,12 @@ import (
 )
 
 var (
-	ErrDBNotFound        = errors.New("not found")
-	ErrDBDuplicatedEntry = errors.New("duplicated entry")
-	ErrDBParentNotFound  = errors.New("invalid parent")
-	ErrDBInvalidTextEnum = errors.New("invalid enum text input")
-	ErrDBBuildQuery      = errors.New("query not valid")
-	ErrDBSortFilter      = errors.New("invalid filter or sort value")
+	ErrDBNotFound         = errors.New("not found")
+	ErrDBDuplicatedEntry  = errors.New("duplicated entry")
+	ErrDBRelationNotFound = errors.New("invalid relation")
+	ErrDBInvalidTextEnum  = errors.New("invalid enum text input")
+	ErrDBBuildQuery       = errors.New("query not valid")
+	ErrDBSortFilter       = errors.New("invalid filter or sort value")
 )
 
 func ParseError(err error) error {
@@ -28,7 +28,7 @@ func ParseError(err error) error {
 		case pgerrcode.UniqueViolation:
 			return ErrDBDuplicatedEntry
 		case pgerrcode.ForeignKeyViolation:
-			return ErrDBParentNotFound
+			return ErrDBRelationNotFound
 		case pgerrcode.InvalidTextRepresentation:
 			return ErrDBInvalidTextEnum
 		case pgerrcode.UndefinedColumn:

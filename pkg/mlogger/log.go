@@ -1,9 +1,11 @@
 package mlogger
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
+	"github.com/muchlist/moneymagnet/pkg/global"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -69,7 +71,8 @@ func (l *mlog) Info(msg string, tags ...Field) {
 	l.zap.Info(msg, tags...)
 }
 
-func (l *mlog) InfoT(traceID string, msg string, tags ...Field) {
+func (l *mlog) InfoT(ctx context.Context, msg string, tags ...Field) {
+	traceID := getTraceID(ctx)
 	tags = append(tags, zap.String("trace_id", traceID))
 	l.zap.Info(msg, tags...)
 }
@@ -79,7 +82,8 @@ func (l *mlog) Warn(msg string, err error, tags ...Field) {
 	l.zap.Warn(msg, tags...)
 }
 
-func (l *mlog) WarnT(traceID string, msg string, err error, tags ...Field) {
+func (l *mlog) WarnT(ctx context.Context, msg string, err error, tags ...Field) {
+	traceID := getTraceID(ctx)
 	tags = append(tags, zap.String("trace_id", traceID), zap.NamedError("error", err))
 	l.zap.Info(msg, tags...)
 }
@@ -89,7 +93,8 @@ func (l *mlog) Error(msg string, err error, tags ...Field) {
 	l.zap.Error(msg, tags...)
 }
 
-func (l *mlog) ErrorT(traceID string, msg string, err error, tags ...Field) {
+func (l *mlog) ErrorT(ctx context.Context, msg string, err error, tags ...Field) {
+	traceID := getTraceID(ctx)
 	tags = append(tags, zap.String("trace_id", traceID), zap.NamedError("error", err), zap.StackSkip("stacktrace", 1))
 	l.zap.Error(msg, tags...)
 }
@@ -130,4 +135,14 @@ func getOutput(output string) string {
 		return "stdout"
 	}
 	return out
+}
+
+func getTraceID(ctx context.Context) string {
+	if ctx == nil {
+		return ""
+	}
+	if reqID, ok := ctx.Value(global.RequestIDKey).(string); ok {
+		return reqID
+	}
+	return ""
 }

@@ -9,6 +9,8 @@ import (
 	ptserv "github.com/muchlist/moneymagnet/business/pocket/service"
 	reqrepo "github.com/muchlist/moneymagnet/business/request/repo"
 	reqserv "github.com/muchlist/moneymagnet/business/request/service"
+	spnrepo "github.com/muchlist/moneymagnet/business/spend/repo"
+	spnserv "github.com/muchlist/moneymagnet/business/spend/service"
 	urrepo "github.com/muchlist/moneymagnet/business/user/repo"
 	urserv "github.com/muchlist/moneymagnet/business/user/service"
 	"github.com/muchlist/moneymagnet/pkg/mid"
@@ -31,6 +33,7 @@ func (app *application) routes() http.Handler {
 	pocketRepo := ptrepo.NewRepo(app.db)
 	categoryRepo := cyrepo.NewRepo(app.db)
 	requestRepo := reqrepo.NewRepo(app.db)
+	spendRepo := spnrepo.NewRepo(app.db, app.logger)
 
 	userService := urserv.NewCore(app.logger, userRepo, pocketRepo, bcrypt, jwt)
 	userHandler := handler.NewUserHandler(app.logger, app.validator, userService)
@@ -43,6 +46,9 @@ func (app *application) routes() http.Handler {
 
 	requestService := reqserv.NewCore(app.logger, requestRepo, pocketRepo)
 	requestHandler := handler.NewRequestHandler(app.logger, app.validator, requestService)
+
+	spendService := spnserv.NewCore(app.logger, spendRepo, pocketRepo)
+	spendHandler := handler.NewSpendHandler(app.logger, app.validator, spendService)
 
 	// Endpoint with no auth required
 	r.Get("/healthcheck", handler.HealthCheckHandler)
@@ -86,6 +92,13 @@ func (app *application) routes() http.Handler {
 			r.Post("/", requestHandler.CreateRequest)
 			r.Get("/in", requestHandler.FindRequestByApprover)
 			r.Get("/out", requestHandler.FindByRequester)
+		})
+
+		r.Route("/spends", func(r chi.Router) {
+			r.Post("/", spendHandler.CreateSpend)
+			r.Patch("/{id}", spendHandler.EditSpend)
+			r.Get("/from-pocket/{id}", spendHandler.FindSpend)
+			r.Get("/{id}", spendHandler.GetByID)
 		})
 
 	})

@@ -35,25 +35,25 @@ type userHandler struct {
 }
 
 func (usr userHandler) Register(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
+
 	var req model.UserRegisterReq
 	err := web.ReadJSON(w, r, &req)
 	if err != nil {
-		usr.log.WarnT(traceID, "bad json", err)
+		usr.log.WarnT(r.Context(), "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	errMap, err := usr.validator.Struct(req)
 	if err != nil {
-		usr.log.WarnT(traceID, "request not valid", err)
+		usr.log.WarnT(r.Context(), "request not valid", err)
 		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 
 	message, err := usr.service.InsertUser(r.Context(), req)
 	if err != nil {
-		usr.log.ErrorT(traceID, "error insert user", err)
+		usr.log.ErrorT(r.Context(), "error insert user", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -69,25 +69,25 @@ func (usr userHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (usr userHandler) Login(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
+
 	var req model.UserLoginReq
 	err := web.ReadJSON(w, r, &req)
 	if err != nil {
-		usr.log.WarnT(traceID, "bad json", err)
+		usr.log.WarnT(r.Context(), "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	errMap, err := usr.validator.Struct(req)
 	if err != nil {
-		usr.log.WarnT(traceID, "request not valid", err)
+		usr.log.WarnT(r.Context(), "request not valid", err)
 		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 
 	result, err := usr.service.Login(r.Context(), req.Email, req.Password)
 	if err != nil {
-		usr.log.ErrorT(traceID, "error login", err)
+		usr.log.ErrorT(r.Context(), "error login", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -105,7 +105,7 @@ func (usr userHandler) Login(w http.ResponseWriter, r *http.Request) {
 // EditSelfUser
 // TODO : remove edit roles and pocket roles by user input
 func (usr userHandler) EditSelfUser(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
+
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -115,7 +115,7 @@ func (usr userHandler) EditSelfUser(w http.ResponseWriter, r *http.Request) {
 	var req model.UserUpdate
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
-		usr.log.WarnT(traceID, "bad json", err)
+		usr.log.WarnT(r.Context(), "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -123,14 +123,14 @@ func (usr userHandler) EditSelfUser(w http.ResponseWriter, r *http.Request) {
 	// Not have validate, because no field required
 	req.ID, err = uuid.Parse(claims.Identity)
 	if err != nil {
-		usr.log.ErrorT(traceID, "uuid from claims must be uuid", err)
+		usr.log.ErrorT(r.Context(), "uuid from claims must be uuid", err)
 		web.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	result, err := usr.service.FetchUser(r.Context(), req)
 	if err != nil {
-		usr.log.ErrorT(traceID, "error edit user", err)
+		usr.log.ErrorT(r.Context(), "error edit user", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -146,7 +146,7 @@ func (usr userHandler) EditSelfUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
+
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -156,7 +156,7 @@ func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	// Get data from url path
 	id, err := web.ReadUUIDParam(r)
 	if err != nil {
-		usr.log.WarnT(traceID, "error edit user", err, mlogger.String("identity", claims.Identity))
+		usr.log.WarnT(r.Context(), "error edit user", err, mlogger.String("identity", claims.Identity))
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -164,7 +164,7 @@ func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	var req model.UserUpdate
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
-		usr.log.WarnT(traceID, "bad json", err)
+		usr.log.WarnT(r.Context(), "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -174,7 +174,7 @@ func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 
 	result, err := usr.service.FetchUser(r.Context(), req)
 	if err != nil {
-		usr.log.ErrorT(traceID, "error edit user", err)
+		usr.log.ErrorT(r.Context(), "error edit user", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -190,7 +190,7 @@ func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (usr userHandler) UpdateFCM(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
+
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -200,14 +200,14 @@ func (usr userHandler) UpdateFCM(w http.ResponseWriter, r *http.Request) {
 	// Get data from url path
 	fcm, err := web.ReadStrIDParam(r)
 	if err != nil {
-		usr.log.WarnT(traceID, "fcm required", err, mlogger.String("identity", claims.Identity))
+		usr.log.WarnT(r.Context(), "fcm required", err, mlogger.String("identity", claims.Identity))
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	err = usr.service.UpdateFCM(r.Context(), claims.Identity, fcm)
 	if err != nil {
-		usr.log.ErrorT(traceID, "error update fcm", err)
+		usr.log.ErrorT(r.Context(), "error update fcm", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -223,7 +223,7 @@ func (usr userHandler) UpdateFCM(w http.ResponseWriter, r *http.Request) {
 }
 
 func (usr userHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
+
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -233,21 +233,21 @@ func (usr userHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	// Get data from url path
 	userIDToDelete, err := web.ReadUUIDParam(r)
 	if err != nil {
-		usr.log.WarnT(traceID, err.Error(), err, mlogger.String("identity", claims.Identity))
+		usr.log.WarnT(r.Context(), err.Error(), err, mlogger.String("identity", claims.Identity))
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	claimsUUID, err := uuid.Parse(claims.Identity)
 	if err != nil {
-		usr.log.ErrorT(traceID, "uuid from claims must be uuid", err)
+		usr.log.ErrorT(r.Context(), "uuid from claims must be uuid", err)
 		web.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	err = usr.service.Delete(r.Context(), userIDToDelete, claimsUUID)
 	if err != nil {
-		usr.log.ErrorT(traceID, "error delete user", err)
+		usr.log.ErrorT(r.Context(), "error delete user", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -263,7 +263,6 @@ func (usr userHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (usr userHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
 
 	type refresh struct {
 		RefreshToken string `json:"refresh_token" validate:"required"`
@@ -272,20 +271,20 @@ func (usr userHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	var req refresh
 	err := web.ReadJSON(w, r, &req)
 	if err != nil {
-		usr.log.WarnT(traceID, "bad json", err)
+		usr.log.WarnT(r.Context(), "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	errMap, err := usr.validator.Struct(req)
 	if err != nil {
-		usr.log.WarnT(traceID, "request not valid", err)
+		usr.log.WarnT(r.Context(), "request not valid", err)
 		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 
 	result, err := usr.service.Refresh(r.Context(), req.RefreshToken)
 	if err != nil {
-		usr.log.ErrorT(traceID, "error refresh token", err)
+		usr.log.ErrorT(r.Context(), "error refresh token", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -302,7 +301,7 @@ func (usr userHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 
 // ==================================================GET
 func (usr userHandler) Profile(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
+
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -311,7 +310,7 @@ func (usr userHandler) Profile(w http.ResponseWriter, r *http.Request) {
 
 	result, err := usr.service.GetProfile(r.Context(), claims.Identity)
 	if err != nil {
-		usr.log.ErrorT(traceID, "error get profile", err)
+		usr.log.ErrorT(r.Context(), "error get profile", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -328,19 +327,18 @@ func (usr userHandler) Profile(w http.ResponseWriter, r *http.Request) {
 
 // GetByID...
 func (usr userHandler) GetByID(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
 
 	// extract url path
 	userID, err := web.ReadStrIDParam(r)
 	if err != nil {
-		usr.log.WarnT(traceID, err.Error(), err)
+		usr.log.WarnT(r.Context(), err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	result, err := usr.service.GetProfile(r.Context(), userID)
 	if err != nil {
-		usr.log.ErrorT(traceID, "error get user by id", err)
+		usr.log.ErrorT(r.Context(), "error get user by id", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -356,7 +354,6 @@ func (usr userHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (usr userHandler) FindByName(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
 
 	// extract url query
 	name := web.ReadString(r.URL.Query(), "name", "")
@@ -370,7 +367,7 @@ func (usr userHandler) FindByName(w http.ResponseWriter, r *http.Request) {
 		Sort:     sort,
 	})
 	if err != nil {
-		usr.log.ErrorT(traceID, "error get profile", err)
+		usr.log.ErrorT(r.Context(), "error get profile", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -395,7 +392,7 @@ func parseError(err error) (int, string) {
 	default:
 		if errors.Is(err, db.ErrDBDuplicatedEntry) ||
 			errors.Is(err, db.ErrDBNotFound) ||
-			errors.Is(err, db.ErrDBParentNotFound) ||
+			errors.Is(err, db.ErrDBRelationNotFound) ||
 			errors.Is(err, service.ErrInvalidID) ||
 			errors.Is(err, db.ErrDBSortFilter) {
 			return http.StatusBadRequest, err.Error()

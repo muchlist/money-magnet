@@ -10,10 +10,10 @@ import (
 	"github.com/muchlist/moneymagnet/business/spend/storer"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/errr"
+	"github.com/muchlist/moneymagnet/pkg/mjwt"
 
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
-	"github.com/muchlist/moneymagnet/pkg/utils/slicer"
 )
 
 // Set of error variables for CRUD operations.
@@ -42,25 +42,21 @@ func NewCore(
 	}
 }
 
-func (s Core) CreateSpend(ctx context.Context, userID uuid.UUID, req model.NewSpend) (model.SpendResp, error) {
-	// Get Pocket to validate user can be write
-	pocket, err := s.pocketRepo.GetByID(ctx, req.PocketID)
-	if err != nil {
-		return model.SpendResp{}, fmt.Errorf("get pocket by id: %w", err)
-	}
+func (s Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req model.NewSpend) (model.SpendResp, error) {
 
-	isUserIsOwner := pocket.OwnerID == userID
-	isUserCanEdit := slicer.In(userID, pocket.EditorID)
-
-	// not owner or editor
-	if !(isUserIsOwner || isUserCanEdit) {
+	canEdit, _ := isCanEditOrWatch(req.PocketID, claims.PocketRoles)
+	if !canEdit {
 		return model.SpendResp{}, errr.New("user doesn't have access to write this pocket", 400)
 	}
 
 	timeNow := time.Now()
+	spendID := uuid.New()
+	if req.ID.Valid {
+		spendID = req.ID.UUID
+	}
 	spend := model.Spend{
-		ID:          uuid.New(),
-		UserID:      userID,
+		ID:          spendID,
+		UserID:      claims.GetUUID(),
 		PocketID:    req.PocketID,
 		CategoryID:  req.CategoryID,
 		CategoryID2: req.CategoryID2,
@@ -75,7 +71,7 @@ func (s Core) CreateSpend(ctx context.Context, userID uuid.UUID, req model.NewSp
 		Version:     1,
 	}
 
-	err = s.repo.Insert(ctx, &spend)
+	err := s.repo.Insert(ctx, &spend)
 	if err != nil {
 		return model.SpendResp{}, fmt.Errorf("insert spend to db: %w", err)
 	}
@@ -83,7 +79,7 @@ func (s Core) CreateSpend(ctx context.Context, userID uuid.UUID, req model.NewSp
 	return spend.ToResp(), nil
 }
 
-func (s Core) UpdatePartialSpend(ctx context.Context, userID uuid.UUID, req model.UpdateSpend) (model.SpendResp, error) {
+func (s Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, req model.UpdateSpend) (model.SpendResp, error) {
 
 	// Get existing Spend
 	spendExisting, err := s.repo.GetByID(ctx, req.ID)
@@ -92,30 +88,22 @@ func (s Core) UpdatePartialSpend(ctx context.Context, userID uuid.UUID, req mode
 	}
 
 	// validate id creator
-	if spendExisting.UserID != userID {
+	if spendExisting.UserID != claims.GetUUID() {
 		return model.SpendResp{}, errr.New("user cannot edit this transaction", 400)
 	}
 
-	// Get Pocket to validate user can be write
-	pocket, err := s.pocketRepo.GetByID(ctx, spendExisting.PocketID)
-	if err != nil {
-		return model.SpendResp{}, fmt.Errorf("get pocket by id: %w", err)
-	}
-
-	isUserIsOwner := pocket.OwnerID == userID
-	isUserCanEdit := slicer.In(userID, pocket.EditorID)
-
-	// not owner or editor
-	if !(isUserIsOwner || isUserCanEdit) {
+	// validate pocket roles
+	canEdit, _ := isCanEditOrWatch(spendExisting.PocketID, claims.PocketRoles)
+	if !canEdit {
 		return model.SpendResp{}, errr.New("user doesn't have access to write this pocket", 400)
 	}
 
 	// Modify data
 	if req.CategoryID.Valid {
-		spendExisting.CategoryID = req.CategoryID.UUID
+		spendExisting.CategoryID = req.CategoryID
 	}
 	if req.CategoryID.Valid {
-		spendExisting.CategoryID2 = req.CategoryID2.UUID
+		spendExisting.CategoryID2 = req.CategoryID2
 	}
 	if req.Name != nil {
 		spendExisting.Name = *req.Name
@@ -154,21 +142,12 @@ func (s Core) GetDetail(ctx context.Context, spendID uuid.UUID) (model.SpendResp
 }
 
 // FindAllSpend ...
-func (s Core) FindAllSpend(ctx context.Context, userID uuid.UUID, pocketID uuid.UUID, filter data.Filters) ([]model.SpendResp, data.Metadata, error) {
-	// Get Pocket to validate user can be write
-	pocket, err := s.pocketRepo.GetByID(ctx, pocketID)
-	if err != nil {
-		return nil, data.Metadata{}, fmt.Errorf("get pocket by id: %w", err)
-	}
+func (s Core) FindAllSpend(ctx context.Context, claims mjwt.CustomClaim, pocketID uuid.UUID, filter data.Filters) ([]model.SpendResp, data.Metadata, error) {
 
-	// validate
-	isUserIsOwner := pocket.OwnerID == userID
-	isUserCanEdit := slicer.In(userID, pocket.EditorID)
-	isUserCanWatch := slicer.In(userID, pocket.WatcherID)
-
-	// --- not owner or editor
-	if !(isUserIsOwner || isUserCanEdit || isUserCanWatch) {
-		return nil, data.Metadata{}, errr.New("user doesn't have access to read this pocket", 400)
+	// if cannot edit and cannot watch, return error
+	canEdit, canWatch := isCanEditOrWatch(pocketID, claims.PocketRoles)
+	if !(canEdit || canWatch) {
+		return nil, data.Metadata{}, errr.New("user doesn't have access to read this resource", 400)
 	}
 
 	spends, metadata, err := s.repo.Find(ctx, pocketID, filter)

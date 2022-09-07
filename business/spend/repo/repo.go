@@ -8,6 +8,7 @@ import (
 	"github.com/muchlist/moneymagnet/business/spend/model"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
+	"github.com/muchlist/moneymagnet/pkg/mlogger"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -34,15 +35,17 @@ const (
 
 // Repo manages the set of APIs for spend access.
 type Repo struct {
-	db *pgxpool.Pool
-	sb sq.StatementBuilderType
+	db  *pgxpool.Pool
+	log mlogger.Logger
+	sb  sq.StatementBuilderType
 }
 
 // NewRepo constructs a data for api access..
-func NewRepo(sqlDB *pgxpool.Pool) Repo {
+func NewRepo(sqlDB *pgxpool.Pool, logger mlogger.Logger) Repo {
 	return Repo{
-		db: sqlDB,
-		sb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
+		db:  sqlDB,
+		log: logger,
+		sb:  sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
 	}
 }
 
@@ -90,11 +93,12 @@ func (r Repo) Insert(ctx context.Context, spend *model.Spend) error {
 		Suffix(db.Returning(keyID)).ToSql()
 
 	if err != nil {
-		return fmt.Errorf("build query insert spend: %w", err)
+		return fmt.Errorf("build query insert spend: %w,", err)
 	}
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&spend.ID)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
 	}
 
@@ -132,6 +136,7 @@ func (r Repo) Edit(ctx context.Context, spend *model.Spend) error {
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&spend.Version)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
 	}
 
@@ -151,6 +156,7 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 
 	res, err := r.db.Exec(ctx, sqlStatement, args...)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
 	}
 
@@ -170,8 +176,8 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error) {
 	defer cancel()
 
 	sqlStatement, args, err := r.sb.Select(
-		db.A(keyUserID),
 		db.A(keyID),
+		db.A(keyUserID),
 		db.A(keyPocketID),
 		db.A(keyCategoryID),
 		db.A(keyCategoryID2),
@@ -186,15 +192,15 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error) {
 		db.A(keyVersion),
 		db.B("name"),
 		db.C("pocket_name"),
-		db.D("category_name"),
-		db.E("category_name"),
+		db.CoalesceString(db.D("category_name"), ""),
+		db.CoalesceString(db.E("category_name"), ""),
 	).
 		From(keyTable + " A").
 		LeftJoin("users B ON A.user_id = B.id").
 		LeftJoin("pockets C ON A.pocket_id = C.id").
 		LeftJoin("categories D ON A.category_id = D.id").
 		LeftJoin("categories E ON A.category_id_2 = E.id").
-		Where(sq.Eq{keyID: id}).ToSql()
+		Where(sq.Eq{"A.id": id}).ToSql()
 
 	if err != nil {
 		return model.Spend{}, fmt.Errorf("build query get spend by id: %w", err)
@@ -223,6 +229,7 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error) {
 			&spend.CategoryName2,
 		)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return model.Spend{}, db.ParseError(err)
 	}
 
@@ -243,8 +250,8 @@ func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters)
 
 	sqlStatement, args, err := r.sb.Select(
 		"count(*) OVER()",
-		db.A(keyUserID),
 		db.A(keyID),
+		db.A(keyUserID),
 		db.A(keyPocketID),
 		db.A(keyCategoryID),
 		db.A(keyCategoryID2),
@@ -259,21 +266,23 @@ func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters)
 		db.A(keyVersion),
 		db.B("name"),
 		db.C("pocket_name"),
-		db.D("category_name"),
-		db.E("category_name"),
+		db.CoalesceString(db.D("category_name"), ""),
+		db.CoalesceString(db.E("category_name"), ""),
 	).
 		From(keyTable + " A").
 		LeftJoin("users B ON A.user_id = B.id").
 		LeftJoin("pockets C ON A.pocket_id = C.id").
 		LeftJoin("categories D ON A.category_id = D.id").
 		LeftJoin("categories E ON A.category_id_2 = E.id").
-		Where(sq.Eq{keyPocketID: pocketID}).
+		Where(sq.Eq{"A.pocket_id": pocketID}).
 		OrderBy(filter.SortColumnDirection()).
 		Limit(uint64(filter.Limit())).
 		Offset(uint64(filter.Offset())).
 		ToSql()
 
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
+		r.log.InfoT(ctx, sqlStatement)
 		return nil, data.Metadata{}, fmt.Errorf("build query find spend: %w", err)
 	}
 
@@ -309,6 +318,7 @@ func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters)
 			&spend.CategoryName2,
 		)
 		if err != nil {
+			r.log.InfoT(ctx, err.Error())
 			return nil, data.Metadata{}, db.ParseError(err)
 		}
 		spends = append(spends, spend)

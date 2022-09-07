@@ -13,6 +13,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/muchlist/moneymagnet/pkg/global"
 )
 
 type Envelope map[string]interface{}
@@ -164,7 +165,7 @@ func ReadTraceID(ctx context.Context) string {
 	if ctx == nil {
 		return ""
 	}
-	if reqID, ok := ctx.Value(RequestIDKey).(string); ok {
+	if reqID, ok := ctx.Value(global.RequestIDKey).(string); ok {
 		return reqID
 	}
 	return ""

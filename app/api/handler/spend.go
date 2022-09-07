@@ -3,34 +3,33 @@ package handler
 import (
 	"net/http"
 
-	"github.com/muchlist/moneymagnet/business/pocket/model"
-	"github.com/muchlist/moneymagnet/business/pocket/service"
+	"github.com/muchlist/moneymagnet/business/spend/model"
+	"github.com/muchlist/moneymagnet/business/spend/service"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/validate"
 
-	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/web"
 )
 
-func NewPocketHandler(log mlogger.Logger,
+func NewSpendHandler(log mlogger.Logger,
 	validator validate.Validator,
-	pocketService service.Core) pocketHandler {
-	return pocketHandler{
+	spendService service.Core) spendHandler {
+	return spendHandler{
 		log:       log,
 		validator: validator,
-		service:   pocketService,
+		service:   spendService,
 	}
 }
 
-type pocketHandler struct {
+type spendHandler struct {
 	log       mlogger.Logger
 	validator validate.Validator
 	service   service.Core
 }
 
-func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
+func (pt spendHandler) CreateSpend(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
@@ -38,7 +37,7 @@ func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req model.PocketNew
+	var req model.NewSpend
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
 		pt.log.WarnT(r.Context(), "bad json", err)
@@ -53,11 +52,9 @@ func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, _ := uuid.Parse(claims.Identity)
-
-	result, err := pt.service.CreatePocket(r.Context(), userID, req)
+	result, err := pt.service.CreateSpend(r.Context(), claims, req)
 	if err != nil {
-		pt.log.ErrorT(r.Context(), "error create pocket", err)
+		pt.log.ErrorT(r.Context(), "error create spend", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -72,7 +69,7 @@ func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (pt pocketHandler) RenamePocket(w http.ResponseWriter, r *http.Request) {
+func (pt spendHandler) EditSpend(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
@@ -80,18 +77,23 @@ func (pt pocketHandler) RenamePocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type Req struct {
-		ID         uuid.UUID `json:"id" validate:"required"`
-		PocketName string    `json:"pocket_name" validate:"required"`
+	// extract url path
+	spendID, err := web.ReadUUIDParam(r)
+	if err != nil {
+		pt.log.WarnT(r.Context(), err.Error(), err)
+		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
 	}
 
-	var req Req
+	var req model.UpdateSpend
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
 		pt.log.WarnT(r.Context(), "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
+
+	req.ID = spendID
 
 	errMap, err := pt.validator.Struct(req)
 	if err != nil {
@@ -100,11 +102,9 @@ func (pt pocketHandler) RenamePocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, _ := uuid.Parse(claims.Identity)
-
-	result, err := pt.service.RenamePocket(r.Context(), userID, req.ID, req.PocketName)
+	result, err := pt.service.UpdatePartialSpend(r.Context(), claims, req)
 	if err != nil {
-		pt.log.ErrorT(r.Context(), "error rename pocket", err)
+		pt.log.ErrorT(r.Context(), "error update spend", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -120,25 +120,19 @@ func (pt pocketHandler) RenamePocket(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetByID...
-func (pt pocketHandler) GetByID(w http.ResponseWriter, r *http.Request) {
-
-	claims, err := mid.GetClaims(r.Context())
-	if err != nil {
-		web.ServerErrorResponse(w, r, err)
-		return
-	}
+func (pt spendHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	// extract url path
-	pocketID, err := web.ReadUUIDParam(r)
+	spendID, err := web.ReadUUIDParam(r)
 	if err != nil {
 		pt.log.WarnT(r.Context(), err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	result, err := pt.service.GetDetail(r.Context(), claims.Identity, pocketID)
+	result, err := pt.service.GetDetail(r.Context(), spendID)
 	if err != nil {
-		pt.log.ErrorT(r.Context(), "error get pocket by id", err)
+		pt.log.ErrorT(r.Context(), "error get spend by id", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -153,11 +147,18 @@ func (pt pocketHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (pt pocketHandler) FindUserPocket(w http.ResponseWriter, r *http.Request) {
+func (pt spendHandler) FindSpend(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	pocketID, err := web.ReadUUIDParam(r)
+	if err != nil {
+		pt.log.WarnT(r.Context(), err.Error(), err)
+		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -166,13 +167,13 @@ func (pt pocketHandler) FindUserPocket(w http.ResponseWriter, r *http.Request) {
 	page := web.ReadInt(r.URL.Query(), "page", 0)
 	pageSize := web.ReadInt(r.URL.Query(), "page_size", 0)
 
-	result, metadata, err := pt.service.FindAllPocket(r.Context(), claims.Identity, data.Filters{
+	result, metadata, err := pt.service.FindAllSpend(r.Context(), claims, pocketID, data.Filters{
 		Page:     page,
 		PageSize: pageSize,
 		Sort:     sort,
 	})
 	if err != nil {
-		pt.log.ErrorT(r.Context(), "error find pocket", err)
+		pt.log.ErrorT(r.Context(), "error find spend", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return

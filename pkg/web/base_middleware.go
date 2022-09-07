@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/muchlist/moneymagnet/pkg/global"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"go.uber.org/zap"
 )
@@ -51,10 +52,6 @@ func midLogger(l mlogger.Logger) func(next http.Handler) http.Handler {
 	}
 }
 
-type ctxKeyRequestID int
-
-const RequestIDKey ctxKeyRequestID = 0
-
 var RequestIDHeader = "X-Request-Id"
 
 // requestID read header with key X-Request-Id, if exist that value used to traceID
@@ -66,7 +63,7 @@ func requestID(next http.Handler) http.Handler {
 		if requestID == "" {
 			requestID = uuid.NewString()
 		}
-		ctx = context.WithValue(ctx, RequestIDKey, requestID)
+		ctx = context.WithValue(ctx, global.RequestIDKey, requestID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 	return http.HandlerFunc(fn)

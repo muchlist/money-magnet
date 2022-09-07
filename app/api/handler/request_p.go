@@ -31,7 +31,7 @@ type requestHandler struct {
 
 // CreateRequest ...
 func (pt requestHandler) CreateRequest(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
+
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -43,21 +43,21 @@ func (pt requestHandler) CreateRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
-		pt.log.WarnT(traceID, "bad json", err)
+		pt.log.WarnT(r.Context(), "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	errMap, err := pt.validator.Struct(req)
 	if err != nil {
-		pt.log.WarnT(traceID, "request not valid", err)
+		pt.log.WarnT(r.Context(), "request not valid", err)
 		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 
 	result, err := pt.service.CreateRequest(r.Context(), claims.GetUUID(), req.PocketID)
 	if err != nil {
-		pt.log.ErrorT(traceID, "error create request", err)
+		pt.log.ErrorT(r.Context(), "error create request", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -74,7 +74,7 @@ func (pt requestHandler) CreateRequest(w http.ResponseWriter, r *http.Request) {
 
 // ApproveOrRejectRequest ...
 func (pt requestHandler) ApproveOrRejectRequest(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
+
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -83,7 +83,7 @@ func (pt requestHandler) ApproveOrRejectRequest(w http.ResponseWriter, r *http.R
 
 	id, err := web.ReadIDParam(r)
 	if err != nil {
-		pt.log.WarnT(traceID, err.Error(), err)
+		pt.log.WarnT(r.Context(), err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -91,7 +91,7 @@ func (pt requestHandler) ApproveOrRejectRequest(w http.ResponseWriter, r *http.R
 	isApprovedStr := web.ReadString(r.URL.Query(), "approve", "")
 	isApprovedBool := false
 	if isApprovedStr == "" {
-		pt.log.WarnT(traceID, "bad request", err)
+		pt.log.WarnT(r.Context(), "bad request", err)
 		web.ErrorResponse(w, http.StatusBadRequest, "?approve=<must be bool>")
 		return
 	}
@@ -101,7 +101,7 @@ func (pt requestHandler) ApproveOrRejectRequest(w http.ResponseWriter, r *http.R
 
 	err = pt.service.ApproveRequest(r.Context(), claims.GetUUID(), isApprovedBool, id)
 	if err != nil {
-		pt.log.ErrorT(traceID, "error change status request", err)
+		pt.log.ErrorT(r.Context(), "error change status request", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -118,7 +118,7 @@ func (pt requestHandler) ApproveOrRejectRequest(w http.ResponseWriter, r *http.R
 
 // FindRequestByApprover...
 func (pt requestHandler) FindRequestByApprover(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
+
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -136,7 +136,7 @@ func (pt requestHandler) FindRequestByApprover(w http.ResponseWriter, r *http.Re
 		Sort:     sort,
 	})
 	if err != nil {
-		pt.log.ErrorT(traceID, "error find request", err)
+		pt.log.ErrorT(r.Context(), "error find request", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -154,7 +154,7 @@ func (pt requestHandler) FindRequestByApprover(w http.ResponseWriter, r *http.Re
 
 // FindByRequester ...
 func (pt requestHandler) FindByRequester(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
+
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -172,7 +172,7 @@ func (pt requestHandler) FindByRequester(w http.ResponseWriter, r *http.Request)
 		Sort:     sort,
 	})
 	if err != nil {
-		pt.log.ErrorT(traceID, "error find request", err)
+		pt.log.ErrorT(r.Context(), "error find request", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return

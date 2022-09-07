@@ -30,7 +30,6 @@ type catHandler struct {
 }
 
 func (ch catHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -40,14 +39,14 @@ func (ch catHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 	var req model.NewCategory
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
-		ch.log.WarnT(traceID, "bad json", err)
+		ch.log.WarnT(r.Context(), "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	errMap, err := ch.validator.Struct(req)
 	if err != nil {
-		ch.log.WarnT(traceID, "request not valid", err)
+		ch.log.WarnT(r.Context(), "request not valid", err)
 		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
@@ -56,7 +55,7 @@ func (ch catHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 
 	result, err := ch.service.CreateCategory(r.Context(), userID, req)
 	if err != nil {
-		ch.log.ErrorT(traceID, "error create pocket", err)
+		ch.log.ErrorT(r.Context(), "error create pocket", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -72,7 +71,6 @@ func (ch catHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ch catHandler) EditCategory(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -82,14 +80,14 @@ func (ch catHandler) EditCategory(w http.ResponseWriter, r *http.Request) {
 	var req model.UpdateCategory
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
-		ch.log.WarnT(traceID, "bad json", err)
+		ch.log.WarnT(r.Context(), "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	errMap, err := ch.validator.Struct(req)
 	if err != nil {
-		ch.log.WarnT(traceID, "request not valid", err)
+		ch.log.WarnT(r.Context(), "request not valid", err)
 		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
@@ -98,7 +96,7 @@ func (ch catHandler) EditCategory(w http.ResponseWriter, r *http.Request) {
 
 	result, err := ch.service.EditCategory(r.Context(), userID, req)
 	if err != nil {
-		ch.log.ErrorT(traceID, "error rename category", err)
+		ch.log.ErrorT(r.Context(), "error rename category", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -114,17 +112,10 @@ func (ch catHandler) EditCategory(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ch catHandler) FindPocketCategory(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
-	// claims, err := mid.GetClaims(r.Context())
-	// if err != nil {
-	// 	web.ServerErrorResponse(w, r, err)
-	// 	return
-	// }
-
 	// extract url query
 	pocketID, err := web.ReadUUIDParam(r)
 	if err != nil {
-		ch.log.WarnT(traceID, err.Error(), err)
+		ch.log.WarnT(r.Context(), err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -138,7 +129,7 @@ func (ch catHandler) FindPocketCategory(w http.ResponseWriter, r *http.Request) 
 		Sort:     sort,
 	})
 	if err != nil {
-		ch.log.ErrorT(traceID, "error find categories", err)
+		ch.log.ErrorT(r.Context(), "error find categories", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -155,19 +146,17 @@ func (ch catHandler) FindPocketCategory(w http.ResponseWriter, r *http.Request) 
 }
 
 func (ch catHandler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
-	traceID := web.ReadTraceID(r.Context())
-
 	// extract url query
 	categoryID, err := web.ReadUUIDParam(r)
 	if err != nil {
-		ch.log.WarnT(traceID, err.Error(), err)
+		ch.log.WarnT(r.Context(), err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	err = ch.service.DeleteCategory(r.Context(), categoryID)
 	if err != nil {
-		ch.log.ErrorT(traceID, "error delete categories", err)
+		ch.log.ErrorT(r.Context(), "error delete categories", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return

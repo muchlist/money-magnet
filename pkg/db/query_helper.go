@@ -63,3 +63,8 @@ func Dot(table, column string) string {
 func CoalesceInt(text string, def int) string {
 	return fmt.Sprintf("Coalesce(%s,%d)", text, def)
 }
+
+// CoalesceString Coalesce(null,default)
+func CoalesceString(text string, def string) string {
+	return fmt.Sprintf("Coalesce(%s,'%s')", text, def)
+}
