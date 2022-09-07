@@ -13,16 +13,20 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/web"
 )
 
-func NewRequestHandler(log mlogger.Logger, requestService service.Core) requestHandler {
+func NewRequestHandler(log mlogger.Logger,
+	validator validate.Validator,
+	requestService service.Core) requestHandler {
 	return requestHandler{
-		log:     log,
-		service: requestService,
+		log:       log,
+		validator: validator,
+		service:   requestService,
 	}
 }
 
 type requestHandler struct {
-	log     mlogger.Logger
-	service service.Core
+	log       mlogger.Logger
+	validator validate.Validator
+	service   service.Core
 }
 
 // CreateRequest ...
@@ -44,10 +48,10 @@ func (pt requestHandler) CreateRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errMessage, err := validate.Struct(req)
+	errMap, err := pt.validator.Struct(req)
 	if err != nil {
 		pt.log.WarnT(traceID, "request not valid", err)
-		web.ErrorResponse(w, http.StatusBadRequest, errMessage)
+		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 

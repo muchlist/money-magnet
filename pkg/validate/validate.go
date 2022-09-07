@@ -2,40 +2,72 @@ package validate
 
 import (
 	"errors"
+	"log"
 	"reflect"
-	"regexp"
 	"strings"
-	"time"
 
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
-	en_translations "github.com/go-playground/validator/v10/translations/en"
+	enTranslations "github.com/go-playground/validator/v10/translations/en"
 )
 
-// validate holds the settings and caches for validating request struct values.
-var validate *validator.Validate
+type Validator interface {
+	// Real mengembalian validator instance asli
+	Real() *validator.Validate
 
-// translator is a cache of locale and translation information.
-var translator ut.Translator
+	// SliceStruct menerima payload []struct dan mengembalikan validasi error yang
+	// didapatkan dalam bentuk map string, dan error aslinya. inputan valid apabila err nil
+	SliceStruct(input interface{}) (map[string]string, error)
 
-// emailRegex is the regular expression used to determine if a string is an email.
-// https://github.com/go-playground/validator/blob/v10.10.0/regexes.go#L73
-var emailRegex *regexp.Regexp
+	// SliceStruct menerima payload []struct dan mengembalikan validasi error yang
+	// didapatkan dalam bentuk map string dan error aslinya. inputan valid apabila err nil
+	Struct(input interface{}) (map[string]string, error)
 
-func Init() {
+	// Var menerima payload variable dan mengembalikan validasi error yang
+	// didapatkan dalam bentuk map string dan error aslinya. inputan valid apabila err nil
+	// eg.
+	// var i int
+	// validate.Var(i, "gt=1,lt=10")
+	Var(input interface{}, tag string) (map[string]string, error)
+}
 
-	// Instantiate a validator.
-	validate = validator.New()
+type mValidator struct {
+	instance   *validator.Validate
+	translator ut.Translator
+}
 
-	// Create a translator for english so the error messages are
-	// more human-readable than technical.
-	translator, _ = ut.New(en.New(), en.New()).GetTranslator("en")
+type envelop map[string]string
 
-	// Register the english error messages for use.
-	en_translations.RegisterDefaultTranslations(validate, translator)
+func (e envelop) makeError() error {
+	var sb strings.Builder
+	for _, message := range e {
+		sb.WriteString(message + ", ")
+	}
+	return errors.New(strings.TrimRight(sb.String(), ", "))
+}
 
-	// Use JSON tag names for errors instead of Go struct names.
+// =======================================================================================
+// register validator baru pada bagian code New()  <<<<<<
+
+// New menginisiasi validator dan mengembalikan custom validator
+// dengan format error map
+func New(regs ...Register) *mValidator {
+
+	// init instance of 'validate' with sane defaults
+	// init default translator
+	validate := validator.New()
+	english := en.New()
+	uni := ut.New(english, english)
+	trans, found := uni.GetTranslator("en")
+	if !found {
+		log.Panic("translator not found")
+	}
+
+	// register default translation
+	_ = enTranslations.RegisterDefaultTranslations(validate, trans)
+
+	// register tag e.Field() use json tag
 	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
 		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
 		if name == "-" {
@@ -44,108 +76,143 @@ func Init() {
 		return name
 	})
 
-	_ = validate.RegisterTranslation("mdate", translator, func(ut ut.Translator) error {
-		return ut.Add("mdate", "{0} must be valid date format", true)
-	}, func(ut ut.Translator, fe validator.FieldError) string {
-		t, _ := ut.T("mdate", fe.Field())
-		return t
-	})
+	// init register validator
+	// init register do this to you
+	//  _ = validate.RegisterTranslation("custom_date", trans, func(ut ut.Translator) error {
+	// 	return ut.Add("custom_date", "{0} must be valid date format", true)
+	// }, func(ut ut.Translator, fe validator.FieldError) string {
+	// 	t, _ := ut.T("custom_date", fe.Field())
+	// 	return t
+	// })
 
-	_ = validate.RegisterValidation("mdate", func(fl validator.FieldLevel) bool {
-		str := fl.Field().String()
-		layout := "2006-01-02 15:04:05"
-		_, err := time.Parse(layout, str)
-		return err == nil
-	})
+	// _ = validate.RegisterValidation("custom_date", func(fl validator.FieldLevel) bool {
+	// 	str := fl.Field().String()
+	// 	layout := "2006-01-02 15:04:05"
+	// 	_, err := time.Parse(layout, str)
+	// 	return err == nil
+	// })
 
-	// emailRegexString is the regular expression string used to compile into a regexp.
-	// https://github.com/go-playground/validator/blob/v10.10.0/regexes.go#L18
-	const emailRegexString = "^(?:(?:(?:(?:[a-zA-Z]|\\d|[!#\\$%&'\\*\\+\\-\\/=\\?\\^_`{\\|}~]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])+(?:\\.([a-zA-Z]|\\d|[!#\\$%&'\\*\\+\\-\\/=\\?\\^_`{\\|}~]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])+)*)|(?:(?:\\x22)(?:(?:(?:(?:\\x20|\\x09)*(?:\\x0d\\x0a))?(?:\\x20|\\x09)+)?(?:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f]|\\x21|[\\x23-\\x5b]|[\\x5d-\\x7e]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])|(?:(?:[\\x01-\\x09\\x0b\\x0c\\x0d-\\x7f]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}]))))*(?:(?:(?:\\x20|\\x09)*(?:\\x0d\\x0a))?(\\x20|\\x09)+)?(?:\\x22))))@(?:(?:(?:[a-zA-Z]|\\d|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])|(?:(?:[a-zA-Z]|\\d|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])(?:[a-zA-Z]|\\d|-|\\.|~|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])*(?:[a-zA-Z]|\\d|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])))\\.)+(?:(?:[a-zA-Z]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])|(?:(?:[a-zA-Z]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])(?:[a-zA-Z]|\\d|-|\\.|~|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])*(?:[a-zA-Z]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])))\\.?$"
-	emailRegex = regexp.MustCompile(emailRegexString)
+	for _, v := range regs {
+		_ = validate.RegisterTranslation(v.Key, trans, func(ut ut.Translator) error {
+			return ut.Add(v.Key, v.Translate, true)
+		}, func(ut ut.Translator, fe validator.FieldError) string {
+			t, _ := ut.T(v.Key, fe.Field())
+			return t
+		})
+		_ = validate.RegisterValidation(v.Key, v.ValidFunc)
+	}
+
+	return &mValidator{
+		instance:   validate,
+		translator: trans,
+	}
+}
+
+type Register struct {
+	// Key example : "custom_date"
+	Key string
+	// Translate example: "{0} must be valid date format"
+	Translate string
+	// ValidFunc like you add validator to golang validator/v10
+	ValidFunc func(fl validator.FieldLevel) bool
 }
 
 // =======================================================================================
 
-// SliceStruct menerima payload []struct dan mengembalikan validasi error yang
-// didapatkan dalam bentuk string dan error aslinya. jika valid akan mengembalikan nil
-func SliceStruct(input interface{}) (string, error) {
-
-	if input == nil || reflect.TypeOf(input).Kind() != reflect.Slice {
-		errorMsg := "developer_vault. input cant be nil or other than slice struct"
-		return errorMsg, errors.New(errorMsg)
-	}
-
-	err := validate.Var(input, "omitempty,dive")
-	if err != nil {
-
-		// not accepted error by validator
-		if _, ok := err.(*validator.InvalidValidationError); ok {
-			return err.Error(), err
-		}
-
-		// iterate error message
-		var sb strings.Builder
-		errs := err.(validator.ValidationErrors)
-		for _, e := range errs {
-			sb.WriteString(e.Translate(translator) + ", ")
-		}
-		return strings.TrimRight(sb.String(), ", "), errs
-	}
-
-	return "", nil
+// Real mengembalian validator instance asli
+func (m *mValidator) Real() *validator.Validate {
+	return m.instance
 }
 
-// Struct menerima payload struct dan mengembalikan validasi error yang
-// didapatkan dalam bentuk string dan error aslinya. jika valid akan mengembalikan nil
-func Struct(input interface{}) (string, error) {
+func (m *mValidator) Engine() interface{} {
+	return m.instance
+}
 
-	if input == nil {
-		errorMsg := "developer_vault. input cant be nil"
-		return errorMsg, errors.New(errorMsg)
+// SliceStruct menerima payload []struct dan mengembalikan validasi error yang
+// didapatkan dalam bentuk map string, dan error aslinya jika valid akan mengembalikan nil
+func (m *mValidator) SliceStruct(input interface{}) (map[string]string, error) {
+
+	errMap := envelop{}
+
+	isInputSlice := reflect.TypeOf(input).Kind() == reflect.Slice
+	if input == nil || !isInputSlice {
+		errorMsg := "500: input cant be nil or other than slice struct"
+		errMap["message"] = errorMsg
+		return errMap, errors.New(errorMsg)
 	}
 
-	err := validate.Struct(input)
+	err := m.instance.Var(input, "omitempty,dive")
 	if err != nil {
+
 		// not accepted error by validator
 		if _, ok := err.(*validator.InvalidValidationError); ok {
-			return err.Error(), err
+			errMap["message"] = err.Error()
+			return errMap, err
 		}
 
 		// iterate error message
-		var sb strings.Builder
 		errs := err.(validator.ValidationErrors)
 		for _, e := range errs {
-			sb.WriteString(e.Translate(translator) + ", ")
+			errMap[e.Field()] = e.Translate(m.translator)
 		}
-		return strings.TrimRight(sb.String(), ", "), errs
+		return errMap, errMap.makeError()
 	}
 
-	return "", nil
+	return nil, nil
+}
+
+// SliceStruct menerima payload []struct dan mengembalikan validasi error yang
+// didapatkan dalam bentuk map string dan error aslinya jika valid akan mengembalikan nil
+func (m *mValidator) Struct(input interface{}) (map[string]string, error) {
+
+	errMap := envelop{}
+
+	if input == nil {
+		errorMsg := "500: input cant be nil"
+		errMap["message"] = errorMsg
+		return errMap, errors.New(errorMsg)
+	}
+
+	err := m.instance.Struct(input)
+	if err != nil {
+		// not accepted error by validator
+		if _, ok := err.(*validator.InvalidValidationError); ok {
+			errMap["message"] = err.Error()
+			return errMap, err
+		}
+
+		// iterate error message
+		errs := err.(validator.ValidationErrors)
+		for _, e := range errs {
+			errMap[e.Field()] = e.Translate(m.translator)
+		}
+		return errMap, errMap.makeError()
+	}
+
+	return nil, nil
 }
 
 // Var menerima payload variable dan mengembalikan validasi error yang
-// didapatkan dalam bentuk string dan error aslinya. jika valid akan mengembalikan nil
-func Var(input interface{}, tag string) (string, error) {
+// didapatkan dalam bentuk map string dan error aslinya jika valid akan mengembalikan nil
+func (m *mValidator) Var(input interface{}, tag string) (map[string]string, error) {
 
-	err := validate.Var(input, tag)
+	errMap := envelop{}
+
+	err := m.instance.Var(input, tag)
 	if err != nil {
 		// not accepted error by validator
 		if _, ok := err.(*validator.InvalidValidationError); ok {
-			return err.Error(), err
+			errMap["message"] = err.Error()
+			return errMap, err
 		}
 
 		// iterate error message
-		var sb strings.Builder
 		errs := err.(validator.ValidationErrors)
 		for _, e := range errs {
-			sb.WriteString(e.Translate(translator) + ", ")
+			errMap[e.Field()] = e.Translate(m.translator)
 		}
-		return strings.TrimRight(sb.String(), ", "), errs
+		return errMap, errMap.makeError()
 	}
 
-	return "", nil
-}
-
-func CheckEmail(email string) bool {
-	return emailRegex.MatchString(email)
+	return nil, nil
 }

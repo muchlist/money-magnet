@@ -13,16 +13,20 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/web"
 )
 
-func NewCatHandler(log mlogger.Logger, catService service.Core) catHandler {
+func NewCatHandler(log mlogger.Logger,
+	validator validate.Validator,
+	catService service.Core) catHandler {
 	return catHandler{
-		log:     log,
-		service: catService,
+		log:       log,
+		validator: validator,
+		service:   catService,
 	}
 }
 
 type catHandler struct {
-	log     mlogger.Logger
-	service service.Core
+	log       mlogger.Logger
+	validator validate.Validator
+	service   service.Core
 }
 
 func (ch catHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
@@ -41,10 +45,10 @@ func (ch catHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errMessage, err := validate.Struct(req)
+	errMap, err := ch.validator.Struct(req)
 	if err != nil {
 		ch.log.WarnT(traceID, "request not valid", err)
-		web.ErrorResponse(w, http.StatusBadRequest, errMessage)
+		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 
@@ -83,10 +87,10 @@ func (ch catHandler) EditCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errMessage, err := validate.Struct(req)
+	errMap, err := ch.validator.Struct(req)
 	if err != nil {
 		ch.log.WarnT(traceID, "request not valid", err)
-		web.ErrorResponse(w, http.StatusBadRequest, errMessage)
+		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 

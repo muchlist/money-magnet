@@ -3,9 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/go-playground/validator/v10"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/validate"
-	"net/http"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -27,9 +30,10 @@ type config struct {
 }
 
 type application struct {
-	config config
-	logger mlogger.Logger
-	db     *pgxpool.Pool
+	config    config
+	logger    mlogger.Logger
+	validator validate.Validator
+	db        *pgxpool.Pool
 }
 
 func main() {
@@ -61,13 +65,26 @@ func main() {
 	defer database.Close()
 
 	// init validator
-	validate.Init()
+	validateRegists := []validate.Register{
+		{
+			Key:       "custom_date",
+			Translate: "{0} must be valid date format",
+			ValidFunc: func(fl validator.FieldLevel) bool {
+				str := fl.Field().String()
+				layout := "2006-01-02 15:04:05"
+				_, err := time.Parse(layout, str)
+				return err == nil
+			},
+		},
+	}
+	validatorInst := validate.New(validateRegists...)
 
 	// init application
 	app := application{
-		config: cfg,
-		logger: log,
-		db:     database,
+		config:    cfg,
+		logger:    log,
+		validator: validatorInst,
+		db:        database,
 	}
 
 	// start debug server

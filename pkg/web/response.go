@@ -13,6 +13,17 @@ func ErrorResponse(w http.ResponseWriter, status int, message interface{}) {
 	}
 }
 
+func ErrorPayloadResponse(w http.ResponseWriter, message interface{}, errorField map[string]string) {
+	env := Envelope{
+		"error":       message,
+		"error_field": errorField,
+	}
+	err := WriteJSON(w, http.StatusBadRequest, env, nil)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
 func NotFoundResponse(w http.ResponseWriter, r *http.Request) {
 	message := "the requested resource could not be found"
 	ErrorResponse(w, http.StatusNotFound, message)

@@ -29,19 +29,19 @@ func (app *application) routes() http.Handler {
 
 	userRepo := urrepo.NewRepo(app.db)
 	userService := urserv.NewCore(app.logger, userRepo, bcrypt, jwt)
-	userHandler := handler.NewUserHandler(app.logger, userService)
+	userHandler := handler.NewUserHandler(app.logger, app.validator, userService)
 
 	pocketRepo := ptrepo.NewRepo(app.db)
 	pocketService := ptserv.NewCore(app.logger, pocketRepo, userRepo)
-	pocketHandler := handler.NewPocketHandler(app.logger, pocketService)
+	pocketHandler := handler.NewPocketHandler(app.logger, app.validator, pocketService)
 
 	categoryRepo := cyrepo.NewRepo(app.db)
 	categoryService := cyserv.NewCore(app.logger, categoryRepo)
-	categoryHandler := handler.NewCatHandler(app.logger, categoryService)
+	categoryHandler := handler.NewCatHandler(app.logger, app.validator, categoryService)
 
 	requestRepo := reqrepo.NewRepo(app.db)
 	requestService := reqserv.NewCore(app.logger, requestRepo, pocketRepo)
-	requestHandler := handler.NewRequestHandler(app.logger, requestService)
+	requestHandler := handler.NewRequestHandler(app.logger, app.validator, requestService)
 
 	// Endpoint with no auth required
 	r.Get("/healthcheck", handler.HealthCheckHandler)

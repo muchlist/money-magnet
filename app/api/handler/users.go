@@ -18,16 +18,20 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/web"
 )
 
-func NewUserHandler(log mlogger.Logger, userService service.Core) userHandler {
+func NewUserHandler(log mlogger.Logger,
+	validator validate.Validator,
+	userService service.Core) userHandler {
 	return userHandler{
-		log:     log,
-		service: userService,
+		log:       log,
+		validator: validator,
+		service:   userService,
 	}
 }
 
 type userHandler struct {
-	log     mlogger.Logger
-	service service.Core
+	log       mlogger.Logger
+	validator validate.Validator
+	service   service.Core
 }
 
 func (usr userHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -40,10 +44,10 @@ func (usr userHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errMessage, err := validate.Struct(req)
+	errMap, err := usr.validator.Struct(req)
 	if err != nil {
 		usr.log.WarnT(traceID, "request not valid", err)
-		web.ErrorResponse(w, http.StatusBadRequest, errMessage)
+		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 
@@ -74,10 +78,10 @@ func (usr userHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errMessage, err := validate.Struct(req)
+	errMap, err := usr.validator.Struct(req)
 	if err != nil {
 		usr.log.WarnT(traceID, "request not valid", err)
-		web.ErrorResponse(w, http.StatusBadRequest, errMessage)
+		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 
@@ -272,10 +276,10 @@ func (usr userHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	errMessage, err := validate.Struct(req)
+	errMap, err := usr.validator.Struct(req)
 	if err != nil {
 		usr.log.WarnT(traceID, "request not valid", err)
-		web.ErrorResponse(w, http.StatusBadRequest, errMessage)
+		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 

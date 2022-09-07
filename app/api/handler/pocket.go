@@ -14,16 +14,20 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/web"
 )
 
-func NewPocketHandler(log mlogger.Logger, pocketService service.Core) pocketHandler {
+func NewPocketHandler(log mlogger.Logger,
+	validator validate.Validator,
+	pocketService service.Core) pocketHandler {
 	return pocketHandler{
-		log:     log,
-		service: pocketService,
+		log:       log,
+		validator: validator,
+		service:   pocketService,
 	}
 }
 
 type pocketHandler struct {
-	log     mlogger.Logger
-	service service.Core
+	log       mlogger.Logger
+	validator validate.Validator
+	service   service.Core
 }
 
 func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
@@ -42,10 +46,10 @@ func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errMessage, err := validate.Struct(req)
+	errMap, err := pt.validator.Struct(req)
 	if err != nil {
 		pt.log.WarnT(traceID, "request not valid", err)
-		web.ErrorResponse(w, http.StatusBadRequest, errMessage)
+		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 
@@ -89,10 +93,10 @@ func (pt pocketHandler) RenamePocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errMessage, err := validate.Struct(req)
+	errMap, err := pt.validator.Struct(req)
 	if err != nil {
 		pt.log.WarnT(traceID, "request not valid", err)
-		web.ErrorResponse(w, http.StatusBadRequest, errMessage)
+		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 

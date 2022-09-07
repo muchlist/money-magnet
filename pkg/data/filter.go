@@ -3,7 +3,6 @@ package data
 import (
 	"errors"
 	"fmt"
-	"github.com/muchlist/moneymagnet/pkg/validate"
 	"math"
 	"strings"
 
@@ -39,9 +38,12 @@ func (f *Filters) setDefault() {
 func (f *Filters) Validate() error {
 	f.setDefault()
 
-	msg, err := validate.Struct(f)
-	if err != nil {
-		return fmt.Errorf(msg)
+	if f.Page < 1 || f.Page > 1000 {
+		return errors.New("invalid page value")
+	}
+
+	if f.PageSize < 1 || f.Page > 100 {
+		return errors.New("invalid page_size value")
 	}
 
 	if len(f.SortSafelist) != 0 {
