@@ -15,17 +15,16 @@ import (
 )
 
 const (
-	keyTable       = "users"
-	keyID          = "id"
-	keyEmail       = "email"
-	keyName        = "name"
-	keyPassword    = "password"
-	keyRoles       = "roles"
-	keyPocketRoles = "pocket_roles"
-	keyFCM         = "fcm"
-	keyCreatedAt   = "created_at"
-	keyUpdatedAt   = "updated_at"
-	keyVersion     = "version"
+	keyTable     = "users"
+	keyID        = "id"
+	keyEmail     = "email"
+	keyName      = "name"
+	keyPassword  = "password"
+	keyRoles     = "roles"
+	keyFCM       = "fcm"
+	keyCreatedAt = "created_at"
+	keyUpdatedAt = "updated_at"
+	keyVersion   = "version"
 )
 
 // Repo manages the set of APIs for user access.
@@ -57,7 +56,6 @@ func (r Repo) Insert(ctx context.Context, user *model.User) error {
 			keyEmail,
 			keyPassword,
 			keyRoles,
-			keyPocketRoles,
 			keyFCM,
 			keyCreatedAt,
 			keyUpdatedAt).
@@ -67,7 +65,6 @@ func (r Repo) Insert(ctx context.Context, user *model.User) error {
 			user.Email,
 			user.Password,
 			user.Roles,
-			user.PocketRoles,
 			user.Fcm,
 			user.CreatedAt,
 			user.UpdatedAt).
@@ -92,13 +89,12 @@ func (r Repo) Edit(ctx context.Context, user *model.User) error {
 
 	sqlStatement, args, err := r.sb.Update(keyTable).
 		SetMap(sq.Eq{
-			keyName:        user.Name,
-			keyEmail:       user.Email,
-			keyRoles:       user.Roles,
-			keyPocketRoles: user.PocketRoles,
-			keyFCM:         user.Fcm,
-			keyUpdatedAt:   time.Now(),
-			keyVersion:     user.Version + 1,
+			keyName:      user.Name,
+			keyEmail:     user.Email,
+			keyRoles:     user.Roles,
+			keyFCM:       user.Fcm,
+			keyUpdatedAt: time.Now(),
+			keyVersion:   user.Version + 1,
 		}).
 		Where(sq.Eq{keyID: user.ID}).
 		Suffix(db.Returning(keyVersion)).
@@ -206,7 +202,6 @@ func (r Repo) GetByID(ctx context.Context, uuid uuid.UUID) (model.User, error) {
 		keyEmail,
 		keyPassword,
 		keyRoles,
-		keyPocketRoles,
 		keyFCM,
 		keyCreatedAt,
 		keyUpdatedAt,
@@ -225,7 +220,6 @@ func (r Repo) GetByID(ctx context.Context, uuid uuid.UUID) (model.User, error) {
 			&user.Email,
 			&user.Password,
 			&user.Roles,
-			&user.PocketRoles,
 			&user.Fcm,
 			&user.CreatedAt,
 			&user.UpdatedAt,
@@ -247,7 +241,6 @@ func (r Repo) GetByIDs(ctx context.Context, uuids []uuid.UUID) ([]model.User, er
 		keyName,
 		keyEmail,
 		keyRoles,
-		keyPocketRoles,
 		keyFCM,
 		keyCreatedAt,
 		keyUpdatedAt,
@@ -272,7 +265,6 @@ func (r Repo) GetByIDs(ctx context.Context, uuids []uuid.UUID) ([]model.User, er
 			&user.Name,
 			&user.Email,
 			&user.Roles,
-			&user.PocketRoles,
 			&user.Fcm,
 			&user.CreatedAt,
 			&user.UpdatedAt,
@@ -301,7 +293,6 @@ func (r Repo) GetByEmail(ctx context.Context, email string) (model.User, error) 
 		keyEmail,
 		keyPassword,
 		keyRoles,
-		keyPocketRoles,
 		keyFCM,
 		keyCreatedAt,
 		keyUpdatedAt,
@@ -320,7 +311,6 @@ func (r Repo) GetByEmail(ctx context.Context, email string) (model.User, error) 
 			&user.Email,
 			&user.Password,
 			&user.Roles,
-			&user.PocketRoles,
 			&user.Fcm,
 			&user.CreatedAt,
 			&user.UpdatedAt,
@@ -351,7 +341,6 @@ func (r Repo) Find(ctx context.Context, name string, filter data.Filters) ([]mod
 		keyEmail,
 		keyPassword,
 		keyRoles,
-		keyPocketRoles,
 		keyFCM,
 		keyCreatedAt,
 		keyUpdatedAt,
@@ -388,7 +377,6 @@ func (r Repo) Find(ctx context.Context, name string, filter data.Filters) ([]mod
 			&user.Email,
 			&user.Password,
 			&user.Roles,
-			&user.PocketRoles,
 			&user.Fcm,
 			&user.CreatedAt,
 			&user.UpdatedAt,

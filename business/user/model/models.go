@@ -7,16 +7,15 @@ import (
 )
 
 type User struct {
-	ID          uuid.UUID
-	Email       string
-	Name        string
-	Password    []byte
-	Roles       []string
-	PocketRoles []string
-	Fcm         string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	Version     int
+	ID        uuid.UUID
+	Email     string
+	Name      string
+	Password  []byte
+	Roles     []string
+	Fcm       string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Version   int
 }
 
 func (u *User) ToUserResp() UserResp {
@@ -25,7 +24,6 @@ func (u *User) ToUserResp() UserResp {
 		Email:        u.Email,
 		Name:         u.Name,
 		Roles:        u.Roles,
-		PocketRoles:  u.PocketRoles,
 		CreatedAt:    u.CreatedAt,
 		UpdatedAt:    u.UpdatedAt,
 		Version:      u.Version,
@@ -55,11 +53,10 @@ type UserLoginReq struct {
 }
 
 type UserRegisterReq struct {
-	Name        string   `json:"name" validate:"required"`
-	Email       string   `json:"email" validate:"required,email"`
-	Password    string   `json:"password" validate:"required"`
-	Roles       []string `json:"roles"`
-	PocketRoles []string `json:"pocket_roles"`
+	Name     string   `json:"name" validate:"required"`
+	Email    string   `json:"email" validate:"required,email"`
+	Password string   `json:"password" validate:"required"`
+	Roles    []string `json:"roles"`
 }
 
 type UserResp struct {
@@ -67,7 +64,6 @@ type UserResp struct {
 	Email        string    `json:"email"`
 	Name         string    `json:"name"`
 	Roles        []string  `json:"roles"`
-	PocketRoles  []string  `json:"pocket_roles"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 	Version      int       `json:"version"`
@@ -76,11 +72,10 @@ type UserResp struct {
 }
 
 type UserUpdate struct {
-	ID          uuid.UUID `json:"-"`
-	Email       *string   `json:"email"`
-	Name        *string   `json:"name"`
-	Password    *string   `json:"password"`
-	Roles       []string  `json:"roles"`
-	PocketRoles []string  `json:"pocket_roles"`
-	Fcm         *string   `json:"fcm"`
+	ID       uuid.UUID `json:"-"`
+	Email    *string   `json:"email"`
+	Name     *string   `json:"name"`
+	Password *string   `json:"password"`
+	Roles    []string  `json:"roles"`
+	Fcm      *string   `json:"fcm"`
 }
