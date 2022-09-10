@@ -6,7 +6,7 @@ CREATE TABLE  IF NOT EXISTS "spends" (
   "category_id_2" uuid NULL,
   "name" varchar(255) NOT NULL,
   "price" bigint NOT NULL,
-  "balance" bigint NOT NULL,
+  "balance_snapshoot" bigint NOT NULL,
   "is_income" boolean NOT NULL DEFAULT false,
   "type" int NOT NULL,
   "date" timestamp NOT NULL DEFAULT (now()),

@@ -55,20 +55,20 @@ func (s Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req mode
 		spendID = req.ID.UUID
 	}
 	spend := model.Spend{
-		ID:          spendID,
-		UserID:      claims.GetUUID(),
-		PocketID:    req.PocketID,
-		CategoryID:  req.CategoryID,
-		CategoryID2: req.CategoryID2,
-		Name:        req.Name,
-		Price:       req.Price,
-		Balance:     0, // TODO : how to get this
-		IsIncome:    req.IsIncome,
-		SpendType:   req.SpendType,
-		Date:        req.Date,
-		CreatedAt:   timeNow,
-		UpdatedAt:   timeNow,
-		Version:     1,
+		ID:               spendID,
+		UserID:           claims.GetUUID(),
+		PocketID:         req.PocketID,
+		CategoryID:       req.CategoryID,
+		CategoryID2:      req.CategoryID2,
+		Name:             req.Name,
+		Price:            req.Price,
+		BalanceSnapshoot: 0, // TODO : how to get this
+		IsIncome:         req.IsIncome,
+		SpendType:        req.SpendType,
+		Date:             req.Date,
+		CreatedAt:        timeNow,
+		UpdatedAt:        timeNow,
+		Version:          1,
 	}
 
 	err := s.repo.Insert(ctx, &spend)
@@ -122,7 +122,7 @@ func (s Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, r
 	}
 
 	// Edit
-	s.repo.Edit(ctx, &spendExisting)
+	err = s.repo.Edit(ctx, &spendExisting)
 	if err != nil {
 		return model.SpendResp{}, fmt.Errorf("edit spend: %w", err)
 	}

@@ -63,7 +63,7 @@ func (s Core) EditCategory(ctx context.Context, owner uuid.UUID, newData model.U
 	CategoryExisting.CategoryName = newData.CategoryName
 
 	// Edit
-	s.repo.Edit(ctx, &CategoryExisting)
+	err = s.repo.Edit(ctx, &CategoryExisting)
 	if err != nil {
 		return model.CategoryResp{}, fmt.Errorf("edit category: %w", err)
 	}

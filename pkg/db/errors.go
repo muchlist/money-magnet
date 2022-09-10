@@ -12,7 +12,7 @@ var (
 	ErrDBNotFound         = errors.New("not found")
 	ErrDBDuplicatedEntry  = errors.New("duplicated entry")
 	ErrDBRelationNotFound = errors.New("invalid relation")
-	ErrDBInvalidTextEnum  = errors.New("invalid enum text input")
+	ErrDBInvalidInput     = errors.New("invalid input syntax")
 	ErrDBBuildQuery       = errors.New("query not valid")
 	ErrDBSortFilter       = errors.New("invalid filter or sort value")
 )
@@ -30,7 +30,7 @@ func ParseError(err error) error {
 		case pgerrcode.ForeignKeyViolation:
 			return ErrDBRelationNotFound
 		case pgerrcode.InvalidTextRepresentation:
-			return ErrDBInvalidTextEnum
+			return ErrDBInvalidInput
 		case pgerrcode.UndefinedColumn:
 			return ErrDBBuildQuery
 		}

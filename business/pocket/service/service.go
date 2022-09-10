@@ -120,7 +120,7 @@ func (s Core) RenamePocket(ctx context.Context, owner uuid.UUID, pocketID uuid.U
 	pocketExisting.PocketName = newName
 
 	// Edit
-	s.repo.Edit(ctx, &pocketExisting)
+	err = s.repo.Edit(ctx, &pocketExisting)
 	if err != nil {
 		return model.PocketResp{}, fmt.Errorf("edit pocket: %w", err)
 	}
@@ -160,7 +160,7 @@ func (s Core) AddPerson(ctx context.Context, data AddPersonData) (model.PocketRe
 	}
 
 	// Edit
-	s.repo.Edit(ctx, &pocketExisting)
+	err = s.repo.Edit(ctx, &pocketExisting)
 	if err != nil {
 		return model.PocketResp{}, fmt.Errorf("edit pocket: %w", err)
 	}
@@ -192,7 +192,7 @@ func (s Core) RemovePerson(ctx context.Context, data RemovePersonData) (model.Po
 	pocketExisting.WatcherID = slicer.RemoveFrom(data.Person, pocketExisting.WatcherID)
 
 	// Edit
-	s.repo.Edit(ctx, &pocketExisting)
+	err = s.repo.Edit(ctx, &pocketExisting)
 	if err != nil {
 		return model.PocketResp{}, fmt.Errorf("edit pocket: %w", err)
 	}

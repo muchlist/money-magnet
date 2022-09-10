@@ -24,7 +24,7 @@ const (
 	keyCategoryID2 = "category_id_2"
 	keyName        = "name"
 	keyPrice       = "price"
-	keyBalance     = "balance"
+	keyBalance     = "balance_snapshoot"
 	keyIsIncome    = "is_income"
 	keyType        = "type"
 	keyDate        = "date"
@@ -82,7 +82,7 @@ func (r Repo) Insert(ctx context.Context, spend *model.Spend) error {
 			&spend.CategoryID2,
 			&spend.Name,
 			&spend.Price,
-			&spend.Balance,
+			&spend.BalanceSnapshoot,
 			&spend.IsIncome,
 			&spend.SpendType,
 			&spend.Date,
@@ -118,13 +118,13 @@ func (r Repo) Edit(ctx context.Context, spend *model.Spend) error {
 			keyCategoryID2: spend.CategoryID2,
 			keyName:        spend.Name,
 			keyPrice:       spend.Price,
-			keyBalance:     spend.Balance,
+			keyBalance:     spend.BalanceSnapshoot,
 			keyIsIncome:    spend.IsIncome,
 			keyType:        spend.SpendType,
 			keyDate:        spend.Date,
 			keyCreatedAt:   spend.CreatedAt,
 			keyUpdatedAt:   spend.UpdatedAt,
-			keyVersion:     "version + 1",
+			keyVersion:     spend.Version + 1,
 		}).
 		Where(sq.Eq{keyID: spend.ID}).
 		Suffix(db.Returning(keyVersion)).
@@ -216,7 +216,7 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error) {
 			&spend.CategoryID2,
 			&spend.Name,
 			&spend.Price,
-			&spend.Balance,
+			&spend.BalanceSnapshoot,
 			&spend.IsIncome,
 			&spend.SpendType,
 			&spend.Date,
@@ -240,7 +240,7 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error) {
 func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters) ([]model.Spend, data.Metadata, error) {
 
 	// Validation filter
-	filter.SortSafelist = []string{"updated_at", "-updated_at"}
+	filter.SortSafelist = []string{"-date", "date", "updated_at", "-updated_at"}
 	if err := filter.Validate(); err != nil {
 		return nil, data.Metadata{}, db.ErrDBSortFilter
 	}
@@ -305,7 +305,7 @@ func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters)
 			&spend.CategoryID2,
 			&spend.Name,
 			&spend.Price,
-			&spend.Balance,
+			&spend.BalanceSnapshoot,
 			&spend.IsIncome,
 			&spend.SpendType,
 			&spend.Date,
