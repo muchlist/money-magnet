@@ -282,7 +282,6 @@ func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters)
 
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
-		r.log.InfoT(ctx, sqlStatement)
 		return nil, data.Metadata{}, fmt.Errorf("build query find spend: %w", err)
 	}
 
@@ -331,4 +330,28 @@ func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters)
 	metadata := data.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
 
 	return spends, metadata, nil
+}
+
+// Count All Price
+func (r Repo) CountAllPrice(ctx context.Context, pocketID uuid.UUID) (int64, error) {
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	sqlStatement, args, err := r.sb.Select("sum(price)").
+		From(keyTable).
+		Where(sq.Eq{"pocket_id": pocketID}).
+		ToSql()
+
+	if err != nil {
+		return 0, fmt.Errorf("build query find spend: %w", err)
+	}
+
+	var balance int64
+	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&balance)
+	if err != nil {
+		return 0, db.ParseError(err)
+	}
+
+	return balance, nil
 }

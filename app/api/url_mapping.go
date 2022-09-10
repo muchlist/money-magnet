@@ -30,7 +30,7 @@ func (app *application) routes() http.Handler {
 	bcrypt := mcrypto.New()
 
 	userRepo := urrepo.NewRepo(app.db)
-	pocketRepo := ptrepo.NewRepo(app.db)
+	pocketRepo := ptrepo.NewRepo(app.db, app.logger)
 	categoryRepo := cyrepo.NewRepo(app.db)
 	requestRepo := reqrepo.NewRepo(app.db)
 	spendRepo := spnrepo.NewRepo(app.db, app.logger)
@@ -99,6 +99,7 @@ func (app *application) routes() http.Handler {
 			r.Patch("/{id}", spendHandler.EditSpend)
 			r.Get("/from-pocket/{id}", spendHandler.FindSpend)
 			r.Get("/{id}", spendHandler.GetByID)
+			r.Post("/sync/{id}", spendHandler.SyncBalance)
 		})
 
 	})

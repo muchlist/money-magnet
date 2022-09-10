@@ -9,6 +9,10 @@ import (
 	"github.com/google/uuid"
 )
 
+/*
+mockgen -source=business/pocket/storer/pocket_storer.go -destination=business/pocket/mock_storer/pocket_storer.go
+*/
+
 type PocketStorer interface {
 	PocketSaver
 	PocketReader
@@ -18,6 +22,7 @@ type PocketSaver interface {
 	Insert(ctx context.Context, Pocket *model.Pocket) error
 	Edit(ctx context.Context, Pocket *model.Pocket) error
 	Delete(ctx context.Context, id uuid.UUID) error
+	UpdateBalance(ctx context.Context, pocketID uuid.UUID, balance int64, isSetOperaton bool) (int64, error)
 
 	// many to many relation
 	InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketID uuid.UUID) error

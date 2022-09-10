@@ -26,14 +26,14 @@ var (
 type Core struct {
 	log        mlogger.Logger
 	repo       storer.SpendStorer
-	pocketRepo storer.PocketReader
+	pocketRepo storer.PocketStorer
 }
 
 // NewCore constructs a core for user api access.
 func NewCore(
 	log mlogger.Logger,
 	repo storer.SpendStorer,
-	pocketRepo storer.PocketReader,
+	pocketRepo storer.PocketStorer,
 ) Core {
 	return Core{
 		log:        log,
@@ -62,7 +62,7 @@ func (s Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req mode
 		CategoryID2:      req.CategoryID2,
 		Name:             req.Name,
 		Price:            req.Price,
-		BalanceSnapshoot: 0, // TODO : how to get this
+		BalanceSnapshoot: 0,
 		IsIncome:         req.IsIncome,
 		SpendType:        req.SpendType,
 		Date:             req.Date,
@@ -75,6 +75,12 @@ func (s Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req mode
 	if err != nil {
 		return model.SpendResp{}, fmt.Errorf("insert spend to db: %w", err)
 	}
+
+	newBalance, err := s.pocketRepo.UpdateBalance(ctx, spend.PocketID, spend.Price, false)
+	if err != nil {
+		return model.SpendResp{}, fmt.Errorf("fail to change balance: %w", err)
+	}
+	spend.BalanceSnapshoot = newBalance
 
 	return spend.ToResp(), nil
 }
@@ -102,14 +108,11 @@ func (s Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, r
 	if req.CategoryID.Valid {
 		spendExisting.CategoryID = req.CategoryID
 	}
-	if req.CategoryID.Valid {
+	if req.CategoryID2.Valid {
 		spendExisting.CategoryID2 = req.CategoryID2
 	}
 	if req.Name != nil {
 		spendExisting.Name = *req.Name
-	}
-	if req.Price != nil {
-		spendExisting.Price = *req.Price
 	}
 	if req.IsIncome != nil {
 		spendExisting.IsIncome = *req.IsIncome
@@ -121,10 +124,25 @@ func (s Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, r
 		spendExisting.Date = *req.Date
 	}
 
+	// more logic if price change
+	var diff int64
+	if req.Price != nil {
+		diff = *req.Price - spendExisting.Price
+		spendExisting.Price = *req.Price
+	}
+
 	// Edit
 	err = s.repo.Edit(ctx, &spendExisting)
 	if err != nil {
 		return model.SpendResp{}, fmt.Errorf("edit spend: %w", err)
+	}
+
+	if diff != 0 {
+		newBalance, err := s.pocketRepo.UpdateBalance(ctx, spendExisting.PocketID, diff, false)
+		if err != nil {
+			return model.SpendResp{}, fmt.Errorf("fail to change balance: %w", err)
+		}
+		spendExisting.BalanceSnapshoot = newBalance
 	}
 
 	return spendExisting.ToResp(), nil
@@ -161,4 +179,26 @@ func (s Core) FindAllSpend(ctx context.Context, claims mjwt.CustomClaim, pocketI
 	}
 
 	return spendResult, metadata, nil
+}
+
+// SyncBalance ...
+func (s Core) SyncBalance(ctx context.Context, claims mjwt.CustomClaim, pocketID uuid.UUID) (int64, error) {
+
+	// if cannot edit and cannot watch, return error
+	canEdit, canWatch := isCanEditOrWatch(pocketID, claims.PocketRoles)
+	if !(canEdit || canWatch) {
+		return 0, errr.New("user doesn't have access to read this resource", 400)
+	}
+
+	balance, err := s.repo.CountAllPrice(ctx, pocketID)
+	if err != nil {
+		return 0, fmt.Errorf("aggregate all price on pocket: %w", err)
+	}
+
+	newBalance, err := s.pocketRepo.UpdateBalance(ctx, pocketID, balance, true)
+	if err != nil {
+		return 0, fmt.Errorf("fail update balance: %w", err)
+	}
+
+	return newBalance, nil
 }
