@@ -18,13 +18,13 @@ definitions:
         example: 3
         type: integer
     type: object
-  data.Response500Err:
+  misc.Response500Err:
     properties:
       error:
         example: 'name func: sub func: cause of error'
         type: string
     type: object
-  data.ResponseErr:
+  misc.ResponseErr:
     properties:
       error:
         example: example error message
@@ -36,17 +36,17 @@ definitions:
           example_field: example_field is a required field
         type: object
     type: object
-  data.ResponseMessage:
+  misc.ResponseMessage:
     properties:
       data:
         example: do thing success
         type: string
     type: object
-  data.ResponseSuccess:
+  misc.ResponseSuccess:
     properties:
       data: {}
     type: object
-  data.ResponseSuccessList:
+  misc.ResponseSuccessList:
     properties:
       data:
         items: {}
@@ -90,6 +90,89 @@ definitions:
     - category_name
     - pocket_id
     type: object
+  model.NewPocket:
+    properties:
+      currency:
+        example: RP.
+        type: string
+      editor_id:
+        example:
+        - ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        items:
+          type: string
+        type: array
+      icon:
+        example: 1
+        type: integer
+      pocket_name:
+        example: dompet utama
+        type: string
+      watcher_id:
+        example:
+        - ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        items:
+          type: string
+        type: array
+    required:
+    - pocket_name
+    type: object
+  model.PocketResp:
+    properties:
+      balance:
+        example: 50000
+        type: integer
+      created_at:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      currency:
+        example: RP.
+        type: string
+      editor_id:
+        example:
+        - ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        items:
+          type: string
+        type: array
+      icon:
+        example: 1
+        type: integer
+      id:
+        example: 968d4dfe-041a-4721-bd8a-4e60c507c671
+        type: string
+      level:
+        example: 1
+        type: integer
+      owner_id:
+        example: ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        type: string
+      pocket_name:
+        example: dompet utama
+        type: string
+      updated_at:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      version:
+        example: 2
+        type: integer
+      watcher_id:
+        example:
+        - ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        items:
+          type: string
+        type: array
+    type: object
+  model.PocketUpdate:
+    properties:
+      currency:
+        example: RP.
+        type: string
+      icon:
+        example: 1
+        type: integer
+      pocket_name:
+        example: dompet utama
+        type: string
+    type: object
   model.UpdateCategory:
     properties:
       category_name:
@@ -131,7 +214,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/data.ResponseSuccess'
+            - $ref: '#/definitions/misc.ResponseSuccess'
             - properties:
                 data:
                   $ref: '#/definitions/model.CategoryResp'
@@ -139,11 +222,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ResponseErr'
+            $ref: '#/definitions/misc.ResponseErr'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/data.Response500Err'
+            $ref: '#/definitions/misc.Response500Err'
       summary: Create Category
       tags:
       - Category
@@ -164,15 +247,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/data.ResponseMessage'
+            $ref: '#/definitions/misc.ResponseMessage'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ResponseErr'
+            $ref: '#/definitions/misc.ResponseErr'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/data.Response500Err'
+            $ref: '#/definitions/misc.Response500Err'
       summary: Delete Category
       tags:
       - Category
@@ -199,7 +282,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/data.ResponseSuccess'
+            - $ref: '#/definitions/misc.ResponseSuccess'
             - properties:
                 data:
                   $ref: '#/definitions/model.CategoryResp'
@@ -207,11 +290,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ResponseErr'
+            $ref: '#/definitions/misc.ResponseErr'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/data.Response500Err'
+            $ref: '#/definitions/misc.Response500Err'
       summary: Edit Category
       tags:
       - Category
@@ -233,7 +316,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/data.ResponseSuccessList'
+            - $ref: '#/definitions/misc.ResponseSuccessList'
             - properties:
                 data:
                   items:
@@ -243,12 +326,185 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/data.ResponseErr'
+            $ref: '#/definitions/misc.ResponseErr'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/data.Response500Err'
+            $ref: '#/definitions/misc.Response500Err'
       summary: Find Category
       tags:
       - Category
+  /healthcheck:
+    get:
+      consumes:
+      - application/json
+      description: Health Check
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/misc.ResponseMessage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/misc.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/misc.Response500Err'
+      summary: Health Check
+      tags:
+      - HealthCheck
+  /pockets:
+    get:
+      consumes:
+      - application/json
+      description: Find pocket
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: page-size
+        in: query
+        name: page_size
+        type: integer
+      - description: sort
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/misc.ResponseSuccessList'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.PocketResp'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/misc.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/misc.Response500Err'
+      summary: Find Pocket
+      tags:
+      - Pocket
+    post:
+      consumes:
+      - application/json
+      description: Create Pocket
+      parameters:
+      - description: Request Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/model.NewPocket'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/misc.ResponseSuccess'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.PocketResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/misc.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/misc.Response500Err'
+      summary: Create Pocket
+      tags:
+      - Pocket
+  /pockets/{pocket_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get Pocket Detail by ID
+      parameters:
+      - description: pocket_id
+        in: path
+        name: pocket_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/misc.ResponseSuccessList'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.PocketResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/misc.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/misc.Response500Err'
+      summary: Get Pocket Detail
+      tags:
+      - Pocket
+    patch:
+      consumes:
+      - application/json
+      description: Update Pocket
+      parameters:
+      - description: pocket_id
+        in: path
+        name: pocket_id
+        required: true
+        type: string
+      - description: Request Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/model.PocketUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/misc.ResponseSuccess'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.PocketResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/misc.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/misc.Response500Err'
+      summary: Update Pocket
+      tags:
+      - Pocket
 swagger: "2.0"

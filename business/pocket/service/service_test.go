@@ -21,7 +21,7 @@ func TestCreatePocketSuccess(t *testing.T) {
 	ctx := context.Background()
 	ownerUUID := uuid.New()
 	pocketUUID := uuid.New()
-	payload := model.PocketNew{
+	payload := model.NewPocket{
 		PocketName: "example pocket",
 		EditorID:   []uuid.UUID{},
 		WatcherID:  []uuid.UUID{},

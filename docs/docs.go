@@ -55,7 +55,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/data.ResponseSuccess"
+                                    "$ref": "#/definitions/misc.ResponseSuccess"
                                 },
                                 {
                                     "type": "object",
@@ -71,13 +71,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ResponseErr"
+                            "$ref": "#/definitions/misc.ResponseErr"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.Response500Err"
+                            "$ref": "#/definitions/misc.Response500Err"
                         }
                     }
                 }
@@ -111,7 +111,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/data.ResponseSuccessList"
+                                    "$ref": "#/definitions/misc.ResponseSuccessList"
                                 },
                                 {
                                     "type": "object",
@@ -130,13 +130,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ResponseErr"
+                            "$ref": "#/definitions/misc.ResponseErr"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.Response500Err"
+                            "$ref": "#/definitions/misc.Response500Err"
                         }
                     }
                 }
@@ -179,7 +179,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/data.ResponseSuccess"
+                                    "$ref": "#/definitions/misc.ResponseSuccess"
                                 },
                                 {
                                     "type": "object",
@@ -195,13 +195,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ResponseErr"
+                            "$ref": "#/definitions/misc.ResponseErr"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.Response500Err"
+                            "$ref": "#/definitions/misc.Response500Err"
                         }
                     }
                 }
@@ -231,19 +231,299 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/data.ResponseMessage"
+                            "$ref": "#/definitions/misc.ResponseMessage"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/data.ResponseErr"
+                            "$ref": "#/definitions/misc.ResponseErr"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/data.Response500Err"
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            }
+        },
+        "/healthcheck": {
+            "get": {
+                "description": "Health Check",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "HealthCheck"
+                ],
+                "summary": "Health Check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseMessage"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            }
+        },
+        "/pockets": {
+            "get": {
+                "description": "Find pocket",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pocket"
+                ],
+                "summary": "Find Pocket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "page-size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "sort",
+                        "name": "sort",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/misc.ResponseSuccessList"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.PocketResp"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create Pocket",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pocket"
+                ],
+                "summary": "Create Pocket",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.NewPocket"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/misc.ResponseSuccess"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.PocketResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            }
+        },
+        "/pockets/{pocket_id}": {
+            "get": {
+                "description": "Get Pocket Detail by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pocket"
+                ],
+                "summary": "Get Pocket Detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pocket_id",
+                        "name": "pocket_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/misc.ResponseSuccessList"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.PocketResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Update Pocket",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pocket"
+                ],
+                "summary": "Update Pocket",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pocket_id",
+                        "name": "pocket_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Request Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.PocketUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/misc.ResponseSuccess"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.PocketResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
                         }
                     }
                 }
@@ -276,7 +556,7 @@ const docTemplate = `{
                 }
             }
         },
-        "data.Response500Err": {
+        "misc.Response500Err": {
             "type": "object",
             "properties": {
                 "error": {
@@ -285,7 +565,7 @@ const docTemplate = `{
                 }
             }
         },
-        "data.ResponseErr": {
+        "misc.ResponseErr": {
             "type": "object",
             "properties": {
                 "error": {
@@ -303,7 +583,7 @@ const docTemplate = `{
                 }
             }
         },
-        "data.ResponseMessage": {
+        "misc.ResponseMessage": {
             "type": "object",
             "properties": {
                 "data": {
@@ -312,13 +592,13 @@ const docTemplate = `{
                 }
             }
         },
-        "data.ResponseSuccess": {
+        "misc.ResponseSuccess": {
             "type": "object",
             "properties": {
                 "data": {}
             }
         },
-        "data.ResponseSuccessList": {
+        "misc.ResponseSuccessList": {
             "type": "object",
             "properties": {
                 "data": {
@@ -377,6 +657,124 @@ const docTemplate = `{
                 "pocket_id": {
                     "type": "string",
                     "example": "f9339be2-6b05-4acb-a269-5309c39bae91"
+                }
+            }
+        },
+        "model.NewPocket": {
+            "type": "object",
+            "required": [
+                "pocket_name"
+            ],
+            "properties": {
+                "currency": {
+                    "type": "string",
+                    "example": "RP."
+                },
+                "editor_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "ba22d3c6-2cdd-40b4-a2aa-d68da8c88502"
+                    ]
+                },
+                "icon": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "pocket_name": {
+                    "type": "string",
+                    "example": "dompet utama"
+                },
+                "watcher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "ba22d3c6-2cdd-40b4-a2aa-d68da8c88502"
+                    ]
+                }
+            }
+        },
+        "model.PocketResp": {
+            "type": "object",
+            "properties": {
+                "balance": {
+                    "type": "integer",
+                    "example": 50000
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "RP."
+                },
+                "editor_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "ba22d3c6-2cdd-40b4-a2aa-d68da8c88502"
+                    ]
+                },
+                "icon": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "id": {
+                    "type": "string",
+                    "example": "968d4dfe-041a-4721-bd8a-4e60c507c671"
+                },
+                "level": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "owner_id": {
+                    "type": "string",
+                    "example": "ba22d3c6-2cdd-40b4-a2aa-d68da8c88502"
+                },
+                "pocket_name": {
+                    "type": "string",
+                    "example": "dompet utama"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "version": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "watcher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "ba22d3c6-2cdd-40b4-a2aa-d68da8c88502"
+                    ]
+                }
+            }
+        },
+        "model.PocketUpdate": {
+            "type": "object",
+            "properties": {
+                "currency": {
+                    "type": "string",
+                    "example": "RP."
+                },
+                "icon": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "pocket_name": {
+                    "type": "string",
+                    "example": "dompet utama"
                 }
             }
         },

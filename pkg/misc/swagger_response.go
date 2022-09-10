@@ -1,4 +1,6 @@
-package data
+package misc
+
+import "github.com/muchlist/moneymagnet/pkg/data"
 
 // ResponseErr just for wrapping swaggo type generator
 type ResponseErr struct {
@@ -23,6 +25,6 @@ type ResponseMessage struct {
 
 // ResponseSuccessList just for wrapping swaggo type generator
 type ResponseSuccessList struct {
-	Data     []any    `json:"data"`
-	Metadata Metadata `json:"meta_data"`
+	Data     []any         `json:"data"`
+	Metadata data.Metadata `json:"meta_data"`
 }

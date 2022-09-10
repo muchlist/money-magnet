@@ -83,7 +83,7 @@ func (app *application) routes() http.Handler {
 			r.Post("/", pocketHandler.CreatePocket)
 			r.Get("/{id}", pocketHandler.GetByID)
 			r.Get("/", pocketHandler.FindUserPocket)
-			r.Put("/rename", pocketHandler.RenamePocket)
+			r.Patch("/{id}", pocketHandler.UpdatePocket)
 		})
 
 		r.Route("/categories", func(r chi.Router) {

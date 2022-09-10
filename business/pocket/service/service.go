@@ -44,7 +44,7 @@ func NewCore(
 	}
 }
 
-func (s Core) CreatePocket(ctx context.Context, owner uuid.UUID, req model.PocketNew) (model.PocketResp, error) {
+func (s Core) CreatePocket(ctx context.Context, owner uuid.UUID, req model.NewPocket) (model.PocketResp, error) {
 	// Validate editor and watcher uuids
 	combineUserUUIDs := append(req.EditorID, req.WatcherID...)
 	users, err := s.userRepo.GetByIDs(ctx, combineUserUUIDs)
@@ -102,10 +102,10 @@ func (s Core) CreatePocket(ctx context.Context, owner uuid.UUID, req model.Pocke
 	return pocket.ToPocketResp(), nil
 }
 
-func (s Core) RenamePocket(ctx context.Context, owner uuid.UUID, pocketID uuid.UUID, newName string) (model.PocketResp, error) {
+func (s Core) UpdatePocket(ctx context.Context, owner uuid.UUID, newData model.PocketUpdate) (model.PocketResp, error) {
 
 	// Get existing Pocket
-	pocketExisting, err := s.repo.GetByID(ctx, pocketID)
+	pocketExisting, err := s.repo.GetByID(ctx, newData.ID)
 	if err != nil {
 		return model.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
 	}
@@ -117,7 +117,15 @@ func (s Core) RenamePocket(ctx context.Context, owner uuid.UUID, pocketID uuid.U
 	}
 
 	// Modify data
-	pocketExisting.PocketName = newName
+	if newData.PocketName != nil {
+		pocketExisting.PocketName = *newData.PocketName
+	}
+	if newData.Currency != nil {
+		pocketExisting.Currency = *newData.Currency
+	}
+	if newData.Icon != nil {
+		pocketExisting.Icon = *newData.Icon
+	}
 
 	// Edit
 	err = s.repo.Edit(ctx, &pocketExisting)
