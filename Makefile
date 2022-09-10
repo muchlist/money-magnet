@@ -36,6 +36,10 @@ db/migrations/up: confirm
 	@echo 'Running up migrations...'
 	migrate -path ./migrations -database '${MONEYMAGNET_DB_DSN}' up
 
+## swagger: generate doc for swagger
+swagger:
+	swag init -g app/api/main.go
+
 
 # ==================================================================================== #
 # QUALITY CONTROL
@@ -69,4 +73,4 @@ vendor:
 	go mod vendor
 
 
-.PHONY: help confirm run/api run/api-log db/psql db/migrations/new db/migrations/up audit vendor test/coverage
+.PHONY: help confirm run/api run/api-log db/psql db/migrations/new db/migrations/up audit vendor test/coverage swagger

@@ -30,15 +30,24 @@ type pocketHandler struct {
 	service   service.Core
 }
 
+// @Summary      Create Pocket
+// @Description  Create Pocket
+// @Tags         Pocket
+// @Accept       json
+// @Produce      json
+// @Param		 Body body model.NewPocket true "Request Body"
+// @Success      200  {object}  misc.ResponseSuccess{data=model.PocketResp}
+// @Failure      400  {object}  misc.ResponseErr
+// @Failure      500  {object}  misc.Response500Err
+// @Router       /pockets [post]
 func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
-
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
 	}
 
-	var req model.PocketNew
+	var req model.NewPocket
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
 		pt.log.WarnT(r.Context(), "bad json", err)
@@ -72,7 +81,18 @@ func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (pt pocketHandler) RenamePocket(w http.ResponseWriter, r *http.Request) {
+// @Summary      Update Pocket
+// @Description  Update Pocket
+// @Tags         Pocket
+// @Accept       json
+// @Produce      json
+// @Param		 pocket_id path string true "pocket_id"
+// @Param		 Body body model.PocketUpdate true "Request Body"
+// @Success      200  {object}  misc.ResponseSuccess{data=model.PocketResp}
+// @Failure      400  {object}  misc.ResponseErr
+// @Failure      500  {object}  misc.Response500Err
+// @Router       /pockets/{pocket_id} [patch]
+func (pt pocketHandler) UpdatePocket(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
@@ -80,18 +100,22 @@ func (pt pocketHandler) RenamePocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type Req struct {
-		ID         uuid.UUID `json:"id" validate:"required"`
-		PocketName string    `json:"pocket_name" validate:"required"`
+	// extract url path
+	pocketID, err := web.ReadUUIDParam(r)
+	if err != nil {
+		pt.log.WarnT(r.Context(), err.Error(), err)
+		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
 	}
 
-	var req Req
+	var req model.PocketUpdate
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
 		pt.log.WarnT(r.Context(), "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	req.ID = pocketID
 
 	errMap, err := pt.validator.Struct(req)
 	if err != nil {
@@ -102,9 +126,9 @@ func (pt pocketHandler) RenamePocket(w http.ResponseWriter, r *http.Request) {
 
 	userID, _ := uuid.Parse(claims.Identity)
 
-	result, err := pt.service.RenamePocket(r.Context(), userID, req.ID, req.PocketName)
+	result, err := pt.service.UpdatePocket(r.Context(), userID, req)
 	if err != nil {
-		pt.log.ErrorT(r.Context(), "error rename pocket", err)
+		pt.log.ErrorT(r.Context(), "error update pocket", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -119,7 +143,16 @@ func (pt pocketHandler) RenamePocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GetByID...
+// @Summary      Get Pocket Detail
+// @Description  Get Pocket Detail by ID
+// @Tags         Pocket
+// @Accept       json
+// @Produce      json
+// @Param 		 pocket_id path string true "pocket_id"
+// @Success      200  {object}  misc.ResponseSuccessList{data=model.PocketResp}
+// @Failure      400  {object}  misc.ResponseErr
+// @Failure      500  {object}  misc.Response500Err
+// @Router       /pockets/{pocket_id} [get]
 func (pt pocketHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := mid.GetClaims(r.Context())
@@ -153,6 +186,18 @@ func (pt pocketHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// @Summary      Find Pocket
+// @Description  Find pocket
+// @Tags         Pocket
+// @Accept       json
+// @Produce      json
+// @Param 		 page query int false "page"
+// @Param 		 page_size query int false "page-size"
+// @Param 		 sort query string false "sort"
+// @Success      200  {object}  misc.ResponseSuccessList{data=[]model.PocketResp}
+// @Failure      400  {object}  misc.ResponseErr
+// @Failure      500  {object}  misc.Response500Err
+// @Router       /pockets [get]
 func (pt pocketHandler) FindUserPocket(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := mid.GetClaims(r.Context())

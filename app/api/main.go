@@ -11,6 +11,7 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/validate"
 
 	"github.com/jackc/pgx/v4/pgxpool"
+	_ "github.com/muchlist/moneymagnet/docs"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/web"
 )
@@ -36,6 +37,20 @@ type application struct {
 	db        *pgxpool.Pool
 }
 
+// @title Money Magnet API
+// @version 1.0
+// @description this is server for money magnet application.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name Muchlis
+// @contact.url https://muchlis.dev
+// @contact.email whois.muchlis@gmail.com
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost
+// @BasePath /
 func main() {
 	var cfg config
 
