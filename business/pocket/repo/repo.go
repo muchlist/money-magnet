@@ -8,6 +8,7 @@ import (
 	"github.com/muchlist/moneymagnet/business/pocket/model"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
+	"github.com/muchlist/moneymagnet/pkg/mlogger"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -21,6 +22,8 @@ const (
 	keyEditorID   = "editor_id"
 	keyWatcherID  = "watcher_id"
 	keyPocketName = "pocket_name"
+	keyBalance    = "balance"
+	keyCurrency   = "currency"
 	keyIcon       = "icon"
 	keyLevel      = "level"
 	keyCreatedAt  = "created_at"
@@ -30,15 +33,17 @@ const (
 
 // Repo manages the set of APIs for pocket access.
 type Repo struct {
-	db *pgxpool.Pool
-	sb sq.StatementBuilderType
+	db  *pgxpool.Pool
+	log mlogger.Logger
+	sb  sq.StatementBuilderType
 }
 
 // NewRepo constructs a data for api access..
-func NewRepo(sqlDB *pgxpool.Pool) Repo {
+func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) Repo {
 	return Repo{
-		db: sqlDB,
-		sb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
+		db:  sqlDB,
+		log: log,
+		sb:  sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
 	}
 }
 
@@ -55,6 +60,7 @@ func (r Repo) Insert(ctx context.Context, pocket *model.Pocket) error {
 	sqlStatement, args, err := r.sb.Insert(keyTable).
 		Columns(
 			keyPocketName,
+			keyCurrency,
 			keyOwnerID,
 			keyEditorID,
 			keyWatcherID,
@@ -66,6 +72,7 @@ func (r Repo) Insert(ctx context.Context, pocket *model.Pocket) error {
 		).
 		Values(
 			pocket.PocketName,
+			pocket.Currency,
 			pocket.OwnerID,
 			pocket.EditorID,
 			pocket.WatcherID,
@@ -82,6 +89,7 @@ func (r Repo) Insert(ctx context.Context, pocket *model.Pocket) error {
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&pocket.ID)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
 	}
 
@@ -98,6 +106,7 @@ func (r Repo) Edit(ctx context.Context, pocket *model.Pocket) error {
 	sqlStatement, args, err := r.sb.Update(keyTable).
 		SetMap(sq.Eq{
 			keyPocketName: pocket.PocketName,
+			keyCurrency:   pocket.Currency,
 			keyOwnerID:    pocket.OwnerID,
 			keyEditorID:   pocket.EditorID,
 			keyWatcherID:  pocket.WatcherID,
@@ -116,10 +125,43 @@ func (r Repo) Edit(ctx context.Context, pocket *model.Pocket) error {
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&pocket.Version)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
 	}
 
 	return nil
+}
+
+// UpdateBalance ...
+func (r Repo) UpdateBalance(ctx context.Context, pocketID uuid.UUID, balance int64, isSetOperaton bool) (int64, error) {
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	setMapValue := sq.Eq{}
+	if isSetOperaton {
+		setMapValue[keyBalance] = balance
+	} else {
+		operation := "+" // when minus operation convert to + -20000 while alse understood by postgres
+		setMapValue[keyBalance] = sq.Expr(fmt.Sprintf("(pockets.balance %s %d)", operation, balance))
+	}
+
+	sqlStatement, args, err := r.sb.Update(keyTable).
+		SetMap(setMapValue).
+		Where(sq.Eq{keyID: pocketID}).
+		Suffix(db.Returning(keyBalance)).
+		ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("build query update pocket balance: %w", err)
+	}
+
+	var newBalance int64
+	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&newBalance)
+	if err != nil {
+		r.log.InfoT(ctx, err.Error())
+		return 0, db.ParseError(err)
+	}
+
+	return newBalance, nil
 }
 
 // Delete ...
@@ -135,6 +177,7 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 
 	res, err := r.db.Exec(ctx, sqlStatement, args...)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
 	}
 
@@ -148,7 +191,7 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 // =========================================================================
 // GETTER
 
-// GetByID get one pocket by email
+// GetByID get one pocket by id
 func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Pocket, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
@@ -159,6 +202,8 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Pocket, error) {
 		keyEditorID,
 		keyWatcherID,
 		keyPocketName,
+		keyBalance,
+		keyCurrency,
 		keyIcon,
 		keyLevel,
 		keyCreatedAt,
@@ -178,12 +223,15 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Pocket, error) {
 			&pocket.EditorID,
 			&pocket.WatcherID,
 			&pocket.PocketName,
+			&pocket.Balance,
+			&pocket.Currency,
 			&pocket.Icon,
 			&pocket.Level,
 			&pocket.CreatedAt,
 			&pocket.UpdatedAt,
 			&pocket.Version)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return model.Pocket{}, db.ParseError(err)
 	}
 
@@ -209,6 +257,8 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 		keyEditorID,
 		keyWatcherID,
 		keyPocketName,
+		keyBalance,
+		keyCurrency,
 		keyIcon,
 		keyLevel,
 		keyCreatedAt,
@@ -228,6 +278,7 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 
 	rows, err := r.db.Query(ctx, sqlStatement, args...)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return nil, data.Metadata{}, db.ParseError(err)
 	}
 	defer rows.Close()
@@ -243,12 +294,15 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 			&pocket.EditorID,
 			&pocket.WatcherID,
 			&pocket.PocketName,
+			&pocket.Balance,
+			&pocket.Currency,
 			&pocket.Icon,
 			&pocket.Level,
 			&pocket.CreatedAt,
 			&pocket.UpdatedAt,
 			&pocket.Version)
 		if err != nil {
+			r.log.InfoT(ctx, err.Error())
 			return nil, data.Metadata{}, db.ParseError(err)
 		}
 		pockets = append(pockets, pocket)
@@ -287,6 +341,8 @@ func (r Repo) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.
 		keyEditorID,
 		keyWatcherID,
 		keyPocketName,
+		keyBalance,
+		keyCurrency,
 		keyIcon,
 		keyLevel,
 		keyCreatedAt,
@@ -306,6 +362,7 @@ func (r Repo) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.
 
 	rows, err := r.db.Query(ctx, sqlStatement, args...)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return nil, data.Metadata{}, db.ParseError(err)
 	}
 	defer rows.Close()
@@ -321,12 +378,15 @@ func (r Repo) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.
 			&pocket.EditorID,
 			&pocket.WatcherID,
 			&pocket.PocketName,
+			&pocket.Balance,
+			&pocket.Currency,
 			&pocket.Icon,
 			&pocket.Level,
 			&pocket.CreatedAt,
 			&pocket.UpdatedAt,
 			&pocket.Version)
 		if err != nil {
+			r.log.InfoT(ctx, err.Error())
 			return nil, data.Metadata{}, db.ParseError(err)
 		}
 		pockets = append(pockets, pocket)
@@ -364,6 +424,8 @@ func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner uuid.UUID, fi
 		db.A(keyEditorID),
 		db.A(keyWatcherID),
 		db.A(keyPocketName),
+		db.A(keyBalance),
+		db.A(keyCurrency),
 		db.A(keyIcon),
 		db.A(keyLevel),
 		db.A(keyCreatedAt),
@@ -385,6 +447,7 @@ func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner uuid.UUID, fi
 
 	rows, err := r.db.Query(ctx, sqlStatement, args...)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return nil, data.Metadata{}, db.ParseError(err)
 	}
 	defer rows.Close()
@@ -400,12 +463,15 @@ func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner uuid.UUID, fi
 			&pocket.EditorID,
 			&pocket.WatcherID,
 			&pocket.PocketName,
+			&pocket.Balance,
+			&pocket.Currency,
 			&pocket.Icon,
 			&pocket.Level,
 			&pocket.CreatedAt,
 			&pocket.UpdatedAt,
 			&pocket.Version)
 		if err != nil {
+			r.log.InfoT(ctx, err.Error())
 			return nil, data.Metadata{}, db.ParseError(err)
 		}
 		pockets = append(pockets, pocket)

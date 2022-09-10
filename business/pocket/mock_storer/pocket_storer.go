@@ -154,6 +154,21 @@ func (mr *MockPocketStorerMockRecorder) InsertPocketUser(ctx, userIDs, pocketID 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertPocketUser", reflect.TypeOf((*MockPocketStorer)(nil).InsertPocketUser), ctx, userIDs, pocketID)
 }
 
+// UpdateBalance mocks base method.
+func (m *MockPocketStorer) UpdateBalance(ctx context.Context, pocketID uuid.UUID, balance int64, isIncrement bool) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateBalance", ctx, pocketID, balance, isIncrement)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateBalance indicates an expected call of UpdateBalance.
+func (mr *MockPocketStorerMockRecorder) UpdateBalance(ctx, pocketID, balance, isIncrement interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBalance", reflect.TypeOf((*MockPocketStorer)(nil).UpdateBalance), ctx, pocketID, balance, isIncrement)
+}
+
 // MockPocketSaver is a mock of PocketSaver interface.
 type MockPocketSaver struct {
 	ctrl     *gomock.Controller
@@ -245,6 +260,21 @@ func (m *MockPocketSaver) InsertPocketUser(ctx context.Context, userIDs []uuid.U
 func (mr *MockPocketSaverMockRecorder) InsertPocketUser(ctx, userIDs, pocketID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertPocketUser", reflect.TypeOf((*MockPocketSaver)(nil).InsertPocketUser), ctx, userIDs, pocketID)
+}
+
+// UpdateBalance mocks base method.
+func (m *MockPocketSaver) UpdateBalance(ctx context.Context, pocketID uuid.UUID, balance int64, isIncrement bool) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateBalance", ctx, pocketID, balance, isIncrement)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateBalance indicates an expected call of UpdateBalance.
+func (mr *MockPocketSaverMockRecorder) UpdateBalance(ctx, pocketID, balance, isIncrement interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBalance", reflect.TypeOf((*MockPocketSaver)(nil).UpdateBalance), ctx, pocketID, balance, isIncrement)
 }
 
 // MockPocketReader is a mock of PocketReader interface.

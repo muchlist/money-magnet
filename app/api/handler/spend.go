@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/muchlist/moneymagnet/business/spend/model"
@@ -181,6 +182,39 @@ func (pt spendHandler) FindSpend(w http.ResponseWriter, r *http.Request) {
 	env := web.Envelope{
 		"metadata": metadata,
 		"data":     result,
+	}
+	err = web.WriteJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+}
+
+// SyncBalance...
+func (pt spendHandler) SyncBalance(w http.ResponseWriter, r *http.Request) {
+	claims, err := mid.GetClaims(r.Context())
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	// extract url path
+	pocketID, err := web.ReadUUIDParam(r)
+	if err != nil {
+		pt.log.WarnT(r.Context(), err.Error(), err)
+		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	newBalance, err := pt.service.SyncBalance(r.Context(), claims, pocketID)
+	if err != nil {
+		pt.log.ErrorT(r.Context(), "error sync balance", err)
+		statusCode, msg := parseError(err)
+		web.ErrorResponse(w, statusCode, msg)
+		return
+	}
+	env := web.Envelope{
+		"data": fmt.Sprintf("new balance for pocket_id %s has set to %d", pocketID, newBalance),
 	}
 	err = web.WriteJSON(w, http.StatusOK, env, nil)
 	if err != nil {
