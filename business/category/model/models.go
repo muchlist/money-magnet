@@ -28,21 +28,21 @@ func (c *Category) ToCategoryResp() CategoryResp {
 }
 
 type NewCategory struct {
-	PocketID     uuid.UUID `json:"pocket_id" validate:"required"`
-	CategoryName string    `json:"category_name" validate:"required"`
-	IsIncome     bool      `json:"is_income"`
+	PocketID     uuid.UUID `json:"pocket_id" validate:"required" example:"f9339be2-6b05-4acb-a269-5309c39bae91"`
+	CategoryName string    `json:"category_name" validate:"required" example:"gaji"`
+	IsIncome     bool      `json:"is_income" example:"true"`
 }
 
 type UpdateCategory struct {
-	ID           uuid.UUID `json:"id" validate:"required"`
-	CategoryName string    `json:"category_name" validate:"required"`
+	ID           uuid.UUID `json:"-" validate:"required"`
+	CategoryName string    `json:"category_name" validate:"required" example:"gaji_2"`
 }
 
 type CategoryResp struct {
-	ID           uuid.UUID `json:"id"`
-	PocketID     uuid.UUID `json:"pocket_id"`
-	CategoryName string    `json:"category_name"`
-	IsIncome     bool      `json:"is_income"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"update_at"`
+	ID           uuid.UUID `json:"id" example:"bead2cb0-692e-41d2-a623-c44d1e19f2a0"`
+	PocketID     uuid.UUID `json:"pocket_id" example:"f9339be2-6b05-4acb-a269-5309c39bae91"`
+	CategoryName string    `json:"category_name" example:"gaji"`
+	IsIncome     bool      `json:"is_income" example:"true"`
+	CreatedAt    time.Time `json:"created_at" example:"2022-09-10T17:03:15.091267+08:00"`
+	UpdatedAt    time.Time `json:"update_at" example:"2022-09-10T17:03:15.091267+08:00"`
 }

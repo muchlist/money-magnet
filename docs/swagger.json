@@ -1,0 +1,389 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "this is server for money magnet application.",
+        "title": "Money Magnet API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Muchlis",
+            "url": "https://muchlis.dev",
+            "email": "whois.muchlis@gmail.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost",
+    "basePath": "/",
+    "paths": {
+        "/categories": {
+            "post": {
+                "description": "Create Category for Spend",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Category"
+                ],
+                "summary": "Create Category",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.NewCategory"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.ResponseSuccess"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.CategoryResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/data.Response500Err"
+                        }
+                    }
+                }
+            }
+        },
+        "/categories/from-pocket/{pocket_id}": {
+            "get": {
+                "description": "Find category for 1 pocket",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Category"
+                ],
+                "summary": "Find Category",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "pocket_id",
+                        "name": "pocket_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.ResponseSuccessList"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.CategoryResp"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/data.Response500Err"
+                        }
+                    }
+                }
+            }
+        },
+        "/categories/{category_id}": {
+            "put": {
+                "description": "Edit category name",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Category"
+                ],
+                "summary": "Edit Category",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "category_id",
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Request Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UpdateCategory"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/data.ResponseSuccess"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.CategoryResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/data.Response500Err"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete category by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Category"
+                ],
+                "summary": "Delete Category",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "category_id",
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/data.ResponseMessage"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/data.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/data.Response500Err"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "data.Metadata": {
+            "type": "object",
+            "properties": {
+                "current_page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "first_page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "last_page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "page_size": {
+                    "type": "integer",
+                    "example": 50
+                },
+                "total_records": {
+                    "type": "integer",
+                    "example": 3
+                }
+            }
+        },
+        "data.Response500Err": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "name func: sub func: cause of error"
+                }
+            }
+        },
+        "data.ResponseErr": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "example error message"
+                },
+                "error_field": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "example": {
+                        "example_field": "example_field is a required field"
+                    }
+                }
+            }
+        },
+        "data.ResponseMessage": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "string",
+                    "example": "do thing success"
+                }
+            }
+        },
+        "data.ResponseSuccess": {
+            "type": "object",
+            "properties": {
+                "data": {}
+            }
+        },
+        "data.ResponseSuccessList": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {}
+                },
+                "meta_data": {
+                    "$ref": "#/definitions/data.Metadata"
+                }
+            }
+        },
+        "model.CategoryResp": {
+            "type": "object",
+            "properties": {
+                "category_name": {
+                    "type": "string",
+                    "example": "gaji"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "bead2cb0-692e-41d2-a623-c44d1e19f2a0"
+                },
+                "is_income": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "pocket_id": {
+                    "type": "string",
+                    "example": "f9339be2-6b05-4acb-a269-5309c39bae91"
+                },
+                "update_at": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                }
+            }
+        },
+        "model.NewCategory": {
+            "type": "object",
+            "required": [
+                "category_name",
+                "pocket_id"
+            ],
+            "properties": {
+                "category_name": {
+                    "type": "string",
+                    "example": "gaji"
+                },
+                "is_income": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "pocket_id": {
+                    "type": "string",
+                    "example": "f9339be2-6b05-4acb-a269-5309c39bae91"
+                }
+            }
+        },
+        "model.UpdateCategory": {
+            "type": "object",
+            "required": [
+                "category_name"
+            ],
+            "properties": {
+                "category_name": {
+                    "type": "string",
+                    "example": "gaji_2"
+                }
+            }
+        }
+    }
+}

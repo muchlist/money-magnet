@@ -15,6 +15,7 @@ import (
 	urserv "github.com/muchlist/moneymagnet/business/user/service"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
+	httpSwagger "github.com/swaggo/http-swagger"
 
 	"github.com/muchlist/moneymagnet/app/api/handler"
 	"github.com/muchlist/moneymagnet/pkg/mcrypto"
@@ -50,6 +51,11 @@ func (app *application) routes() http.Handler {
 	spendService := spnserv.NewCore(app.logger, spendRepo, pocketRepo)
 	spendHandler := handler.NewSpendHandler(app.logger, app.validator, spendService)
 
+	// swagger endpoint
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8081/swagger/doc.json"),
+	))
+
 	// Endpoint with no auth required
 	r.Get("/healthcheck", handler.HealthCheckHandler)
 	r.Post("/user/login", userHandler.Login)
@@ -83,7 +89,7 @@ func (app *application) routes() http.Handler {
 		r.Route("/categories", func(r chi.Router) {
 			r.Post("/", categoryHandler.CreateCategory)
 			r.Get("/from-pocket/{id}", categoryHandler.FindPocketCategory)
-			r.Put("/", categoryHandler.EditCategory)
+			r.Put("/{id}", categoryHandler.EditCategory)
 			r.Delete("/{id}", categoryHandler.DeleteCategory)
 		})
 

@@ -96,11 +96,11 @@ func (f *Filters) Offset() int {
 
 // Metadata for metadata pagination
 type Metadata struct {
-	CurrentPage  int `json:"current_page,omitempty"`
-	PageSize     int `json:"page_size,omitempty"`
-	FirstPage    int `json:"first_page,omitempty"`
-	LastPage     int `json:"last_page,omitempty"`
-	TotalRecords int `json:"total_records,omitempty"`
+	CurrentPage  int `json:"current_page,omitempty" example:"1"`
+	PageSize     int `json:"page_size,omitempty" example:"50"`
+	FirstPage    int `json:"first_page,omitempty" example:"1"`
+	LastPage     int `json:"last_page,omitempty" example:"1"`
+	TotalRecords int `json:"total_records,omitempty" example:"3"`
 }
 
 func CalculateMetadata(totalRecords, page, pageSize int) Metadata {

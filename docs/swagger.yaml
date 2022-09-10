@@ -1,0 +1,254 @@
+basePath: /
+definitions:
+  data.Metadata:
+    properties:
+      current_page:
+        example: 1
+        type: integer
+      first_page:
+        example: 1
+        type: integer
+      last_page:
+        example: 1
+        type: integer
+      page_size:
+        example: 50
+        type: integer
+      total_records:
+        example: 3
+        type: integer
+    type: object
+  data.Response500Err:
+    properties:
+      error:
+        example: 'name func: sub func: cause of error'
+        type: string
+    type: object
+  data.ResponseErr:
+    properties:
+      error:
+        example: example error message
+        type: string
+      error_field:
+        additionalProperties:
+          type: string
+        example:
+          example_field: example_field is a required field
+        type: object
+    type: object
+  data.ResponseMessage:
+    properties:
+      data:
+        example: do thing success
+        type: string
+    type: object
+  data.ResponseSuccess:
+    properties:
+      data: {}
+    type: object
+  data.ResponseSuccessList:
+    properties:
+      data:
+        items: {}
+        type: array
+      meta_data:
+        $ref: '#/definitions/data.Metadata'
+    type: object
+  model.CategoryResp:
+    properties:
+      category_name:
+        example: gaji
+        type: string
+      created_at:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      id:
+        example: bead2cb0-692e-41d2-a623-c44d1e19f2a0
+        type: string
+      is_income:
+        example: true
+        type: boolean
+      pocket_id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae91
+        type: string
+      update_at:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+    type: object
+  model.NewCategory:
+    properties:
+      category_name:
+        example: gaji
+        type: string
+      is_income:
+        example: true
+        type: boolean
+      pocket_id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae91
+        type: string
+    required:
+    - category_name
+    - pocket_id
+    type: object
+  model.UpdateCategory:
+    properties:
+      category_name:
+        example: gaji_2
+        type: string
+    required:
+    - category_name
+    type: object
+host: localhost
+info:
+  contact:
+    email: whois.muchlis@gmail.com
+    name: Muchlis
+    url: https://muchlis.dev
+  description: this is server for money magnet application.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Money Magnet API
+  version: "1.0"
+paths:
+  /categories:
+    post:
+      consumes:
+      - application/json
+      description: Create Category for Spend
+      parameters:
+      - description: Request Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/model.NewCategory'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/data.ResponseSuccess'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.CategoryResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/data.Response500Err'
+      summary: Create Category
+      tags:
+      - Category
+  /categories/{category_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete category by id
+      parameters:
+      - description: category_id
+        in: path
+        name: category_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/data.ResponseMessage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/data.Response500Err'
+      summary: Delete Category
+      tags:
+      - Category
+    put:
+      consumes:
+      - application/json
+      description: Edit category name
+      parameters:
+      - description: category_id
+        in: path
+        name: category_id
+        required: true
+        type: string
+      - description: Request Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateCategory'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/data.ResponseSuccess'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.CategoryResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/data.Response500Err'
+      summary: Edit Category
+      tags:
+      - Category
+  /categories/from-pocket/{pocket_id}:
+    get:
+      consumes:
+      - application/json
+      description: Find category for 1 pocket
+      parameters:
+      - description: pocket_id
+        in: path
+        name: pocket_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/data.ResponseSuccessList'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.CategoryResp'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/data.Response500Err'
+      summary: Find Category
+      tags:
+      - Category
+swagger: "2.0"
