@@ -11,6 +11,7 @@ import (
 	"github.com/muchlist/moneymagnet/business/category/model"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
+	"github.com/muchlist/moneymagnet/pkg/mlogger"
 )
 
 const (
@@ -25,15 +26,17 @@ const (
 
 // Repo manages the set of APIs for pocket access.
 type Repo struct {
-	db *pgxpool.Pool
-	sb sq.StatementBuilderType
+	db  *pgxpool.Pool
+	log mlogger.Logger
+	sb  sq.StatementBuilderType
 }
 
 // NewRepo constructs a data for api access..
-func NewRepo(sqlDB *pgxpool.Pool) Repo {
+func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) Repo {
 	return Repo{
-		db: sqlDB,
-		sb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
+		db:  sqlDB,
+		log: log,
+		sb:  sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
 	}
 }
 
@@ -70,6 +73,7 @@ func (r Repo) Insert(ctx context.Context, category *model.Category) error {
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&category.ID)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
 	}
 
@@ -95,6 +99,7 @@ func (r Repo) Edit(ctx context.Context, category *model.Category) error {
 
 	res, err := r.db.Exec(ctx, sqlStatement, args...)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
 	}
 	if res.RowsAffected() == 0 {
@@ -117,6 +122,7 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 
 	res, err := r.db.Exec(ctx, sqlStatement, args...)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
 	}
 
@@ -159,6 +165,7 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Category, error)
 			&cat.UpdatedAt,
 		)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return model.Category{}, db.ParseError(err)
 	}
 
@@ -199,6 +206,7 @@ func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters)
 
 	rows, err := r.db.Query(ctx, sqlStatement, args...)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return nil, data.Metadata{}, db.ParseError(err)
 	}
 	defer rows.Close()
@@ -216,6 +224,7 @@ func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters)
 			&cat.CreatedAt,
 			&cat.UpdatedAt)
 		if err != nil {
+			r.log.InfoT(ctx, err.Error())
 			return nil, data.Metadata{}, db.ParseError(err)
 		}
 		cats = append(cats, cat)

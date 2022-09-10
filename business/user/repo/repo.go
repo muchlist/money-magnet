@@ -8,6 +8,7 @@ import (
 	"github.com/muchlist/moneymagnet/business/user/model"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
+	"github.com/muchlist/moneymagnet/pkg/mlogger"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -29,15 +30,17 @@ const (
 
 // Repo manages the set of APIs for user access.
 type Repo struct {
-	db *pgxpool.Pool
-	sb sq.StatementBuilderType
+	db  *pgxpool.Pool
+	log mlogger.Logger
+	sb  sq.StatementBuilderType
 }
 
 // NewRepo constructs a data for api access..
-func NewRepo(sqlDB *pgxpool.Pool) Repo {
+func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) Repo {
 	return Repo{
-		db: sqlDB,
-		sb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
+		db:  sqlDB,
+		log: log,
+		sb:  sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
 	}
 }
 
@@ -76,6 +79,7 @@ func (r Repo) Insert(ctx context.Context, user *model.User) error {
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&user.ID)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
 	}
 
@@ -106,6 +110,7 @@ func (r Repo) Edit(ctx context.Context, user *model.User) error {
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&user.Version)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
 	}
 
@@ -130,6 +135,7 @@ func (r Repo) EditFCM(ctx context.Context, id uuid.UUID, fcm string) error {
 
 	_, err = r.db.Exec(ctx, sqlStatement, args...)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
 	}
 
@@ -151,6 +157,7 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 
 	res, err := r.db.Exec(ctx, sqlStatement, args...)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
 	}
 
@@ -182,6 +189,7 @@ func (r Repo) ChangePassword(ctx context.Context, user *model.User) error {
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&user.Version)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
 	}
 
@@ -225,6 +233,7 @@ func (r Repo) GetByID(ctx context.Context, uuid uuid.UUID) (model.User, error) {
 			&user.UpdatedAt,
 			&user.Version)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return model.User{}, db.ParseError(err)
 	}
 
@@ -253,6 +262,7 @@ func (r Repo) GetByIDs(ctx context.Context, uuids []uuid.UUID) ([]model.User, er
 
 	rows, err := r.db.Query(ctx, sqlStatement, args...)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return nil, db.ParseError(err)
 	}
 	defer rows.Close()
@@ -270,6 +280,7 @@ func (r Repo) GetByIDs(ctx context.Context, uuids []uuid.UUID) ([]model.User, er
 			&user.UpdatedAt,
 			&user.Version)
 		if err != nil {
+			r.log.InfoT(ctx, err.Error())
 			return nil, db.ParseError(err)
 		}
 		users = append(users, user)
@@ -316,6 +327,7 @@ func (r Repo) GetByEmail(ctx context.Context, email string) (model.User, error) 
 			&user.UpdatedAt,
 			&user.Version)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return model.User{}, db.ParseError(err)
 	}
 
@@ -362,6 +374,7 @@ func (r Repo) Find(ctx context.Context, name string, filter data.Filters) ([]mod
 
 	rows, err := r.db.Query(ctx, sqlStatement, args...)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return nil, data.Metadata{}, db.ParseError(err)
 	}
 	defer rows.Close()
@@ -382,6 +395,7 @@ func (r Repo) Find(ctx context.Context, name string, filter data.Filters) ([]mod
 			&user.UpdatedAt,
 			&user.Version)
 		if err != nil {
+			r.log.InfoT(ctx, err.Error())
 			return nil, data.Metadata{}, db.ParseError(err)
 		}
 		users = append(users, user)

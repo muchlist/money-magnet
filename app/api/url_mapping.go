@@ -29,10 +29,10 @@ func (app *application) routes() http.Handler {
 	jwt := mjwt.New(app.config.secret)
 	bcrypt := mcrypto.New()
 
-	userRepo := urrepo.NewRepo(app.db)
+	userRepo := urrepo.NewRepo(app.db, app.logger)
 	pocketRepo := ptrepo.NewRepo(app.db, app.logger)
-	categoryRepo := cyrepo.NewRepo(app.db)
-	requestRepo := reqrepo.NewRepo(app.db)
+	categoryRepo := cyrepo.NewRepo(app.db, app.logger)
+	requestRepo := reqrepo.NewRepo(app.db, app.logger)
 	spendRepo := spnrepo.NewRepo(app.db, app.logger)
 
 	userService := urserv.NewCore(app.logger, userRepo, pocketRepo, bcrypt, jwt)

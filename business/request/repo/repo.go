@@ -10,6 +10,7 @@ import (
 	"github.com/muchlist/moneymagnet/business/request/model"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
+	"github.com/muchlist/moneymagnet/pkg/mlogger"
 )
 
 /*
@@ -39,15 +40,17 @@ const (
 
 // Repo manages the set of APIs for pocket access.
 type Repo struct {
-	db *pgxpool.Pool
-	sb sq.StatementBuilderType
+	db  *pgxpool.Pool
+	log mlogger.Logger
+	sb  sq.StatementBuilderType
 }
 
 // NewRepo constructs a data for api access..
-func NewRepo(sqlDB *pgxpool.Pool) Repo {
+func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) Repo {
 	return Repo{
-		db: sqlDB,
-		sb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
+		db:  sqlDB,
+		log: log,
+		sb:  sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
 	}
 }
 
@@ -83,6 +86,7 @@ func (r Repo) Insert(ctx context.Context, request *model.RequestPocket) error {
 
 	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&request.ID)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
 	}
 
@@ -127,6 +131,7 @@ func (r Repo) UpdateStatus(ctx context.Context, request *model.RequestPocket) er
 		&request.UpdatedAt,
 	)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
 	}
 
@@ -170,6 +175,7 @@ func (r Repo) GetByID(ctx context.Context, id uint64) (model.RequestPocket, erro
 			&request.UpdatedAt,
 		)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return model.RequestPocket{}, db.ParseError(err)
 	}
 
@@ -233,6 +239,7 @@ func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter data.Filters
 
 	rows, err := r.db.Query(ctx, sqlStatement, args...)
 	if err != nil {
+		r.log.InfoT(ctx, err.Error())
 		return nil, data.Metadata{}, db.ParseError(err)
 	}
 	defer rows.Close()
@@ -254,6 +261,7 @@ func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter data.Filters
 			&request.UpdatedAt,
 		)
 		if err != nil {
+			r.log.InfoT(ctx, err.Error())
 			return nil, data.Metadata{}, db.ParseError(err)
 		}
 		requests = append(requests, request)
