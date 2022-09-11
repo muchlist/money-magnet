@@ -2,6 +2,7 @@ package storer
 
 import (
 	"context"
+
 	"github.com/muchlist/moneymagnet/business/user/model"
 	"github.com/muchlist/moneymagnet/pkg/data"
 
@@ -11,6 +12,11 @@ import (
 type UserStorer interface {
 	UserSaver
 	UserReader
+	Transactor
+}
+
+type Transactor interface {
+	WithinTransaction(ctx context.Context, tFunc func(ctx context.Context) error) error
 }
 
 type UserSaver interface {

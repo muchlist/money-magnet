@@ -304,9 +304,9 @@ func (s Core) FindUserByName(ctx context.Context, name string, filter data.Filte
 }
 
 func (s Core) getPocketRoles(ctx context.Context, userID uuid.UUID) ([]string, error) {
-	pockets, _, err := s.pocketRepo.FindUserPockets(ctx, userID, data.Filters{})
+	pockets, _, err := s.pocketRepo.FindUserPocketsByRelation(ctx, userID, data.Filters{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("find user pocket: %w", err)
 	}
 
 	pocketRoles := make([]string, 0)

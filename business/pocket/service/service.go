@@ -83,20 +83,32 @@ func (s Core) CreatePocket(ctx context.Context, owner uuid.UUID, req model.NewPo
 		Version:    1,
 	}
 
-	err = s.repo.Insert(ctx, &pocket)
-	if err != nil {
-		return model.PocketResp{}, fmt.Errorf("insert pocket to db: %w", err)
-	}
+	// Run IN Transaction
+	transErr := s.repo.WithinTransaction(
+		ctx, func(ctx context.Context) error {
 
-	// insert relation
-	uuidUserSet := ds.NewUUIDSet()
-	uuidUserSet.Add(owner)
-	uuidUserSet.AddAll(combineUserUUIDs)
-	uniqueUsers := uuidUserSet.Reveal()
+			// insert pocket
+			err = s.repo.Insert(ctx, &pocket)
+			if err != nil {
+				return fmt.Errorf("insert pocket to db: %w", err)
+			}
 
-	err = s.repo.InsertPocketUser(ctx, uniqueUsers, pocket.ID)
-	if err != nil {
-		return pocket.ToPocketResp(), fmt.Errorf("loop insert pocket_user to db: %w", err)
+			// insert relation
+			uuidUserSet := ds.NewUUIDSet()
+			uuidUserSet.Add(owner)
+			uuidUserSet.AddAll(combineUserUUIDs)
+			uniqueUsers := uuidUserSet.Reveal()
+
+			err = s.repo.InsertPocketUser(ctx, uniqueUsers, pocket.ID)
+			if err != nil {
+				return fmt.Errorf("loop insert pocket_user to db: %w", err)
+			}
+			return nil
+		},
+	)
+
+	if transErr != nil {
+		return model.PocketResp{}, transErr
 	}
 
 	return pocket.ToPocketResp(), nil
@@ -167,16 +179,24 @@ func (s Core) AddPerson(ctx context.Context, data AddPersonData) (model.PocketRe
 		pocketExisting.EditorID = append(pocketExisting.EditorID, data.Person)
 	}
 
-	// Edit
-	err = s.repo.Edit(ctx, &pocketExisting)
-	if err != nil {
-		return model.PocketResp{}, fmt.Errorf("edit pocket: %w", err)
-	}
+	// Run IN Transaction
+	transErr := s.repo.WithinTransaction(ctx, func(ctx context.Context) error {
+		// Edit
+		err = s.repo.Edit(ctx, &pocketExisting)
+		if err != nil {
+			return fmt.Errorf("edit pocket: %w", err)
+		}
 
-	// insert to related table
-	err = s.repo.InsertPocketUser(ctx, []uuid.UUID{data.Person}, pocketExisting.ID)
-	if err != nil {
-		return pocketExisting.ToPocketResp(), fmt.Errorf("insert pocket_user to db: %w", err)
+		// insert to related table
+		err = s.repo.InsertPocketUser(ctx, []uuid.UUID{data.Person}, pocketExisting.ID)
+		if err != nil {
+			return fmt.Errorf("insert pocket_user to db: %w", err)
+		}
+
+		return nil
+	})
+	if transErr != nil {
+		return model.PocketResp{}, transErr
 	}
 
 	return pocketExisting.ToPocketResp(), nil
@@ -199,16 +219,23 @@ func (s Core) RemovePerson(ctx context.Context, data RemovePersonData) (model.Po
 	pocketExisting.EditorID = slicer.RemoveFrom(data.Person, pocketExisting.EditorID)
 	pocketExisting.WatcherID = slicer.RemoveFrom(data.Person, pocketExisting.WatcherID)
 
-	// Edit
-	err = s.repo.Edit(ctx, &pocketExisting)
-	if err != nil {
-		return model.PocketResp{}, fmt.Errorf("edit pocket: %w", err)
-	}
+	// Run IN Transaction
+	transErr := s.repo.WithinTransaction(ctx, func(ctx context.Context) error {
+		// Edit
+		err = s.repo.Edit(ctx, &pocketExisting)
+		if err != nil {
+			return fmt.Errorf("edit pocket: %w", err)
+		}
 
-	// delete from related table
-	err = s.repo.DeletePocketUser(ctx, data.Person, pocketExisting.ID)
-	if err != nil {
-		return pocketExisting.ToPocketResp(), fmt.Errorf("delete pocket_user from db: %w", err)
+		// delete from related table
+		err = s.repo.DeletePocketUser(ctx, data.Person, pocketExisting.ID)
+		if err != nil {
+			return fmt.Errorf("delete pocket_user from db: %w", err)
+		}
+		return nil
+	})
+	if transErr != nil {
+		return model.PocketResp{}, transErr
 	}
 
 	return pocketExisting.ToPocketResp(), nil

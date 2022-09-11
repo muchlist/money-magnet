@@ -77,7 +77,7 @@ func (r Repo) Insert(ctx context.Context, user *model.User) error {
 		return fmt.Errorf("build query insert user: %w", err)
 	}
 
-	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&user.ID)
+	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&user.ID)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -108,7 +108,7 @@ func (r Repo) Edit(ctx context.Context, user *model.User) error {
 		return fmt.Errorf("build query edit user: %w", err)
 	}
 
-	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&user.Version)
+	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&user.Version)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -133,7 +133,7 @@ func (r Repo) EditFCM(ctx context.Context, id uuid.UUID, fcm string) error {
 		return fmt.Errorf("build query update fcm user: %w", err)
 	}
 
-	_, err = r.db.Exec(ctx, sqlStatement, args...)
+	_, err = r.mod(ctx).Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -155,7 +155,7 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("build query delete user: %w", err)
 	}
 
-	res, err := r.db.Exec(ctx, sqlStatement, args...)
+	res, err := r.mod(ctx).Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -187,7 +187,7 @@ func (r Repo) ChangePassword(ctx context.Context, user *model.User) error {
 		return fmt.Errorf("build query change password user: %w", err)
 	}
 
-	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&user.Version)
+	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&user.Version)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -221,7 +221,7 @@ func (r Repo) GetByID(ctx context.Context, uuid uuid.UUID) (model.User, error) {
 	}
 
 	var user model.User
-	err = r.db.QueryRow(ctx, sqlStatement, args...).
+	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).
 		Scan(
 			&user.ID,
 			&user.Name,
@@ -260,7 +260,7 @@ func (r Repo) GetByIDs(ctx context.Context, uuids []uuid.UUID) ([]model.User, er
 		return nil, fmt.Errorf("build query get user by ids: %w", err)
 	}
 
-	rows, err := r.db.Query(ctx, sqlStatement, args...)
+	rows, err := r.mod(ctx).Query(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return nil, db.ParseError(err)
@@ -315,7 +315,7 @@ func (r Repo) GetByEmail(ctx context.Context, email string) (model.User, error) 
 	}
 
 	var user model.User
-	err = r.db.QueryRow(ctx, sqlStatement, args...).
+	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).
 		Scan(
 			&user.ID,
 			&user.Name,
@@ -372,7 +372,7 @@ func (r Repo) Find(ctx context.Context, name string, filter data.Filters) ([]mod
 		return nil, data.Metadata{}, fmt.Errorf("build query find user: %w", err)
 	}
 
-	rows, err := r.db.Query(ctx, sqlStatement, args...)
+	rows, err := r.mod(ctx).Query(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return nil, data.Metadata{}, db.ParseError(err)

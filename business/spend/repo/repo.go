@@ -96,7 +96,7 @@ func (r Repo) Insert(ctx context.Context, spend *model.Spend) error {
 		return fmt.Errorf("build query insert spend: %w,", err)
 	}
 
-	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&spend.ID)
+	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&spend.ID)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -134,7 +134,7 @@ func (r Repo) Edit(ctx context.Context, spend *model.Spend) error {
 		return fmt.Errorf("build query edit spend: %w", err)
 	}
 
-	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&spend.Version)
+	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&spend.Version)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -154,7 +154,7 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("build query delete spend: %w", err)
 	}
 
-	res, err := r.db.Exec(ctx, sqlStatement, args...)
+	res, err := r.mod(ctx).Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -207,7 +207,7 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error) {
 	}
 
 	var spend model.Spend
-	err = r.db.QueryRow(ctx, sqlStatement, args...).
+	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).
 		Scan(
 			&spend.ID,
 			&spend.UserID,
@@ -319,7 +319,7 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter da
 		return nil, data.Metadata{}, fmt.Errorf("build query find spend: %w", err)
 	}
 
-	rows, err := r.db.Query(ctx, sqlStatement, args...)
+	rows, err := r.mod(ctx).Query(ctx, sqlStatement, args...)
 	if err != nil {
 		return nil, data.Metadata{}, db.ParseError(err)
 	}
@@ -382,7 +382,7 @@ func (r Repo) CountAllPrice(ctx context.Context, pocketID uuid.UUID) (int64, err
 	}
 
 	var balance int64
-	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&balance)
+	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&balance)
 	if err != nil {
 		return 0, db.ParseError(err)
 	}
