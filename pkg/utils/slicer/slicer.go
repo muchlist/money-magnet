@@ -1,7 +1,9 @@
 package slicer
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -61,4 +63,30 @@ func ToStringSlice(i any) ([]string, error) {
 	default:
 		return a, fmt.Errorf("unable to cast %#v of type %T to []string", i, i)
 	}
+}
+
+// CsvToSliceInt convert string with comma separated to slice int
+// if error in middle slice int still return all of convertable string to int
+// but error is not empty
+func CsvToSliceInt(str string) ([]int, error) {
+	listType := make([]int, 0)
+	errMsg := ""
+	if str != "" {
+		types := strings.Split(str, ",")
+		for _, v := range types {
+			number, err := strconv.Atoi(v)
+			if err != nil {
+				errMsg = err.Error()
+				continue
+			}
+			listType = append(listType, number)
+		}
+	}
+
+	var err error
+	if errMsg != "" {
+		err = errors.New(errMsg)
+	}
+
+	return listType, err
 }

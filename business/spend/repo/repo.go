@@ -237,7 +237,7 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error) {
 }
 
 // Find get all spend
-func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters) ([]model.Spend, data.Metadata, error) {
+func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter data.Filters) ([]model.Spend, data.Metadata, error) {
 
 	// Validation filter
 	filter.SortSafelist = []string{"-date", "date", "updated_at", "-updated_at"}
@@ -248,7 +248,8 @@ func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters)
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	sqlStatement, args, err := r.sb.Select(
+	//  := r.sb.Select(
+	query := r.sb.Select(
 		"count(*) OVER()",
 		db.A(keyID),
 		db.A(keyUserID),
@@ -273,9 +274,42 @@ func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters)
 		LeftJoin("users B ON A.user_id = B.id").
 		LeftJoin("pockets C ON A.pocket_id = C.id").
 		LeftJoin("categories D ON A.category_id = D.id").
-		LeftJoin("categories E ON A.category_id_2 = E.id").
-		Where(sq.Eq{"A.pocket_id": pocketID}).
-		OrderBy(filter.SortColumnDirection()).
+		LeftJoin("categories E ON A.category_id_2 = E.id")
+
+	// WHERE builder
+	// mapping where filter
+	whereMap := sq.Eq{db.A(keyPocketID): spendFilter.PocketID.UUID}
+	if spendFilter.User.Valid {
+		whereMap[db.A(keyUserID)] = spendFilter.User.UUID
+	}
+	// if spendFilter.Category.Valid {
+	// 	whereMap[db.A(keyCategoryID)] = spendFilter.Category.UUID
+	// }
+	if spendFilter.IsIncome != nil {
+		whereMap[db.A(keyIsIncome)] = *spendFilter.IsIncome
+	}
+	if len(spendFilter.Type) != 0 {
+		whereMap[db.A(keyType)] = spendFilter.Type
+	}
+
+	// building where clause
+	query = query.Where(whereMap)
+	if spendFilter.Category.Valid {
+		query = query.Where(
+			sq.Or{
+				sq.Eq{db.A(keyCategoryID): spendFilter.Category.UUID},
+				sq.Eq{db.A(keyCategoryID2): spendFilter.Category.UUID},
+			},
+		)
+	}
+	if spendFilter.DateStart != nil {
+		query = query.Where(sq.GtOrEq{db.A(keyDate): *spendFilter.DateStart})
+	}
+	if spendFilter.DateEnd != nil {
+		query = query.Where(sq.Lt{db.A(keyDate): *spendFilter.DateEnd})
+	}
+
+	sqlStatement, args, err := query.OrderBy(filter.SortColumnDirection()).
 		Limit(uint64(filter.Limit())).
 		Offset(uint64(filter.Offset())).
 		ToSql()

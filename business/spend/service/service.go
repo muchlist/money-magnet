@@ -160,15 +160,15 @@ func (s Core) GetDetail(ctx context.Context, spendID uuid.UUID) (model.SpendResp
 }
 
 // FindAllSpend ...
-func (s Core) FindAllSpend(ctx context.Context, claims mjwt.CustomClaim, pocketID uuid.UUID, filter data.Filters) ([]model.SpendResp, data.Metadata, error) {
+func (s Core) FindAllSpend(ctx context.Context, claims mjwt.CustomClaim, spendFilter model.SpendFilter, filter data.Filters) ([]model.SpendResp, data.Metadata, error) {
 
 	// if cannot edit and cannot watch, return error
-	canEdit, canWatch := isCanEditOrWatch(pocketID, claims.PocketRoles)
+	canEdit, canWatch := isCanEditOrWatch(spendFilter.PocketID.UUID, claims.PocketRoles)
 	if !(canEdit || canWatch) {
 		return nil, data.Metadata{}, errr.New("user doesn't have access to read this resource", 400)
 	}
 
-	spends, metadata, err := s.repo.Find(ctx, pocketID, filter)
+	spends, metadata, err := s.repo.Find(ctx, spendFilter, filter)
 	if err != nil {
 		return nil, data.Metadata{}, fmt.Errorf("find spend by pocketID: %w", err)
 	}
