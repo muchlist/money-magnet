@@ -528,6 +528,539 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/request": {
+            "post": {
+                "description": "Create Join Request",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Join"
+                ],
+                "summary": "Create Join Request",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.NewRequestPocket"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/misc.ResponseSuccess"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.RequestPocket"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            }
+        },
+        "/request/in": {
+            "get": {
+                "description": "Get request you can approve",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Join"
+                ],
+                "summary": "Get Request IN",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/misc.ResponseSuccessList"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.RequestPocket"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            }
+        },
+        "/request/out": {
+            "get": {
+                "description": "Get request created by you",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Join"
+                ],
+                "summary": "Get Request OUT",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/misc.ResponseSuccessList"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.RequestPocket"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            }
+        },
+        "/request/{request_id}/action": {
+            "post": {
+                "description": "Action to Join Request",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Join"
+                ],
+                "summary": "Action to Join Request",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "request_id",
+                        "name": "request_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "approve",
+                        "name": "approve",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseMessage"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            }
+        },
+        "/spends": {
+            "get": {
+                "description": "Find spend",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Spend"
+                ],
+                "summary": "Find Spend",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "page-size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "sort",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user",
+                        "name": "user",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "category",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "is_income",
+                        "name": "is_income",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "type",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "date_start",
+                        "name": "date_start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "date_end",
+                        "name": "date_end",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/misc.ResponseSuccessList"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.SpendResp"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create spend",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Spend"
+                ],
+                "summary": "Create Spend",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.NewSpend"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/misc.ResponseSuccess"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.SpendResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            }
+        },
+        "/spends/sync/{spend_id}": {
+            "post": {
+                "description": "Sync spend to update pocket balance",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Spend"
+                ],
+                "summary": "Sync Spend Balance",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "spend_id",
+                        "name": "spend_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseMessage"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            }
+        },
+        "/spends/{spend_id}": {
+            "get": {
+                "description": "Get spend detail by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Spend"
+                ],
+                "summary": "Get Spend Detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "spend_id",
+                        "name": "spend_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/misc.ResponseSuccessList"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.SpendResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Update spend",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Spend"
+                ],
+                "summary": "Update Spend",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "spend_id",
+                        "name": "spend_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Request Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UpdateSpend"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/misc.ResponseSuccess"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.SpendResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -552,7 +1085,7 @@ const docTemplate = `{
                 },
                 "total_records": {
                     "type": "integer",
-                    "example": 3
+                    "example": 1
                 }
             }
         },
@@ -698,6 +1231,56 @@ const docTemplate = `{
                 }
             }
         },
+        "model.NewRequestPocket": {
+            "type": "object",
+            "properties": {
+                "pocket_id": {
+                    "type": "string",
+                    "example": "968d4dfe-041a-4721-bd8a-4e60c507c671"
+                }
+            }
+        },
+        "model.NewSpend": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "string",
+                    "example": "f9339be2-6b05-4acb-a269-5309c39bae92"
+                },
+                "category_id_2": {
+                    "type": "string",
+                    "example": "f9339be2-6b05-4acb-a269-5309c39bae93"
+                },
+                "date": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "f9339be2-6b05-4acb-a269-5309c39bae90"
+                },
+                "is_income": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Makan siang"
+                },
+                "pocket_id": {
+                    "type": "string",
+                    "example": "f9339be2-6b05-4acb-a269-5309c39bae91"
+                },
+                "price": {
+                    "type": "integer",
+                    "example": 50000
+                },
+                "type": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
         "model.PocketResp": {
             "type": "object",
             "properties": {
@@ -778,6 +1361,124 @@ const docTemplate = `{
                 }
             }
         },
+        "model.RequestPocket": {
+            "type": "object",
+            "properties": {
+                "approver_id": {
+                    "type": "string",
+                    "example": "ba22d3c6-2cdd-40b4-a2aa-d68da8c88501"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 2001
+                },
+                "is_approved": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "is_rejected": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "pocket_id": {
+                    "type": "string",
+                    "example": "968d4dfe-041a-4721-bd8a-4e60c507c671"
+                },
+                "pocket_name": {
+                    "type": "string",
+                    "example": "main pocket"
+                },
+                "requester_id": {
+                    "type": "string",
+                    "example": "ba22d3c6-2cdd-40b4-a2aa-d68da8c88502"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                }
+            }
+        },
+        "model.SpendResp": {
+            "type": "object",
+            "properties": {
+                "balance_snapshoot": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "category_id": {
+                    "type": "string",
+                    "example": "f9339be2-6b05-4acb-a269-5309c39bae92"
+                },
+                "category_id_2": {
+                    "type": "string",
+                    "example": "f9339be2-6b05-4acb-a269-5309c39bae93"
+                },
+                "category_name": {
+                    "type": "string",
+                    "example": "food"
+                },
+                "category_name_2": {
+                    "type": "string",
+                    "example": "b and f"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "date": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "f9339be2-6b05-4acb-a269-5309c39bae90"
+                },
+                "is_income": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Makan siang"
+                },
+                "pocket_id": {
+                    "type": "string",
+                    "example": "f9339be2-6b05-4acb-a269-5309c39bae91"
+                },
+                "pocket_name": {
+                    "type": "string",
+                    "example": "main pocket"
+                },
+                "price": {
+                    "type": "integer",
+                    "example": 50000
+                },
+                "type": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "user_id": {
+                    "type": "string",
+                    "example": "f9339be2-6b05-4acb-a269-5309c39bae89"
+                },
+                "user_name": {
+                    "type": "string",
+                    "example": "Muchlis"
+                },
+                "version": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "model.UpdateCategory": {
             "type": "object",
             "required": [
@@ -787,6 +1488,39 @@ const docTemplate = `{
                 "category_name": {
                     "type": "string",
                     "example": "gaji_2"
+                }
+            }
+        },
+        "model.UpdateSpend": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "string",
+                    "example": "f9339be2-6b05-4acb-a269-5309c39bae92"
+                },
+                "category_id_2": {
+                    "type": "string",
+                    "example": "f9339be2-6b05-4acb-a269-5309c39bae93"
+                },
+                "date": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "is_income": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Makan siang"
+                },
+                "price": {
+                    "type": "integer",
+                    "example": 50000
+                },
+                "type": {
+                    "type": "integer",
+                    "example": 2
                 }
             }
         }

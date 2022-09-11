@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/google/uuid"
+	"github.com/muchlist/moneymagnet/business/request/model"
 	"github.com/muchlist/moneymagnet/business/request/service"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/mid"
@@ -29,7 +29,16 @@ type requestHandler struct {
 	service   service.Core
 }
 
-// CreateRequest ...
+// @Summary      Create Join Request
+// @Description  Create Join Request
+// @Tags         Join
+// @Accept       json
+// @Produce      json
+// @Param		 Body body model.NewRequestPocket true "Request Body"
+// @Success      200  {object}  misc.ResponseSuccess{data=model.RequestPocket}
+// @Failure      400  {object}  misc.ResponseErr
+// @Failure      500  {object}  misc.Response500Err
+// @Router       /request [post]
 func (pt requestHandler) CreateRequest(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := mid.GetClaims(r.Context())
@@ -38,9 +47,7 @@ func (pt requestHandler) CreateRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req struct {
-		PocketID uuid.UUID `json:"pocket_id" validator:"required,uuid"`
-	}
+	var req model.NewRequestPocket
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
 		pt.log.WarnT(r.Context(), "bad json", err)
@@ -72,7 +79,17 @@ func (pt requestHandler) CreateRequest(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ApproveOrRejectRequest ...
+// @Summary      Action to Join Request
+// @Description  Action to Join Request
+// @Tags         Join
+// @Accept       json
+// @Produce      json
+// @Param		 request_id path string true "request_id"
+// @Param		 approve query bool false "approve"
+// @Success      200  {object}  misc.ResponseMessage
+// @Failure      400  {object}  misc.ResponseErr
+// @Failure      500  {object}  misc.Response500Err
+// @Router       /request/{request_id}/action [post]
 func (pt requestHandler) ApproveOrRejectRequest(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := mid.GetClaims(r.Context())
@@ -116,7 +133,15 @@ func (pt requestHandler) ApproveOrRejectRequest(w http.ResponseWriter, r *http.R
 	}
 }
 
-// FindRequestByApprover...
+// @Summary      Get Request IN
+// @Description  Get request you can approve
+// @Tags         Join
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  misc.ResponseSuccessList{data=[]model.RequestPocket}
+// @Failure      400  {object}  misc.ResponseErr
+// @Failure      500  {object}  misc.Response500Err
+// @Router       /request/in [get]
 func (pt requestHandler) FindRequestByApprover(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := mid.GetClaims(r.Context())
@@ -152,7 +177,15 @@ func (pt requestHandler) FindRequestByApprover(w http.ResponseWriter, r *http.Re
 	}
 }
 
-// FindByRequester ...
+// @Summary      Get Request OUT
+// @Description  Get request created by you
+// @Tags         Join
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  misc.ResponseSuccessList{data=[]model.RequestPocket}
+// @Failure      400  {object}  misc.ResponseErr
+// @Failure      500  {object}  misc.Response500Err
+// @Router       /request/out [get]
 func (pt requestHandler) FindByRequester(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := mid.GetClaims(r.Context())

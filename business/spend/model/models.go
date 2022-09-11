@@ -51,45 +51,45 @@ func (s *Spend) ToResp() SpendResp {
 }
 
 type SpendResp struct {
-	ID               uuid.UUID     `json:"id"`
-	UserID           uuid.UUID     `json:"user_id"`
-	UserName         string        `json:"user_name"`
-	PocketID         uuid.UUID     `json:"pocket_id"`
-	PocketName       string        `json:"pocket_name"`
-	CategoryID       uuid.NullUUID `json:"category_id"`
-	CategoryName     string        `json:"category_name"`
-	CategoryID2      uuid.NullUUID `json:"category_id_2"`
-	CategoryName2    string        `json:"category_name_2"`
-	Name             string        `json:"name"`
-	Price            int64         `json:"price"`
-	BalanceSnapshoot int64         `json:"balance_snapshoot"`
-	IsIncome         bool          `json:"is_income"`
-	SpendType        int           `json:"type"`
-	Date             time.Time     `json:"date"`
-	CreatedAt        time.Time     `json:"created_at"`
-	UpdatedAt        time.Time     `json:"updated_at"`
-	Version          int           `json:"version"`
+	ID               uuid.UUID     `json:"id" example:"f9339be2-6b05-4acb-a269-5309c39bae90"`
+	UserID           uuid.UUID     `json:"user_id" example:"f9339be2-6b05-4acb-a269-5309c39bae89"`
+	UserName         string        `json:"user_name" example:"Muchlis"`
+	PocketID         uuid.UUID     `json:"pocket_id" example:"f9339be2-6b05-4acb-a269-5309c39bae91"`
+	PocketName       string        `json:"pocket_name" example:"main pocket"`
+	CategoryID       uuid.NullUUID `json:"category_id" example:"f9339be2-6b05-4acb-a269-5309c39bae92"`
+	CategoryName     string        `json:"category_name" example:"food"`
+	CategoryID2      uuid.NullUUID `json:"category_id_2" example:"f9339be2-6b05-4acb-a269-5309c39bae93"`
+	CategoryName2    string        `json:"category_name_2" example:"b and f"`
+	Name             string        `json:"name" example:"Makan siang"`
+	Price            int64         `json:"price" example:"50000"`
+	BalanceSnapshoot int64         `json:"balance_snapshoot" example:"0"`
+	IsIncome         bool          `json:"is_income" example:"false"`
+	SpendType        int           `json:"type" example:"2"`
+	Date             time.Time     `json:"date" example:"2022-09-10T17:03:15.091267+08:00"`
+	CreatedAt        time.Time     `json:"created_at" example:"2022-09-10T17:03:15.091267+08:00"`
+	UpdatedAt        time.Time     `json:"updated_at" example:"2022-09-10T17:03:15.091267+08:00"`
+	Version          int           `json:"version" example:"1"`
 }
 
 type NewSpend struct {
-	ID          uuid.NullUUID `json:"id"`
-	PocketID    uuid.UUID     `json:"pocket_id"`
-	CategoryID  uuid.NullUUID `json:"category_id"`
-	CategoryID2 uuid.NullUUID `json:"category_id_2"`
-	Name        string        `json:"name"`
-	Price       int64         `json:"price"`
-	IsIncome    bool          `json:"is_income"`
-	SpendType   int           `json:"type"`
-	Date        time.Time     `json:"date"`
+	ID          uuid.NullUUID `json:"id" example:"f9339be2-6b05-4acb-a269-5309c39bae90"`
+	PocketID    uuid.UUID     `json:"pocket_id" example:"f9339be2-6b05-4acb-a269-5309c39bae91"`
+	CategoryID  uuid.NullUUID `json:"category_id" example:"f9339be2-6b05-4acb-a269-5309c39bae92"`
+	CategoryID2 uuid.NullUUID `json:"category_id_2" example:"f9339be2-6b05-4acb-a269-5309c39bae93"`
+	Name        string        `json:"name" example:"Makan siang"`
+	Price       int64         `json:"price" example:"50000"`
+	IsIncome    bool          `json:"is_income" example:"false"`
+	SpendType   int           `json:"type" example:"2"`
+	Date        time.Time     `json:"date" example:"2022-09-10T17:03:15.091267+08:00"`
 }
 
 type UpdateSpend struct {
 	ID          uuid.UUID     `json:"-"`
-	CategoryID2 uuid.NullUUID `json:"category_id_2"`
-	CategoryID  uuid.NullUUID `json:"category_id"`
-	Name        *string       `json:"name"`
-	Price       *int64        `json:"price"`
-	IsIncome    *bool         `json:"is_income"`
-	SpendType   *int          `json:"type"`
-	Date        *time.Time    `json:"date"`
+	CategoryID  uuid.NullUUID `json:"category_id" example:"f9339be2-6b05-4acb-a269-5309c39bae92"`
+	CategoryID2 uuid.NullUUID `json:"category_id_2" example:"f9339be2-6b05-4acb-a269-5309c39bae93"`
+	Name        *string       `json:"name" example:"Makan siang"`
+	Price       *int64        `json:"price" example:"50000"`
+	IsIncome    *bool         `json:"is_income" example:"false"`
+	SpendType   *int          `json:"type" example:"2"`
+	Date        *time.Time    `json:"date" example:"2022-09-10T17:03:15.091267+08:00"`
 }
