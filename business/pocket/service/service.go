@@ -83,20 +83,29 @@ func (s Core) CreatePocket(ctx context.Context, owner uuid.UUID, req model.NewPo
 		Version:    1,
 	}
 
-	err = s.repo.Insert(ctx, &pocket)
-	if err != nil {
-		return model.PocketResp{}, fmt.Errorf("insert pocket to db: %w", err)
-	}
+	transErr := s.repo.WithinTransaction(
+		ctx, func(ctx context.Context) error {
+			err = s.repo.Insert(ctx, &pocket)
+			if err != nil {
+				return fmt.Errorf("insert pocket to db: %w", err)
+			}
 
-	// insert relation
-	uuidUserSet := ds.NewUUIDSet()
-	uuidUserSet.Add(owner)
-	uuidUserSet.AddAll(combineUserUUIDs)
-	uniqueUsers := uuidUserSet.Reveal()
+			// insert relation
+			uuidUserSet := ds.NewUUIDSet()
+			uuidUserSet.Add(owner)
+			uuidUserSet.AddAll(combineUserUUIDs)
+			uniqueUsers := uuidUserSet.Reveal()
 
-	err = s.repo.InsertPocketUser(ctx, uniqueUsers, pocket.ID)
-	if err != nil {
-		return pocket.ToPocketResp(), fmt.Errorf("loop insert pocket_user to db: %w", err)
+			err = s.repo.InsertPocketUser(ctx, uniqueUsers, pocket.ID)
+			if err != nil {
+				return fmt.Errorf("loop insert pocket_user to db: %w", err)
+			}
+			return nil
+		},
+	)
+
+	if transErr != nil {
+		return model.PocketResp{}, fmt.Errorf("transaction fail: %w", transErr)
 	}
 
 	return pocket.ToPocketResp(), nil

@@ -23,6 +23,7 @@ type PocketSaver interface {
 	Edit(ctx context.Context, Pocket *model.Pocket) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	UpdateBalance(ctx context.Context, pocketID uuid.UUID, balance int64, isSetOperaton bool) (int64, error)
+	WithinTransaction(ctx context.Context, tFunc func(ctx context.Context) error) error
 
 	// many to many relation
 	InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketID uuid.UUID) error

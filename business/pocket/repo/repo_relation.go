@@ -41,7 +41,7 @@ func (r Repo) InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketI
 		return fmt.Errorf("build query insert pocket user relation: %w", err)
 	}
 
-	_, err = r.db.Exec(ctx, sqlStatement, args...)
+	_, err = r.model(ctx).Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		return db.ParseError(err)
 	}
@@ -64,7 +64,7 @@ func (r Repo) DeletePocketUser(ctx context.Context, userID uuid.UUID, pocketID u
 		return fmt.Errorf("build query delete pocket user relation: %w", err)
 	}
 
-	res, err := r.db.Exec(ctx, sqlStatement, args...)
+	res, err := r.model(ctx).Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		return db.ParseError(err)
 	}
