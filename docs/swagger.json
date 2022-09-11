@@ -521,6 +521,214 @@
                     }
                 }
             }
+        },
+        "/request": {
+            "post": {
+                "description": "Create Join Request",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Join"
+                ],
+                "summary": "Create Join Request",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.NewRequestPocket"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/misc.ResponseSuccess"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.RequestPocket"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            }
+        },
+        "/request/in": {
+            "get": {
+                "description": "Get request you can approve",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Join"
+                ],
+                "summary": "Get Request IN",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/misc.ResponseSuccessList"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.RequestPocket"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            }
+        },
+        "/request/out": {
+            "get": {
+                "description": "Get request created by you",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Join"
+                ],
+                "summary": "Get Request OUT",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/misc.ResponseSuccessList"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.RequestPocket"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            }
+        },
+        "/request/{request_id}/action": {
+            "post": {
+                "description": "Action to Join Request",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Join"
+                ],
+                "summary": "Action to Join Request",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "request_id",
+                        "name": "request_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "approve",
+                        "name": "approve",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseMessage"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -545,7 +753,7 @@
                 },
                 "total_records": {
                     "type": "integer",
-                    "example": 3
+                    "example": 1
                 }
             }
         },
@@ -691,6 +899,15 @@
                 }
             }
         },
+        "model.NewRequestPocket": {
+            "type": "object",
+            "properties": {
+                "pocket_id": {
+                    "type": "string",
+                    "example": "968d4dfe-041a-4721-bd8a-4e60c507c671"
+                }
+            }
+        },
         "model.PocketResp": {
             "type": "object",
             "properties": {
@@ -768,6 +985,47 @@
                 "pocket_name": {
                     "type": "string",
                     "example": "dompet utama"
+                }
+            }
+        },
+        "model.RequestPocket": {
+            "type": "object",
+            "properties": {
+                "approver_id": {
+                    "type": "string",
+                    "example": "ba22d3c6-2cdd-40b4-a2aa-d68da8c88501"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 2001
+                },
+                "is_approved": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "is_rejected": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "pocket_id": {
+                    "type": "string",
+                    "example": "968d4dfe-041a-4721-bd8a-4e60c507c671"
+                },
+                "pocket_name": {
+                    "type": "string",
+                    "example": "main pocket"
+                },
+                "requester_id": {
+                    "type": "string",
+                    "example": "ba22d3c6-2cdd-40b4-a2aa-d68da8c88502"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
                 }
             }
         },

@@ -100,7 +100,7 @@ type Metadata struct {
 	PageSize     int `json:"page_size,omitempty" example:"50"`
 	FirstPage    int `json:"first_page,omitempty" example:"1"`
 	LastPage     int `json:"last_page,omitempty" example:"1"`
-	TotalRecords int `json:"total_records,omitempty" example:"3"`
+	TotalRecords int `json:"total_records,omitempty" example:"1"`
 }
 
 func CalculateMetadata(totalRecords, page, pageSize int) Metadata {

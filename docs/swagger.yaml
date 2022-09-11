@@ -15,7 +15,7 @@ definitions:
         example: 50
         type: integer
       total_records:
-        example: 3
+        example: 1
         type: integer
     type: object
   misc.Response500Err:
@@ -116,6 +116,12 @@ definitions:
     required:
     - pocket_name
     type: object
+  model.NewRequestPocket:
+    properties:
+      pocket_id:
+        example: 968d4dfe-041a-4721-bd8a-4e60c507c671
+        type: string
+    type: object
   model.PocketResp:
     properties:
       balance:
@@ -171,6 +177,36 @@ definitions:
         type: integer
       pocket_name:
         example: dompet utama
+        type: string
+    type: object
+  model.RequestPocket:
+    properties:
+      approver_id:
+        example: ba22d3c6-2cdd-40b4-a2aa-d68da8c88501
+        type: string
+      created_at:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      id:
+        example: 2001
+        type: integer
+      is_approved:
+        example: false
+        type: boolean
+      is_rejected:
+        example: false
+        type: boolean
+      pocket_id:
+        example: 968d4dfe-041a-4721-bd8a-4e60c507c671
+        type: string
+      pocket_name:
+        example: main pocket
+        type: string
+      requester_id:
+        example: ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        type: string
+      updated_at:
+        example: "2022-09-10T17:03:15.091267+08:00"
         type: string
     type: object
   model.UpdateCategory:
@@ -507,4 +543,132 @@ paths:
       summary: Update Pocket
       tags:
       - Pocket
+  /request:
+    post:
+      consumes:
+      - application/json
+      description: Create Join Request
+      parameters:
+      - description: Request Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/model.NewRequestPocket'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/misc.ResponseSuccess'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.RequestPocket'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/misc.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/misc.Response500Err'
+      summary: Create Join Request
+      tags:
+      - Join
+  /request/{request_id}/action:
+    post:
+      consumes:
+      - application/json
+      description: Action to Join Request
+      parameters:
+      - description: request_id
+        in: path
+        name: request_id
+        required: true
+        type: string
+      - description: approve
+        in: query
+        name: approve
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/misc.ResponseMessage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/misc.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/misc.Response500Err'
+      summary: Action to Join Request
+      tags:
+      - Join
+  /request/in:
+    get:
+      consumes:
+      - application/json
+      description: Get request you can approve
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/misc.ResponseSuccessList'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.RequestPocket'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/misc.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/misc.Response500Err'
+      summary: Get Request IN
+      tags:
+      - Join
+  /request/out:
+    get:
+      consumes:
+      - application/json
+      description: Get request created by you
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/misc.ResponseSuccessList'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.RequestPocket'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/misc.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/misc.Response500Err'
+      summary: Get Request OUT
+      tags:
+      - Join
 swagger: "2.0"
