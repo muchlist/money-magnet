@@ -291,20 +291,6 @@ func (mr *MockPocketSaverMockRecorder) UpdateBalance(ctx, pocketID, balance, isS
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBalance", reflect.TypeOf((*MockPocketSaver)(nil).UpdateBalance), ctx, pocketID, balance, isSetOperaton)
 }
 
-// WithinTransaction mocks base method.
-func (m *MockPocketSaver) WithinTransaction(ctx context.Context, tFunc func(context.Context) error) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WithinTransaction", ctx, tFunc)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// WithinTransaction indicates an expected call of WithinTransaction.
-func (mr *MockPocketSaverMockRecorder) WithinTransaction(ctx, tFunc interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithinTransaction", reflect.TypeOf((*MockPocketSaver)(nil).WithinTransaction), ctx, tFunc)
-}
-
 // MockPocketReader is a mock of PocketReader interface.
 type MockPocketReader struct {
 	ctrl     *gomock.Controller
@@ -373,4 +359,41 @@ func (m *MockPocketReader) GetByID(ctx context.Context, id uuid.UUID) (model.Poc
 func (mr *MockPocketReaderMockRecorder) GetByID(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockPocketReader)(nil).GetByID), ctx, id)
+}
+
+// MockTransactor is a mock of Transactor interface.
+type MockTransactor struct {
+	ctrl     *gomock.Controller
+	recorder *MockTransactorMockRecorder
+}
+
+// MockTransactorMockRecorder is the mock recorder for MockTransactor.
+type MockTransactorMockRecorder struct {
+	mock *MockTransactor
+}
+
+// NewMockTransactor creates a new mock instance.
+func NewMockTransactor(ctrl *gomock.Controller) *MockTransactor {
+	mock := &MockTransactor{ctrl: ctrl}
+	mock.recorder = &MockTransactorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockTransactor) EXPECT() *MockTransactorMockRecorder {
+	return m.recorder
+}
+
+// WithinTransaction mocks base method.
+func (m *MockTransactor) WithinTransaction(ctx context.Context, tFunc func(context.Context) error) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithinTransaction", ctx, tFunc)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// WithinTransaction indicates an expected call of WithinTransaction.
+func (mr *MockTransactorMockRecorder) WithinTransaction(ctx, tFunc interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithinTransaction", reflect.TypeOf((*MockTransactor)(nil).WithinTransaction), ctx, tFunc)
 }

@@ -16,6 +16,7 @@ mockgen -source=business/pocket/storer/pocket_storer.go -destination=business/po
 type PocketStorer interface {
 	PocketSaver
 	PocketReader
+	Transactor
 }
 
 type PocketSaver interface {
@@ -23,7 +24,6 @@ type PocketSaver interface {
 	Edit(ctx context.Context, Pocket *model.Pocket) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	UpdateBalance(ctx context.Context, pocketID uuid.UUID, balance int64, isSetOperaton bool) (int64, error)
-	WithinTransaction(ctx context.Context, tFunc func(ctx context.Context) error) error
 
 	// many to many relation
 	InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketID uuid.UUID) error
@@ -34,4 +34,8 @@ type PocketReader interface {
 	GetByID(ctx context.Context, id uuid.UUID) (model.Pocket, error)
 	Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error)
 	FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error)
+}
+
+type Transactor interface {
+	WithinTransaction(ctx context.Context, tFunc func(ctx context.Context) error) error
 }

@@ -3,7 +3,7 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-		<title>ptservice: Go Coverage Report</title>
+		<title>service: Go Coverage Report</title>
 		<style>
 			body {
 				background: black;
@@ -55,9 +55,11 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">github.com/muchlist/moneymagnet/business/pocket/ptservice/service.go (21.5%)</option>
+				<option value="file0">github.com/muchlist/moneymagnet/business/pocket/service/service.go (22.7%)</option>
 				
-				<option value="file1">github.com/muchlist/moneymagnet/pkg/utils/slicer/slicer.go (45.8%)</option>
+				<option value="file1">github.com/muchlist/moneymagnet/business/request/repo/repo.go (0.0%)</option>
+				
+				<option value="file2">github.com/muchlist/moneymagnet/pkg/utils/slicer/slicer.go (65.8%)</option>
 				
 				</select>
 			</div>
@@ -71,7 +73,7 @@
 		</div>
 		<div id="content">
 		
-		<pre class="file" id="file0" style="display: none">package ptservice
+		<pre class="file" id="file0" style="display: none">package service
 
 import (
         "context"
@@ -79,7 +81,7 @@ import (
         "fmt"
         "time"
 
-        "github.com/muchlist/moneymagnet/business/pocket/ptmodel"
+        "github.com/muchlist/moneymagnet/business/pocket/model"
         "github.com/muchlist/moneymagnet/business/pocket/storer"
         "github.com/muchlist/moneymagnet/pkg/data"
         "github.com/muchlist/moneymagnet/pkg/db"
@@ -97,32 +99,32 @@ var (
         ErrInvalidID = errors.New("ID is not in its proper form")
 )
 
-// Service manages the set of APIs for user access.
-type Service struct {
+// Core manages the set of APIs for user access.
+type Core struct {
         log      mlogger.Logger
         repo     storer.PocketStorer
         userRepo storer.UserReader
 }
 
-// NewService constructs a core for user api access.
-func NewService(
+// NewCore constructs a core for user api access.
+func NewCore(
         log mlogger.Logger,
         repo storer.PocketStorer,
         userRepo storer.UserReader,
-) Service <span class="cov8" title="1">{
-        return Service{
+) Core <span class="cov8" title="1">{
+        return Core{
                 log:      log,
                 repo:     repo,
                 userRepo: userRepo,
         }
 }</span>
 
-func (s Service) CreatePocket(ctx context.Context, owner uuid.UUID, req ptmodel.PocketNew) (ptmodel.PocketResp, error) <span class="cov8" title="1">{
+func (s Core) CreatePocket(ctx context.Context, owner uuid.UUID, req model.NewPocket) (model.PocketResp, error) <span class="cov8" title="1">{
         // Validate editor and watcher uuids
-        combineUserUUIDs := append(req.Editor, req.Watcher...)
+        combineUserUUIDs := append(req.EditorID, req.WatcherID...)
         users, err := s.userRepo.GetByIDs(ctx, combineUserUUIDs)
         if err != nil </span><span class="cov0" title="0">{
-                return ptmodel.PocketResp{}, fmt.Errorf("get users: %w", err)
+                return model.PocketResp{}, fmt.Errorf("get users: %w", err)
         }</span>
         <span class="cov8" title="1">for _, id := range combineUserUUIDs </span><span class="cov0" title="0">{
                 found := false
@@ -133,22 +135,22 @@ func (s Service) CreatePocket(ctx context.Context, owner uuid.UUID, req ptmodel.
                         }
                 }
                 <span class="cov0" title="0">if !found </span><span class="cov0" title="0">{
-                        return ptmodel.PocketResp{}, errr.New(fmt.Sprintf("uuid %s is not have valid user", id), 400)
+                        return model.PocketResp{}, errr.New(fmt.Sprintf("uuid %s is not have valid user", id), 400)
                 }</span>
         }
 
-        <span class="cov8" title="1">if req.Editor == nil || len(req.Editor) == 0 </span><span class="cov8" title="1">{
-                req.Editor = []uuid.UUID{owner}
+        <span class="cov8" title="1">if req.EditorID == nil || len(req.EditorID) == 0 </span><span class="cov8" title="1">{
+                req.EditorID = []uuid.UUID{owner}
         }</span>
-        <span class="cov8" title="1">if req.Watcher == nil || len(req.Watcher) == 0 </span><span class="cov8" title="1">{
-                req.Watcher = []uuid.UUID{owner}
+        <span class="cov8" title="1">if req.WatcherID == nil || len(req.WatcherID) == 0 </span><span class="cov8" title="1">{
+                req.WatcherID = []uuid.UUID{owner}
         }</span>
 
         <span class="cov8" title="1">timeNow := time.Now()
-        pocket := ptmodel.Pocket{
-                Owner:      owner,
-                Editor:     req.Editor,
-                Watcher:    req.Watcher,
+        pocket := model.Pocket{
+                OwnerID:    owner,
+                EditorID:   req.EditorID,
+                WatcherID:  req.WatcherID,
                 PocketName: req.PocketName,
                 Level:      1,
                 CreatedAt:  timeNow,
@@ -156,153 +158,188 @@ func (s Service) CreatePocket(ctx context.Context, owner uuid.UUID, req ptmodel.
                 Version:    1,
         }
 
-        err = s.repo.Insert(ctx, &amp;pocket)
-        if err != nil </span><span class="cov0" title="0">{
-                return ptmodel.PocketResp{}, fmt.Errorf("insert pocket to db: %w", err)
-        }</span>
+        // Run IN Transaction
+        transErr := s.repo.WithinTransaction(
+                ctx, func(ctx context.Context) error </span><span class="cov8" title="1">{
 
-        // insert relation
-        <span class="cov8" title="1">uuidUserSet := ds.NewUUIDSet()
-        uuidUserSet.Add(owner)
-        uuidUserSet.AddAll(combineUserUUIDs)
-        uniqueUsers := uuidUserSet.Reveal()
+                        // insert pocket
+                        err = s.repo.Insert(ctx, &amp;pocket)
+                        if err != nil </span><span class="cov8" title="1">{
+                                return fmt.Errorf("insert pocket to db: %w", err)
+                        }</span>
 
-        err = s.repo.InsertPocketUser(ctx, uniqueUsers, pocket.ID)
-        if err != nil </span><span class="cov0" title="0">{
-                return pocket.ToPocketResp(), fmt.Errorf("loop insert pocket_user to db: %w", err)
+                        // insert relation
+                        <span class="cov8" title="1">uuidUserSet := ds.NewUUIDSet()
+                        uuidUserSet.Add(owner)
+                        uuidUserSet.AddAll(combineUserUUIDs)
+                        uniqueUsers := uuidUserSet.Reveal()
+
+                        err = s.repo.InsertPocketUser(ctx, uniqueUsers, pocket.ID)
+                        if err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("loop insert pocket_user to db: %w", err)
+                        }</span>
+                        <span class="cov8" title="1">return nil</span>
+                },
+        )
+
+        <span class="cov8" title="1">if transErr != nil </span><span class="cov8" title="1">{
+                return model.PocketResp{}, transErr
         }</span>
 
         <span class="cov8" title="1">return pocket.ToPocketResp(), nil</span>
 }
 
-func (s Service) RenamePocket(ctx context.Context, owner uuid.UUID, pocketID uint64, newName string) (ptmodel.PocketResp, error) <span class="cov0" title="0">{
+func (s Core) UpdatePocket(ctx context.Context, owner uuid.UUID, newData model.PocketUpdate) (model.PocketResp, error) <span class="cov0" title="0">{
 
         // Get existing Pocket
-        pocketExisting, err := s.repo.GetByID(ctx, pocketID)
+        pocketExisting, err := s.repo.GetByID(ctx, newData.ID)
         if err != nil </span><span class="cov0" title="0">{
-                return ptmodel.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
+                return model.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
         }</span>
 
         // Check if owner not have access to pocket
-        <span class="cov0" title="0">if !(pocketExisting.Owner == owner ||
-                slicer.In(owner, pocketExisting.Editor)) </span><span class="cov0" title="0">{
-                return ptmodel.PocketResp{}, errr.New("not have access to this pocket", 400)
+        <span class="cov0" title="0">if !(pocketExisting.OwnerID == owner ||
+                slicer.In(owner, pocketExisting.EditorID)) </span><span class="cov0" title="0">{
+                return model.PocketResp{}, errr.New("not have access to this pocket", 400)
         }</span>
 
         // Modify data
-        <span class="cov0" title="0">pocketExisting.PocketName = newName
+        <span class="cov0" title="0">if newData.PocketName != nil </span><span class="cov0" title="0">{
+                pocketExisting.PocketName = *newData.PocketName
+        }</span>
+        <span class="cov0" title="0">if newData.Currency != nil </span><span class="cov0" title="0">{
+                pocketExisting.Currency = *newData.Currency
+        }</span>
+        <span class="cov0" title="0">if newData.Icon != nil </span><span class="cov0" title="0">{
+                pocketExisting.Icon = *newData.Icon
+        }</span>
 
         // Edit
-        s.repo.Edit(ctx, &amp;pocketExisting)
+        <span class="cov0" title="0">err = s.repo.Edit(ctx, &amp;pocketExisting)
         if err != nil </span><span class="cov0" title="0">{
-                return ptmodel.PocketResp{}, fmt.Errorf("edit pocket: %w", err)
+                return model.PocketResp{}, fmt.Errorf("edit pocket: %w", err)
         }</span>
 
         <span class="cov0" title="0">return pocketExisting.ToPocketResp(), nil</span>
 }
 
-func (s Service) AddPerson(ctx context.Context, data AddPersonData) (ptmodel.PocketResp, error) <span class="cov0" title="0">{
+func (s Core) AddPerson(ctx context.Context, data AddPersonData) (model.PocketResp, error) <span class="cov0" title="0">{
 
         // Get existing Pocket
         pocketExisting, err := s.repo.GetByID(ctx, data.PocketID)
         if err != nil </span><span class="cov0" title="0">{
-                return ptmodel.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
+                return model.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
         }</span>
 
         // Check if owner not have access to pocket
-        <span class="cov0" title="0">if !(pocketExisting.Owner == data.Owner ||
-                slicer.In(data.Owner, pocketExisting.Editor)) </span><span class="cov0" title="0">{
-                return ptmodel.PocketResp{}, errr.New("not have access to this pocket", 400)
+        <span class="cov0" title="0">if !(pocketExisting.OwnerID == data.Owner ||
+                slicer.In(data.Owner, pocketExisting.EditorID)) </span><span class="cov0" title="0">{
+                return model.PocketResp{}, errr.New("not have access to this pocket", 400)
         }</span>
 
         // Check if person to add is exist
         <span class="cov0" title="0">_, err = s.userRepo.GetByID(ctx, data.Person)
         if err != nil </span><span class="cov0" title="0">{
                 if errors.Is(err, db.ErrDBNotFound) </span><span class="cov0" title="0">{
-                        return ptmodel.PocketResp{}, errr.New("account is not exist", 400)
+                        return model.PocketResp{}, errr.New("account is not exist", 400)
                 }</span>
-                <span class="cov0" title="0">return ptmodel.PocketResp{}, fmt.Errorf("get user by id : %w", err)</span>
+                <span class="cov0" title="0">return model.PocketResp{}, fmt.Errorf("get user by id : %w", err)</span>
         }
 
         <span class="cov0" title="0">if data.IsReadOnly </span><span class="cov0" title="0">{
                 // add to wathcer
-                pocketExisting.Watcher = append(pocketExisting.Watcher, data.Person)
+                pocketExisting.WatcherID = append(pocketExisting.WatcherID, data.Person)
         }</span> else<span class="cov0" title="0"> {
                 // add to editor
-                pocketExisting.Editor = append(pocketExisting.Editor, data.Person)
+                pocketExisting.EditorID = append(pocketExisting.EditorID, data.Person)
         }</span>
 
-        // Edit
-        <span class="cov0" title="0">s.repo.Edit(ctx, &amp;pocketExisting)
-        if err != nil </span><span class="cov0" title="0">{
-                return ptmodel.PocketResp{}, fmt.Errorf("edit pocket: %w", err)
-        }</span>
+        // Run IN Transaction
+        <span class="cov0" title="0">transErr := s.repo.WithinTransaction(ctx, func(ctx context.Context) error </span><span class="cov0" title="0">{
+                // Edit
+                err = s.repo.Edit(ctx, &amp;pocketExisting)
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("edit pocket: %w", err)
+                }</span>
 
-        // insert to related table
-        <span class="cov0" title="0">err = s.repo.InsertPocketUser(ctx, []uuid.UUID{data.Person}, pocketExisting.ID)
-        if err != nil </span><span class="cov0" title="0">{
-                return pocketExisting.ToPocketResp(), fmt.Errorf("insert pocket_user to db: %w", err)
+                // insert to related table
+                <span class="cov0" title="0">err = s.repo.InsertPocketUser(ctx, []uuid.UUID{data.Person}, pocketExisting.ID)
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("insert pocket_user to db: %w", err)
+                }</span>
+
+                <span class="cov0" title="0">return nil</span>
+        })
+        <span class="cov0" title="0">if transErr != nil </span><span class="cov0" title="0">{
+                return model.PocketResp{}, transErr
         }</span>
 
         <span class="cov0" title="0">return pocketExisting.ToPocketResp(), nil</span>
 }
 
 // RemovePerson will remove person from both editor and watcher
-func (s Service) RemovePerson(ctx context.Context, data RemovePersonData) (ptmodel.PocketResp, error) <span class="cov0" title="0">{
+func (s Core) RemovePerson(ctx context.Context, data RemovePersonData) (model.PocketResp, error) <span class="cov0" title="0">{
         // Get existing Pocket
         pocketExisting, err := s.repo.GetByID(ctx, data.PocketID)
         if err != nil </span><span class="cov0" title="0">{
-                return ptmodel.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
+                return model.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
         }</span>
 
         // Check if owner not have access to pocket
-        <span class="cov0" title="0">if !(pocketExisting.Owner == data.Owner ||
-                slicer.In(data.Owner, pocketExisting.Editor)) </span><span class="cov0" title="0">{
-                return ptmodel.PocketResp{}, errr.New("not have access to this pocket", 400)
+        <span class="cov0" title="0">if !(pocketExisting.OwnerID == data.Owner ||
+                slicer.In(data.Owner, pocketExisting.EditorID)) </span><span class="cov0" title="0">{
+                return model.PocketResp{}, errr.New("not have access to this pocket", 400)
         }</span>
 
-        <span class="cov0" title="0">pocketExisting.Editor = slicer.RemoveFrom(data.Person, pocketExisting.Editor)
-        pocketExisting.Watcher = slicer.RemoveFrom(data.Person, pocketExisting.Watcher)
+        <span class="cov0" title="0">pocketExisting.EditorID = slicer.RemoveFrom(data.Person, pocketExisting.EditorID)
+        pocketExisting.WatcherID = slicer.RemoveFrom(data.Person, pocketExisting.WatcherID)
 
-        // Edit
-        s.repo.Edit(ctx, &amp;pocketExisting)
-        if err != nil </span><span class="cov0" title="0">{
-                return ptmodel.PocketResp{}, fmt.Errorf("edit pocket: %w", err)
-        }</span>
+        // Run IN Transaction
+        transErr := s.repo.WithinTransaction(ctx, func(ctx context.Context) error </span><span class="cov0" title="0">{
+                // Edit
+                err = s.repo.Edit(ctx, &amp;pocketExisting)
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("edit pocket: %w", err)
+                }</span>
 
-        // delete from related table
-        <span class="cov0" title="0">err = s.repo.DeletePocketUser(ctx, data.Person, pocketExisting.ID)
-        if err != nil </span><span class="cov0" title="0">{
-                return pocketExisting.ToPocketResp(), fmt.Errorf("delete pocket_user from db: %w", err)
+                // delete from related table
+                <span class="cov0" title="0">err = s.repo.DeletePocketUser(ctx, data.Person, pocketExisting.ID)
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("delete pocket_user from db: %w", err)
+                }</span>
+                <span class="cov0" title="0">return nil</span>
+        })
+        <span class="cov0" title="0">if transErr != nil </span><span class="cov0" title="0">{
+                return model.PocketResp{}, transErr
         }</span>
 
         <span class="cov0" title="0">return pocketExisting.ToPocketResp(), nil</span>
 }
 
 // GetDetail ...
-func (s Service) GetDetail(ctx context.Context, userID string, pocketID uint64) (ptmodel.PocketResp, error) <span class="cov0" title="0">{
+func (s Core) GetDetail(ctx context.Context, userID string, pocketID uuid.UUID) (model.PocketResp, error) <span class="cov0" title="0">{
         userUUID, err := uuid.Parse(userID)
         if err != nil </span><span class="cov0" title="0">{
-                return ptmodel.PocketResp{}, ErrInvalidID
+                return model.PocketResp{}, ErrInvalidID
         }</span>
 
         // Get existing Pocket
         <span class="cov0" title="0">pocketDetail, err := s.repo.GetByID(ctx, pocketID)
         if err != nil </span><span class="cov0" title="0">{
-                return ptmodel.PocketResp{}, fmt.Errorf("get pocket detail by id: %w", err)
+                return model.PocketResp{}, fmt.Errorf("get pocket detail by id: %w", err)
         }</span>
 
         // Check if owner not have access to pocket
-        <span class="cov0" title="0">if !(pocketDetail.Owner == userUUID ||
-                slicer.In(userUUID, pocketDetail.Watcher)) </span><span class="cov0" title="0">{
-                return ptmodel.PocketResp{}, errr.New("not have access to this pocket", 400)
+        <span class="cov0" title="0">if !(pocketDetail.OwnerID == userUUID ||
+                slicer.In(userUUID, pocketDetail.WatcherID)) </span><span class="cov0" title="0">{
+                return model.PocketResp{}, errr.New("not have access to this pocket", 400)
         }</span>
 
         <span class="cov0" title="0">return pocketDetail.ToPocketResp(), nil</span>
 }
 
 // FindAllPocket ...
-func (s Service) FindAllPocket(ctx context.Context, userID string, filter data.Filters) ([]ptmodel.PocketResp, data.Metadata, error) <span class="cov0" title="0">{
+func (s Core) FindAllPocket(ctx context.Context, userID string, filter data.Filters) ([]model.PocketResp, data.Metadata, error) <span class="cov0" title="0">{
         userUUID, err := uuid.Parse(userID)
         if err != nil </span><span class="cov0" title="0">{
                 return nil, data.Metadata{}, ErrInvalidID
@@ -314,7 +351,7 @@ func (s Service) FindAllPocket(ctx context.Context, userID string, filter data.F
                 return nil, data.Metadata{}, fmt.Errorf("find pocket user: %w", err)
         }</span>
 
-        <span class="cov0" title="0">pocketResult := make([]ptmodel.PocketResp, len(pockets))
+        <span class="cov0" title="0">pocketResult := make([]model.PocketResp, len(pockets))
         for i := range pockets </span><span class="cov0" title="0">{
                 pocketResult[i] = pockets[i].ToPocketResp()
         }</span>
@@ -323,10 +360,291 @@ func (s Service) FindAllPocket(ctx context.Context, userID string, filter data.F
 }
 </pre>
 		
-		<pre class="file" id="file1" style="display: none">package slicer
+		<pre class="file" id="file1" style="display: none">package repo
 
 import (
+        "context"
         "fmt"
+        "time"
+
+        sq "github.com/Masterminds/squirrel"
+        "github.com/jackc/pgx/v4/pgxpool"
+        "github.com/muchlist/moneymagnet/business/request/model"
+        "github.com/muchlist/moneymagnet/pkg/data"
+        "github.com/muchlist/moneymagnet/pkg/db"
+        "github.com/muchlist/moneymagnet/pkg/mlogger"
+)
+
+/*
+CREATE TABLE IF NOT EXISTS "requests" (
+  "id" BIGSERIAL PRIMARY KEY,
+  "requester" uuid,
+  "pocket" bigint,
+  "pocket_name" varchar(100) NOT NULL,
+  "is_approved" boolean NOT NULL DEFAULT false,
+  "created_at" timestamp NOT NULL DEFAULT (now()),
+  "updated_at" timestamp NOT NULL DEFAULT (now())
+);
+*/
+
+const (
+        keyTable       = "requests"
+        keyID          = "id"
+        keyRequesterID = "requester_id"
+        keyApproverID  = "approver_id"
+        keyPocketID    = "pocket_id"
+        keyPocketName  = "pocket_name"
+        keyIsApproved  = "is_approved"
+        keyIsRejected  = "is_rejected"
+        keyCreatedAt   = "created_at"
+        keyUpdatedAt   = "updated_at"
+)
+
+// Repo manages the set of APIs for pocket access.
+type Repo struct {
+        db  *pgxpool.Pool
+        log mlogger.Logger
+        sb  sq.StatementBuilderType
+}
+
+// NewRepo constructs a data for api access..
+func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) Repo <span class="cov0" title="0">{
+        return Repo{
+                db:  sqlDB,
+                log: log,
+                sb:  sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
+        }
+}</span>
+
+// =========================================================================
+// MANIPULATOR
+
+// Insert ...
+func (r Repo) Insert(ctx context.Context, request *model.RequestPocket) error <span class="cov0" title="0">{
+        ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+        defer cancel()
+
+        sqlStatement, args, err := r.sb.Insert(keyTable).
+                Columns(
+                        keyRequesterID,
+                        keyApproverID,
+                        keyPocketID,
+                        keyPocketName,
+                        keyCreatedAt,
+                        keyUpdatedAt,
+                ).
+                Values(
+                        request.RequesterID,
+                        request.ApproverID,
+                        request.PocketID,
+                        request.PocketName,
+                        request.CreatedAt,
+                        request.UpdatedAt).
+                Suffix(db.Returning(keyID)).ToSql()
+
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("build query insert request: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&amp;request.ID)
+        if err != nil </span><span class="cov0" title="0">{
+                r.log.InfoT(ctx, err.Error())
+                return db.ParseError(err)
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+// UpdateStatus update approver, is_approved and udpdated_at
+func (r Repo) UpdateStatus(ctx context.Context, request *model.RequestPocket) error <span class="cov0" title="0">{
+        ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+        defer cancel()
+
+        sqlStatement, args, err := r.sb.Update(keyTable).
+                SetMap(sq.Eq{
+                        keyIsApproved: request.IsApproved,
+                        keyIsRejected: request.IsRejected,
+                        keyUpdatedAt:  time.Now(),
+                }).
+                Suffix(db.Returning(keyID,
+                        keyRequesterID,
+                        keyApproverID,
+                        keyPocketID,
+                        keyPocketName,
+                        keyIsApproved,
+                        keyIsRejected,
+                        keyCreatedAt,
+                        keyUpdatedAt,
+                )).ToSql()
+
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("build query update request: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(
+                &amp;request.ID,
+                &amp;request.RequesterID,
+                &amp;request.ApproverID,
+                &amp;request.PocketID,
+                &amp;request.PocketName,
+                &amp;request.IsApproved,
+                &amp;request.IsRejected,
+                &amp;request.CreatedAt,
+                &amp;request.UpdatedAt,
+        )
+        if err != nil </span><span class="cov0" title="0">{
+                r.log.InfoT(ctx, err.Error())
+                return db.ParseError(err)
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+// =========================================================================
+// GETTER
+// GetByID get one pocket by email
+func (r Repo) GetByID(ctx context.Context, id uint64) (model.RequestPocket, error) <span class="cov0" title="0">{
+        ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+        defer cancel()
+
+        sqlStatement, args, err := r.sb.Select(
+                keyID,
+                keyRequesterID,
+                keyApproverID,
+                keyPocketID,
+                keyPocketName,
+                keyIsApproved,
+                keyIsRejected,
+                keyCreatedAt,
+                keyUpdatedAt,
+        ).From(keyTable).Where(sq.Eq{keyID: id}).ToSql()
+
+        if err != nil </span><span class="cov0" title="0">{
+                return model.RequestPocket{}, fmt.Errorf("build query get request by id: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">var request model.RequestPocket
+        err = r.db.QueryRow(ctx, sqlStatement, args...).
+                Scan(
+                        &amp;request.ID,
+                        &amp;request.RequesterID,
+                        &amp;request.ApproverID,
+                        &amp;request.PocketID,
+                        &amp;request.PocketName,
+                        &amp;request.IsApproved,
+                        &amp;request.IsRejected,
+                        &amp;request.CreatedAt,
+                        &amp;request.UpdatedAt,
+                )
+        if err != nil </span><span class="cov0" title="0">{
+                r.log.InfoT(ctx, err.Error())
+                return model.RequestPocket{}, db.ParseError(err)
+        }</span>
+
+        <span class="cov0" title="0">return request, nil</span>
+}
+
+// Find get all request by FIND model
+func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter data.Filters) ([]model.RequestPocket, data.Metadata, error) <span class="cov0" title="0">{
+
+        // Validation filter
+        filter.SortSafelist = []string{"updated_at", "-updated_at"}
+        if err := filter.Validate(); err != nil </span><span class="cov0" title="0">{
+                return nil, data.Metadata{}, db.ErrDBSortFilter
+        }</span>
+
+        <span class="cov0" title="0">ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+        defer cancel()
+
+        // where builder
+        var orBuilder sq.Or
+        var inputCount int
+        if findBy.ApproverID != "" </span><span class="cov0" title="0">{
+                orBuilder = append(orBuilder, sq.Eq{keyApproverID: findBy.ApproverID})
+                inputCount++
+        }</span>
+        <span class="cov0" title="0">if len(findBy.PocketIDs) != 0 </span><span class="cov0" title="0">{
+                orBuilder = append(orBuilder, sq.Eq{keyPocketID: findBy.PocketIDs})
+                inputCount++
+        }</span>
+        <span class="cov0" title="0">if findBy.RequesterID != "" </span><span class="cov0" title="0">{
+                orBuilder = append(orBuilder, sq.Eq{keyRequesterID: findBy.RequesterID})
+                inputCount++
+        }</span>
+
+        <span class="cov0" title="0">if inputCount == 0 </span><span class="cov0" title="0">{
+                return []model.RequestPocket{}, data.Metadata{}, nil
+        }</span>
+
+        <span class="cov0" title="0">sqlStatement, args, err := r.sb.Select(
+                "count(*) OVER()",
+                keyID,
+                keyRequesterID,
+                keyApproverID,
+                keyPocketID,
+                keyPocketName,
+                keyIsApproved,
+                keyIsRejected,
+                keyCreatedAt,
+                keyUpdatedAt,
+        ).
+                From(keyTable).
+                Where(orBuilder).
+                OrderBy(filter.SortColumnDirection()).
+                Limit(uint64(filter.Limit())).
+                Offset(uint64(filter.Offset())).
+                ToSql()
+
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, data.Metadata{}, fmt.Errorf("build query find request: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">rows, err := r.db.Query(ctx, sqlStatement, args...)
+        if err != nil </span><span class="cov0" title="0">{
+                r.log.InfoT(ctx, err.Error())
+                return nil, data.Metadata{}, db.ParseError(err)
+        }</span>
+        <span class="cov0" title="0">defer rows.Close()
+
+        totalRecords := 0
+        requests := make([]model.RequestPocket, 0)
+        for rows.Next() </span><span class="cov0" title="0">{
+                var request model.RequestPocket
+                err := rows.Scan(
+                        &amp;totalRecords,
+                        &amp;request.ID,
+                        &amp;request.RequesterID,
+                        &amp;request.ApproverID,
+                        &amp;request.PocketID,
+                        &amp;request.PocketName,
+                        &amp;request.IsApproved,
+                        &amp;request.IsRejected,
+                        &amp;request.CreatedAt,
+                        &amp;request.UpdatedAt,
+                )
+                if err != nil </span><span class="cov0" title="0">{
+                        r.log.InfoT(ctx, err.Error())
+                        return nil, data.Metadata{}, db.ParseError(err)
+                }</span>
+                <span class="cov0" title="0">requests = append(requests, request)</span>
+        }
+
+        <span class="cov0" title="0">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, data.Metadata{}, err
+        }</span>
+
+        <span class="cov0" title="0">metadata := data.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
+
+        return requests, metadata, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package slicer
+
+import (
+        "errors"
+        "fmt"
+        "strconv"
         "strings"
 )
 
@@ -386,6 +704,32 @@ func ToStringSlice(i any) ([]string, error) <span class="cov0" title="0">{
         default:<span class="cov0" title="0">
                 return a, fmt.Errorf("unable to cast %#v of type %T to []string", i, i)</span>
         }
+}
+
+// CsvToSliceInt convert string with comma separated to slice int
+// if error in middle slice int still return all of convertable string to int
+// but error is not empty
+func CsvToSliceInt(str string) ([]int, error) <span class="cov8" title="1">{
+        listType := make([]int, 0)
+        errMsg := ""
+        if str != "" </span><span class="cov8" title="1">{
+                types := strings.Split(str, ",")
+                for _, v := range types </span><span class="cov8" title="1">{
+                        number, err := strconv.Atoi(v)
+                        if err != nil </span><span class="cov8" title="1">{
+                                errMsg = err.Error()
+                                continue</span>
+                        }
+                        <span class="cov8" title="1">listType = append(listType, number)</span>
+                }
+        }
+
+        <span class="cov8" title="1">var err error
+        if errMsg != "" </span><span class="cov8" title="1">{
+                err = errors.New(errMsg)
+        }</span>
+
+        <span class="cov8" title="1">return listType, err</span>
 }
 </pre>
 		

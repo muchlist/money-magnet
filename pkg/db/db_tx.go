@@ -26,6 +26,7 @@ type PGStore struct {
 	Tx    pgx.Tx
 }
 
+// NewPGStore return interface can execute TX and pgx.Pool
 func NewPGStore(pool *pgxpool.Pool, tx pgx.Tx) DBTX {
 	var pgstore PGStore
 	if tx != nil {
@@ -63,9 +64,9 @@ func (p *PGStore) Rollback(ctx context.Context) error {
 // Exec implements DBTX
 func (p *PGStore) Exec(ctx context.Context, sql string, arguments ...interface{}) (commandTag pgconn.CommandTag, err error) {
 	if p.Tx != nil {
-		return p.Tx.Exec(ctx, sql, arguments)
+		return p.Tx.Exec(ctx, sql, arguments...)
 	}
-	return p.NonTX.Exec(ctx, sql, arguments)
+	return p.NonTX.Exec(ctx, sql, arguments...)
 }
 
 // Prepare implements DBTX
@@ -79,9 +80,9 @@ func (p *PGStore) Prepare(ctx context.Context, name string, sql string) (*pgconn
 // Query implements DBTX
 func (p *PGStore) Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error) {
 	if p.Tx != nil {
-		return p.Tx.Query(ctx, sql, args)
+		return p.Tx.Query(ctx, sql, args...)
 	}
-	return p.NonTX.Query(ctx, sql, args)
+	return p.NonTX.Query(ctx, sql, args...)
 }
 
 // QueryFunc implements DBTX
@@ -95,7 +96,7 @@ func (p *PGStore) QueryFunc(ctx context.Context, sql string, args []interface{},
 // QueryRow implements DBTX
 func (p *PGStore) QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row {
 	if p.Tx != nil {
-		return p.Tx.QueryRow(ctx, sql, args)
+		return p.Tx.QueryRow(ctx, sql, args...)
 	}
-	return p.NonTX.QueryRow(ctx, sql, args)
+	return p.NonTX.QueryRow(ctx, sql, args...)
 }
