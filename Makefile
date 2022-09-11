@@ -38,7 +38,7 @@ db/migrations/up: confirm
 
 ## swagger: generate doc for swagger
 swagger:
-	swag init -g app/api/main.go
+	swag init -g app/api/main.go --parseDependency --overridesFile .swaggo
 
 
 # ==================================================================================== #

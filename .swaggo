@@ -1,0 +1,2 @@
+// Replace all uuid.NullUUID with string
+replace github.com/google/uuid.NullUUID string

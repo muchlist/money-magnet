@@ -122,6 +122,36 @@ definitions:
         example: 968d4dfe-041a-4721-bd8a-4e60c507c671
         type: string
     type: object
+  model.NewSpend:
+    properties:
+      category_id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae92
+        type: string
+      category_id_2:
+        example: f9339be2-6b05-4acb-a269-5309c39bae93
+        type: string
+      date:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae90
+        type: string
+      is_income:
+        example: false
+        type: boolean
+      name:
+        example: Makan siang
+        type: string
+      pocket_id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae91
+        type: string
+      price:
+        example: 50000
+        type: integer
+      type:
+        example: 2
+        type: integer
+    type: object
   model.PocketResp:
     properties:
       balance:
@@ -209,6 +239,63 @@ definitions:
         example: "2022-09-10T17:03:15.091267+08:00"
         type: string
     type: object
+  model.SpendResp:
+    properties:
+      balance_snapshoot:
+        example: 0
+        type: integer
+      category_id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae92
+        type: string
+      category_id_2:
+        example: f9339be2-6b05-4acb-a269-5309c39bae93
+        type: string
+      category_name:
+        example: food
+        type: string
+      category_name_2:
+        example: b and f
+        type: string
+      created_at:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      date:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae90
+        type: string
+      is_income:
+        example: false
+        type: boolean
+      name:
+        example: Makan siang
+        type: string
+      pocket_id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae91
+        type: string
+      pocket_name:
+        example: main pocket
+        type: string
+      price:
+        example: 50000
+        type: integer
+      type:
+        example: 2
+        type: integer
+      updated_at:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      user_id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae89
+        type: string
+      user_name:
+        example: Muchlis
+        type: string
+      version:
+        example: 1
+        type: integer
+    type: object
   model.UpdateCategory:
     properties:
       category_name:
@@ -216,6 +303,30 @@ definitions:
         type: string
     required:
     - category_name
+    type: object
+  model.UpdateSpend:
+    properties:
+      category_id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae92
+        type: string
+      category_id_2:
+        example: f9339be2-6b05-4acb-a269-5309c39bae93
+        type: string
+      date:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      is_income:
+        example: false
+        type: boolean
+      name:
+        example: Makan siang
+        type: string
+      price:
+        example: 50000
+        type: integer
+      type:
+        example: 2
+        type: integer
     type: object
 host: localhost
 info:
@@ -671,4 +782,207 @@ paths:
       summary: Get Request OUT
       tags:
       - Join
+  /spends:
+    get:
+      consumes:
+      - application/json
+      description: Find spend
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: integer
+      - description: page-size
+        in: query
+        name: page_size
+        type: integer
+      - description: sort
+        in: query
+        name: sort
+        type: string
+      - description: user
+        in: query
+        name: user
+        type: string
+      - description: category
+        in: query
+        name: category
+        type: string
+      - description: is_income
+        in: query
+        name: is_income
+        type: boolean
+      - description: type
+        in: query
+        name: type
+        type: string
+      - description: date_start
+        in: query
+        name: date_start
+        type: integer
+      - description: date_end
+        in: query
+        name: date_end
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/misc.ResponseSuccessList'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.SpendResp'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/misc.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/misc.Response500Err'
+      summary: Find Spend
+      tags:
+      - Spend
+    post:
+      consumes:
+      - application/json
+      description: Create spend
+      parameters:
+      - description: Request Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/model.NewSpend'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/misc.ResponseSuccess'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.SpendResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/misc.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/misc.Response500Err'
+      summary: Create Spend
+      tags:
+      - Spend
+  /spends/{spend_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get spend detail by ID
+      parameters:
+      - description: spend_id
+        in: path
+        name: spend_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/misc.ResponseSuccessList'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.SpendResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/misc.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/misc.Response500Err'
+      summary: Get Spend Detail
+      tags:
+      - Spend
+    patch:
+      consumes:
+      - application/json
+      description: Update spend
+      parameters:
+      - description: spend_id
+        in: path
+        name: spend_id
+        required: true
+        type: string
+      - description: Request Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateSpend'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/misc.ResponseSuccess'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.SpendResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/misc.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/misc.Response500Err'
+      summary: Update Spend
+      tags:
+      - Spend
+  /spends/sync/{spend_id}:
+    post:
+      consumes:
+      - application/json
+      description: Sync spend to update pocket balance
+      parameters:
+      - description: spend_id
+        in: path
+        name: spend_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/misc.ResponseMessage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/misc.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/misc.Response500Err'
+      summary: Sync Spend Balance
+      tags:
+      - Spend
 swagger: "2.0"

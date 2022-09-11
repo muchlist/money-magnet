@@ -31,8 +31,17 @@ type spendHandler struct {
 	service   service.Core
 }
 
+// @Summary      Create Spend
+// @Description  Create spend
+// @Tags         Spend
+// @Accept       json
+// @Produce      json
+// @Param		 Body body model.NewSpend true "Request Body"
+// @Success      200  {object}  misc.ResponseSuccess{data=model.SpendResp}
+// @Failure      400  {object}  misc.ResponseErr
+// @Failure      500  {object}  misc.Response500Err
+// @Router       /spends [post]
 func (pt spendHandler) CreateSpend(w http.ResponseWriter, r *http.Request) {
-
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -71,8 +80,18 @@ func (pt spendHandler) CreateSpend(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// @Summary      Update Spend
+// @Description  Update spend
+// @Tags         Spend
+// @Accept       json
+// @Produce      json
+// @Param		 spend_id path string true "spend_id"
+// @Param		 Body body model.UpdateSpend true "Request Body"
+// @Success      200  {object}  misc.ResponseSuccess{data=model.SpendResp}
+// @Failure      400  {object}  misc.ResponseErr
+// @Failure      500  {object}  misc.Response500Err
+// @Router       /spends/{spend_id} [patch]
 func (pt spendHandler) EditSpend(w http.ResponseWriter, r *http.Request) {
-
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -121,7 +140,16 @@ func (pt spendHandler) EditSpend(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// SyncBalance...
+// @Summary      Sync Spend Balance
+// @Description  Sync spend to update pocket balance
+// @Tags         Spend
+// @Accept       json
+// @Produce      json
+// @Param		 spend_id path string true "spend_id"
+// @Success      200  {object}  misc.ResponseMessage
+// @Failure      400  {object}  misc.ResponseErr
+// @Failure      500  {object}  misc.Response500Err
+// @Router       /spends/sync/{spend_id} [post]
 func (pt spendHandler) SyncBalance(w http.ResponseWriter, r *http.Request) {
 	claims, err := mid.GetClaims(r.Context())
 	if err != nil {
@@ -154,7 +182,16 @@ func (pt spendHandler) SyncBalance(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GetByID...
+// @Summary      Get Spend Detail
+// @Description  Get spend detail by ID
+// @Tags         Spend
+// @Accept       json
+// @Produce      json
+// @Param 		 spend_id path string true "spend_id"
+// @Success      200  {object}  misc.ResponseSuccessList{data=model.SpendResp}
+// @Failure      400  {object}  misc.ResponseErr
+// @Failure      500  {object}  misc.Response500Err
+// @Router       /spends/{spend_id} [get]
 func (pt spendHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	// extract url path
@@ -194,7 +231,24 @@ func extractSpendFIlter(values url.Values) model.SpendFilter {
 	return rawFilter.ToModel()
 }
 
-// FindSpend ...
+// @Summary      Find Spend
+// @Description  Find spend
+// @Tags         Spend
+// @Accept       json
+// @Produce      json
+// @Param 		 page query int false "page"
+// @Param 		 page_size query int false "page-size"
+// @Param 		 sort query string false "sort"
+// @Param 		 user query string false "user"
+// @Param 		 category query string false "category"
+// @Param 		 is_income query bool false "is_income"
+// @Param 		 type query string false "type"
+// @Param 		 date_start query int false "date_start"
+// @Param 		 date_end query int false "date_end"
+// @Success      200  {object}  misc.ResponseSuccessList{data=[]model.SpendResp}
+// @Failure      400  {object}  misc.ResponseErr
+// @Failure      500  {object}  misc.Response500Err
+// @Router       /spends [get]
 func (pt spendHandler) FindSpend(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := mid.GetClaims(r.Context())
