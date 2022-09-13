@@ -10,6 +10,7 @@ import (
 type RequestStorer interface {
 	RequestSaver
 	RequestReader
+	Transactor
 }
 
 type RequestSaver interface {
@@ -20,4 +21,8 @@ type RequestSaver interface {
 type RequestReader interface {
 	GetByID(ctx context.Context, id uint64) (model.RequestPocket, error)
 	Find(ctx context.Context, findBy model.FindBy, filter data.Filters) ([]model.RequestPocket, data.Metadata, error)
+}
+
+type Transactor interface {
+	WithinTransaction(ctx context.Context, tFunc func(ctx context.Context) error) error
 }

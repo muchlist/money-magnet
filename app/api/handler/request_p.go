@@ -62,7 +62,7 @@ func (pt requestHandler) CreateRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := pt.service.CreateRequest(r.Context(), claims.GetUUID(), req.PocketID)
+	result, err := pt.service.CreateRequest(r.Context(), claims, req.PocketID)
 	if err != nil {
 		pt.log.ErrorT(r.Context(), "error create request", err)
 		statusCode, msg := parseError(err)
@@ -116,7 +116,7 @@ func (pt requestHandler) ApproveOrRejectRequest(w http.ResponseWriter, r *http.R
 		isApprovedBool = true
 	}
 
-	err = pt.service.ApproveRequest(r.Context(), claims.GetUUID(), isApprovedBool, id)
+	err = pt.service.ApproveRequest(r.Context(), claims, isApprovedBool, id)
 	if err != nil {
 		pt.log.ErrorT(r.Context(), "error change status request", err)
 		statusCode, msg := parseError(err)
@@ -155,7 +155,7 @@ func (pt requestHandler) FindRequestByApprover(w http.ResponseWriter, r *http.Re
 	page := web.ReadInt(r.URL.Query(), "page", 0)
 	pageSize := web.ReadInt(r.URL.Query(), "page_size", 0)
 
-	result, metadata, err := pt.service.FindAllByApprover(r.Context(), claims.GetUUID(), data.Filters{
+	result, metadata, err := pt.service.FindAllByApprover(r.Context(), claims, data.Filters{
 		Page:     page,
 		PageSize: pageSize,
 		Sort:     sort,
@@ -199,7 +199,7 @@ func (pt requestHandler) FindByRequester(w http.ResponseWriter, r *http.Request)
 	page := web.ReadInt(r.URL.Query(), "page", 0)
 	pageSize := web.ReadInt(r.URL.Query(), "page_size", 0)
 
-	result, metadata, err := pt.service.FindAllByRequester(r.Context(), claims.GetUUID(), data.Filters{
+	result, metadata, err := pt.service.FindAllByRequester(r.Context(), claims, data.Filters{
 		Page:     page,
 		PageSize: pageSize,
 		Sort:     sort,

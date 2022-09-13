@@ -10,6 +10,7 @@ import (
 	"github.com/muchlist/moneymagnet/business/request/storer"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/errr"
+	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 )
 
@@ -33,7 +34,7 @@ func NewCore(
 	}
 }
 
-func (s Core) CreateRequest(ctx context.Context, user uuid.UUID, pocketID uuid.UUID) (model.RequestPocket, error) {
+func (s Core) CreateRequest(ctx context.Context, claims mjwt.CustomClaim, pocketID uuid.UUID) (model.RequestPocket, error) {
 	timeNow := time.Now()
 
 	// GET Pocket BY ID
@@ -43,7 +44,7 @@ func (s Core) CreateRequest(ctx context.Context, user uuid.UUID, pocketID uuid.U
 	}
 
 	req := model.RequestPocket{
-		RequesterID: user,
+		RequesterID: claims.GetUUID(),
 		PocketID:    pocketID,
 		PocketName:  pocket.PocketName,
 		ApproverID:  &pocket.OwnerID,
@@ -59,7 +60,7 @@ func (s Core) CreateRequest(ctx context.Context, user uuid.UUID, pocketID uuid.U
 	return req, nil
 }
 
-func (s Core) ApproveRequest(ctx context.Context, user uuid.UUID, IsApproved bool, requestID uint64) error {
+func (s Core) ApproveRequest(ctx context.Context, claims mjwt.CustomClaim, IsApproved bool, requestID uint64) error {
 
 	// GET Request by ID
 	req, err := s.repo.GetByID(ctx, requestID)
@@ -67,7 +68,7 @@ func (s Core) ApproveRequest(ctx context.Context, user uuid.UUID, IsApproved boo
 		return fmt.Errorf("get request by id: %w", err)
 	}
 
-	if *req.ApproverID != user {
+	if *req.ApproverID != claims.GetUUID() {
 		return errr.New("the user does not have access rights to approve this request", 400)
 	}
 
@@ -100,33 +101,36 @@ func (s Core) ApproveRequest(ctx context.Context, user uuid.UUID, IsApproved boo
 		return fmt.Errorf("get pocket by id: %w", err)
 	}
 
-	// TODO separate logic for logic pocketExist
 	// add to wathcer
 	pocketExisting.WatcherID = append(pocketExisting.WatcherID, req.RequesterID)
 	// add to editor
 	pocketExisting.EditorID = append(pocketExisting.EditorID, req.RequesterID)
 
-	// Edit
-	s.pocketRepo.Edit(ctx, &pocketExisting)
-	if err != nil {
-		return fmt.Errorf("edit pocket: %w", err)
-	}
+	// TRANSACTION
+	err = s.repo.WithinTransaction(ctx, func(ctx context.Context) error {
+		// Edit
+		err = s.pocketRepo.Edit(ctx, &pocketExisting)
+		if err != nil {
+			return fmt.Errorf("edit pocket: %w", err)
+		}
+		// insert to related table
+		err = s.pocketRepo.InsertPocketUser(ctx, []uuid.UUID{req.RequesterID}, pocketExisting.ID)
+		if err != nil {
+			return fmt.Errorf("insert pocket_user to db: %w", err)
+		}
 
-	// insert to related table
-	err = s.pocketRepo.InsertPocketUser(ctx, []uuid.UUID{req.RequesterID}, pocketExisting.ID)
-	if err != nil {
-		return fmt.Errorf("insert pocket_user to db: %w", err)
-	}
+		return nil
+	})
 
-	return nil
+	return err
 }
 
 // FindAllByRequester ...
-func (s Core) FindAllByRequester(ctx context.Context, user uuid.UUID, filter data.Filters) ([]model.RequestPocket, data.Metadata, error) {
+func (s Core) FindAllByRequester(ctx context.Context, claims mjwt.CustomClaim, filter data.Filters) ([]model.RequestPocket, data.Metadata, error) {
 
 	// Get All Request
 	findBy := model.FindBy{
-		RequesterID: user.String(),
+		RequesterID: claims.Identity,
 	}
 
 	reqs, metadata, err := s.repo.Find(ctx, findBy, filter)
@@ -138,10 +142,10 @@ func (s Core) FindAllByRequester(ctx context.Context, user uuid.UUID, filter dat
 }
 
 // FindAllByApprover ...
-func (s Core) FindAllByApprover(ctx context.Context, user uuid.UUID, filter data.Filters) ([]model.RequestPocket, data.Metadata, error) {
+func (s Core) FindAllByApprover(ctx context.Context, claims mjwt.CustomClaim, filter data.Filters) ([]model.RequestPocket, data.Metadata, error) {
 	// Get All Request
 	findBy := model.FindBy{
-		ApproverID: user.String(),
+		ApproverID: claims.Identity,
 	}
 
 	reqs, metadata, err := s.repo.Find(ctx, findBy, filter)
