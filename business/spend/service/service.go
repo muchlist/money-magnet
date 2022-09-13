@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/muchlist/moneymagnet/business/shared"
 	"github.com/muchlist/moneymagnet/business/spend/model"
 	"github.com/muchlist/moneymagnet/business/spend/storer"
 	"github.com/muchlist/moneymagnet/pkg/data"
@@ -44,7 +45,7 @@ func NewCore(
 
 func (s Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req model.NewSpend) (model.SpendResp, error) {
 
-	canEdit, _ := isCanEditOrWatch(req.PocketID, claims.PocketRoles)
+	canEdit, _ := shared.IsCanEditOrWatch(req.PocketID, claims.PocketRoles)
 	if !canEdit {
 		return model.SpendResp{}, errr.New("user doesn't have access to write this pocket", 400)
 	}
@@ -99,7 +100,7 @@ func (s Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, r
 	}
 
 	// validate pocket roles
-	canEdit, _ := isCanEditOrWatch(spendExisting.PocketID, claims.PocketRoles)
+	canEdit, _ := shared.IsCanEditOrWatch(spendExisting.PocketID, claims.PocketRoles)
 	if !canEdit {
 		return model.SpendResp{}, errr.New("user doesn't have access to write this pocket", 400)
 	}
@@ -163,7 +164,7 @@ func (s Core) GetDetail(ctx context.Context, spendID uuid.UUID) (model.SpendResp
 func (s Core) FindAllSpend(ctx context.Context, claims mjwt.CustomClaim, spendFilter model.SpendFilter, filter data.Filters) ([]model.SpendResp, data.Metadata, error) {
 
 	// if cannot edit and cannot watch, return error
-	canEdit, canWatch := isCanEditOrWatch(spendFilter.PocketID.UUID, claims.PocketRoles)
+	canEdit, canWatch := shared.IsCanEditOrWatch(spendFilter.PocketID.UUID, claims.PocketRoles)
 	if !(canEdit || canWatch) {
 		return nil, data.Metadata{}, errr.New("user doesn't have access to read this resource", 400)
 	}
@@ -185,7 +186,7 @@ func (s Core) FindAllSpend(ctx context.Context, claims mjwt.CustomClaim, spendFi
 func (s Core) SyncBalance(ctx context.Context, claims mjwt.CustomClaim, pocketID uuid.UUID) (int64, error) {
 
 	// if cannot edit and cannot watch, return error
-	canEdit, canWatch := isCanEditOrWatch(pocketID, claims.PocketRoles)
+	canEdit, canWatch := shared.IsCanEditOrWatch(pocketID, claims.PocketRoles)
 	if !(canEdit || canWatch) {
 		return 0, errr.New("user doesn't have access to read this resource", 400)
 	}

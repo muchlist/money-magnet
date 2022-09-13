@@ -8,7 +8,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/business/category/model"
 	"github.com/muchlist/moneymagnet/business/category/storer"
+	"github.com/muchlist/moneymagnet/business/shared"
 	"github.com/muchlist/moneymagnet/pkg/data"
+	"github.com/muchlist/moneymagnet/pkg/errr"
+	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 )
 
@@ -29,8 +32,12 @@ func NewCore(
 	}
 }
 
-func (s Core) CreateCategory(ctx context.Context, owner uuid.UUID, req model.NewCategory) (model.CategoryResp, error) {
-	// TODO Validate user can create this category
+func (s Core) CreateCategory(ctx context.Context, claims mjwt.CustomClaim, req model.NewCategory) (model.CategoryResp, error) {
+	// if cannot edit return error
+	canEdit, _ := shared.IsCanEditOrWatch(req.PocketID, claims.PocketRoles)
+	if !canEdit {
+		return model.CategoryResp{}, errr.New("user doesn't have access to write this resource", 400)
+	}
 
 	timeNow := time.Now()
 	cat := model.Category{
@@ -49,26 +56,30 @@ func (s Core) CreateCategory(ctx context.Context, owner uuid.UUID, req model.New
 	return cat.ToCategoryResp(), nil
 }
 
-func (s Core) EditCategory(ctx context.Context, owner uuid.UUID, newData model.UpdateCategory) (model.CategoryResp, error) {
+func (s Core) EditCategory(ctx context.Context, claims mjwt.CustomClaim, newData model.UpdateCategory) (model.CategoryResp, error) {
 
 	// Get existing Category
-	CategoryExisting, err := s.repo.GetByID(ctx, newData.ID)
+	categoryExisting, err := s.repo.GetByID(ctx, newData.ID)
 	if err != nil {
 		return model.CategoryResp{}, fmt.Errorf("get category by id: %w", err)
 	}
 
-	// TODO ensure this category can edited by owner
+	// if cannot edit return error
+	canEdit, _ := shared.IsCanEditOrWatch(categoryExisting.PocketID, claims.PocketRoles)
+	if !canEdit {
+		return model.CategoryResp{}, errr.New("user doesn't have access to write this resource", 400)
+	}
 
 	// Modify data
-	CategoryExisting.CategoryName = newData.CategoryName
+	categoryExisting.CategoryName = newData.CategoryName
 
 	// Edit
-	err = s.repo.Edit(ctx, &CategoryExisting)
+	err = s.repo.Edit(ctx, &categoryExisting)
 	if err != nil {
 		return model.CategoryResp{}, fmt.Errorf("edit category: %w", err)
 	}
 
-	return CategoryExisting.ToCategoryResp(), nil
+	return categoryExisting.ToCategoryResp(), nil
 }
 
 // FindAllCategory ...

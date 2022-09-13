@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/business/category/model"
 	"github.com/muchlist/moneymagnet/business/category/service"
 	"github.com/muchlist/moneymagnet/pkg/data"
@@ -61,9 +60,7 @@ func (ch catHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, _ := uuid.Parse(claims.Identity)
-
-	result, err := ch.service.CreateCategory(r.Context(), userID, req)
+	result, err := ch.service.CreateCategory(r.Context(), claims, req)
 	if err != nil {
 		ch.log.ErrorT(r.Context(), "error create pocket", err)
 		statusCode, msg := parseError(err)
@@ -121,9 +118,7 @@ func (ch catHandler) EditCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, _ := uuid.Parse(claims.Identity)
-
-	result, err := ch.service.EditCategory(r.Context(), userID, req)
+	result, err := ch.service.EditCategory(r.Context(), claims, req)
 	if err != nil {
 		ch.log.ErrorT(r.Context(), "error rename category", err)
 		statusCode, msg := parseError(err)

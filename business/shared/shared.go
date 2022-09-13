@@ -1,4 +1,4 @@
-package service
+package shared
 
 import (
 	"strings"
@@ -6,9 +6,9 @@ import (
 	"github.com/google/uuid"
 )
 
-// isCanEditOrWatch read pocketRoles and validate those roles can edit or just watch
+// IsCanEditOrWatch read pocketRoles and validate those roles can edit or just watch
 // isCanEditOrWatch can be move to claims function if needed globally
-func isCanEditOrWatch(pocketID uuid.UUID, pocketRoles []string) (edit bool, watch bool) {
+func IsCanEditOrWatch(pocketID uuid.UUID, pocketRoles []string) (edit bool, watch bool) {
 	pocketStr := pocketID.String()
 	canEdit := false
 	canWatch := false
