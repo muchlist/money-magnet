@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	mstore "github.com/muchlist/moneymagnet/business/pocket/mock_storer"
 	"github.com/muchlist/moneymagnet/business/pocket/model"
 	urmodel "github.com/muchlist/moneymagnet/business/user/model"
+	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,6 +28,15 @@ func TestCreatePocketSuccess(t *testing.T) {
 	ctx := context.Background()
 	ownerUUID := uuid.New()
 	pocketUUID := uuid.New()
+	claims := mjwt.CustomClaim{
+		Identity:    ownerUUID.String(),
+		Name:        "muchlis",
+		Exp:         999999999999,
+		Type:        "access",
+		Fresh:       true,
+		Roles:       []string{"admin"},
+		PocketRoles: []string{fmt.Sprintf("%s:edit", pocketUUID)},
+	}
 	payload := model.NewPocket{
 		PocketName: "example pocket",
 		EditorID:   []uuid.UUID{},
@@ -85,7 +96,7 @@ func TestCreatePocketSuccess(t *testing.T) {
 	service := NewCore(log, pocketRepo, userRepo)
 
 	// Assertion
-	result, err := service.CreatePocket(ctx, ownerUUID, payload)
+	result, err := service.CreatePocket(ctx, claims, payload)
 	assert.Nil(t, err)
 	assert.Equal(t, expect, result)
 }
@@ -95,6 +106,15 @@ func TestCreatePocketFailInsertUser(t *testing.T) {
 	ctx := context.Background()
 	ownerUUID := uuid.New()
 	pocketUUID := uuid.New()
+	claims := mjwt.CustomClaim{
+		Identity:    ownerUUID.String(),
+		Name:        "muchlis",
+		Exp:         999999999999,
+		Type:        "access",
+		Fresh:       true,
+		Roles:       []string{"admin"},
+		PocketRoles: []string{fmt.Sprintf("%s:edit", pocketUUID)},
+	}
 	payload := model.NewPocket{
 		PocketName: "example pocket",
 		EditorID:   []uuid.UUID{},
@@ -141,7 +161,7 @@ func TestCreatePocketFailInsertUser(t *testing.T) {
 	service := NewCore(log, pocketRepo, userRepo)
 
 	// Assertion
-	result, err := service.CreatePocket(ctx, ownerUUID, payload)
+	result, err := service.CreatePocket(ctx, claims, payload)
 	assert.Equal(t, "insert pocket to db: context deadline exceeded", err.Error())
 	assert.Equal(t, model.PocketResp{}, result)
 }

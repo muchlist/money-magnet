@@ -8,9 +8,11 @@ import (
 
 	"github.com/muchlist/moneymagnet/business/pocket/model"
 	"github.com/muchlist/moneymagnet/business/pocket/storer"
+	"github.com/muchlist/moneymagnet/business/shared"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/errr"
+	"github.com/muchlist/moneymagnet/pkg/mjwt"
 
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -44,7 +46,7 @@ func NewCore(
 	}
 }
 
-func (s Core) CreatePocket(ctx context.Context, owner uuid.UUID, req model.NewPocket) (model.PocketResp, error) {
+func (s Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req model.NewPocket) (model.PocketResp, error) {
 	// Validate editor and watcher uuids
 	combineUserUUIDs := append(req.EditorID, req.WatcherID...)
 	users, err := s.userRepo.GetByIDs(ctx, combineUserUUIDs)
@@ -65,15 +67,15 @@ func (s Core) CreatePocket(ctx context.Context, owner uuid.UUID, req model.NewPo
 	}
 
 	if req.EditorID == nil || len(req.EditorID) == 0 {
-		req.EditorID = []uuid.UUID{owner}
+		req.EditorID = []uuid.UUID{claims.GetUUID()}
 	}
 	if req.WatcherID == nil || len(req.WatcherID) == 0 {
-		req.WatcherID = []uuid.UUID{owner}
+		req.WatcherID = []uuid.UUID{claims.GetUUID()}
 	}
 
 	timeNow := time.Now()
 	pocket := model.Pocket{
-		OwnerID:    owner,
+		OwnerID:    claims.GetUUID(),
 		EditorID:   req.EditorID,
 		WatcherID:  req.WatcherID,
 		PocketName: req.PocketName,
@@ -95,7 +97,7 @@ func (s Core) CreatePocket(ctx context.Context, owner uuid.UUID, req model.NewPo
 
 			// insert relation
 			uuidUserSet := ds.NewUUIDSet()
-			uuidUserSet.Add(owner)
+			uuidUserSet.Add(claims.GetUUID())
 			uuidUserSet.AddAll(combineUserUUIDs)
 			uniqueUsers := uuidUserSet.Reveal()
 
@@ -114,18 +116,17 @@ func (s Core) CreatePocket(ctx context.Context, owner uuid.UUID, req model.NewPo
 	return pocket.ToPocketResp(), nil
 }
 
-func (s Core) UpdatePocket(ctx context.Context, owner uuid.UUID, newData model.PocketUpdate) (model.PocketResp, error) {
+func (s Core) UpdatePocket(ctx context.Context, claims mjwt.CustomClaim, newData model.PocketUpdate) (model.PocketResp, error) {
+	// Validate Pocket Roles
+	canEdit, _ := shared.IsCanEditOrWatch(newData.ID, claims.PocketRoles)
+	if !canEdit {
+		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
+	}
 
 	// Get existing Pocket
 	pocketExisting, err := s.repo.GetByID(ctx, newData.ID)
 	if err != nil {
 		return model.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
-	}
-
-	// Check if owner not have access to pocket
-	if !(pocketExisting.OwnerID == owner ||
-		slicer.In(owner, pocketExisting.EditorID)) {
-		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
 	}
 
 	// Modify data
@@ -148,18 +149,18 @@ func (s Core) UpdatePocket(ctx context.Context, owner uuid.UUID, newData model.P
 	return pocketExisting.ToPocketResp(), nil
 }
 
-func (s Core) AddPerson(ctx context.Context, data AddPersonData) (model.PocketResp, error) {
+func (s Core) AddPerson(ctx context.Context, claims mjwt.CustomClaim, data AddPersonData) (model.PocketResp, error) {
+
+	// Validate Pocket Roles
+	canEdit, _ := shared.IsCanEditOrWatch(data.PocketID, claims.PocketRoles)
+	if !canEdit {
+		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
+	}
 
 	// Get existing Pocket
 	pocketExisting, err := s.repo.GetByID(ctx, data.PocketID)
 	if err != nil {
 		return model.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
-	}
-
-	// Check if owner not have access to pocket
-	if !(pocketExisting.OwnerID == data.Owner ||
-		slicer.In(data.Owner, pocketExisting.EditorID)) {
-		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
 	}
 
 	// Check if person to add is exist
@@ -203,17 +204,18 @@ func (s Core) AddPerson(ctx context.Context, data AddPersonData) (model.PocketRe
 }
 
 // RemovePerson will remove person from both editor and watcher
-func (s Core) RemovePerson(ctx context.Context, data RemovePersonData) (model.PocketResp, error) {
+func (s Core) RemovePerson(ctx context.Context, claims mjwt.CustomClaim, data RemovePersonData) (model.PocketResp, error) {
+
+	// Validate Pocket Roles
+	canEdit, _ := shared.IsCanEditOrWatch(data.PocketID, claims.PocketRoles)
+	if !canEdit {
+		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
+	}
+
 	// Get existing Pocket
 	pocketExisting, err := s.repo.GetByID(ctx, data.PocketID)
 	if err != nil {
 		return model.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
-	}
-
-	// Check if owner not have access to pocket
-	if !(pocketExisting.OwnerID == data.Owner ||
-		slicer.In(data.Owner, pocketExisting.EditorID)) {
-		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
 	}
 
 	pocketExisting.EditorID = slicer.RemoveFrom(data.Person, pocketExisting.EditorID)
@@ -242,10 +244,12 @@ func (s Core) RemovePerson(ctx context.Context, data RemovePersonData) (model.Po
 }
 
 // GetDetail ...
-func (s Core) GetDetail(ctx context.Context, userID string, pocketID uuid.UUID) (model.PocketResp, error) {
-	userUUID, err := uuid.Parse(userID)
-	if err != nil {
-		return model.PocketResp{}, ErrInvalidID
+func (s Core) GetDetail(ctx context.Context, claims mjwt.CustomClaim, pocketID uuid.UUID) (model.PocketResp, error) {
+
+	// Validate Pocket Roles
+	canEdit, canWatch := shared.IsCanEditOrWatch(pocketID, claims.PocketRoles)
+	if !(canEdit || canWatch) {
+		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
 	}
 
 	// Get existing Pocket
@@ -254,24 +258,14 @@ func (s Core) GetDetail(ctx context.Context, userID string, pocketID uuid.UUID) 
 		return model.PocketResp{}, fmt.Errorf("get pocket detail by id: %w", err)
 	}
 
-	// Check if owner not have access to pocket
-	if !(pocketDetail.OwnerID == userUUID ||
-		slicer.In(userUUID, pocketDetail.WatcherID)) {
-		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
-	}
-
 	return pocketDetail.ToPocketResp(), nil
 }
 
 // FindAllPocket ...
-func (s Core) FindAllPocket(ctx context.Context, userID string, filter data.Filters) ([]model.PocketResp, data.Metadata, error) {
-	userUUID, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, data.Metadata{}, ErrInvalidID
-	}
+func (s Core) FindAllPocket(ctx context.Context, claims mjwt.CustomClaim, filter data.Filters) ([]model.PocketResp, data.Metadata, error) {
 
 	// Get existing Pocket
-	pockets, metadata, err := s.repo.FindUserPockets(ctx, userUUID, filter)
+	pockets, metadata, err := s.repo.FindUserPockets(ctx, claims.GetUUID(), filter)
 	if err != nil {
 		return nil, data.Metadata{}, fmt.Errorf("find pocket user: %w", err)
 	}

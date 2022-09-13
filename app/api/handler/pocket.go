@@ -9,7 +9,6 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/validate"
 
-	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/web"
 )
@@ -62,9 +61,7 @@ func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, _ := uuid.Parse(claims.Identity)
-
-	result, err := pt.service.CreatePocket(r.Context(), userID, req)
+	result, err := pt.service.CreatePocket(r.Context(), claims, req)
 	if err != nil {
 		pt.log.ErrorT(r.Context(), "error create pocket", err)
 		statusCode, msg := parseError(err)
@@ -124,9 +121,7 @@ func (pt pocketHandler) UpdatePocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, _ := uuid.Parse(claims.Identity)
-
-	result, err := pt.service.UpdatePocket(r.Context(), userID, req)
+	result, err := pt.service.UpdatePocket(r.Context(), claims, req)
 	if err != nil {
 		pt.log.ErrorT(r.Context(), "error update pocket", err)
 		statusCode, msg := parseError(err)
@@ -169,7 +164,7 @@ func (pt pocketHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := pt.service.GetDetail(r.Context(), claims.Identity, pocketID)
+	result, err := pt.service.GetDetail(r.Context(), claims, pocketID)
 	if err != nil {
 		pt.log.ErrorT(r.Context(), "error get pocket by id", err)
 		statusCode, msg := parseError(err)
@@ -211,7 +206,7 @@ func (pt pocketHandler) FindUserPocket(w http.ResponseWriter, r *http.Request) {
 	page := web.ReadInt(r.URL.Query(), "page", 0)
 	pageSize := web.ReadInt(r.URL.Query(), "page_size", 0)
 
-	result, metadata, err := pt.service.FindAllPocket(r.Context(), claims.Identity, data.Filters{
+	result, metadata, err := pt.service.FindAllPocket(r.Context(), claims, data.Filters{
 		Page:     page,
 		PageSize: pageSize,
 		Sort:     sort,
