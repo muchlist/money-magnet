@@ -5,40 +5,19 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/muchlist/moneymagnet/pkg/global"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 type mlog struct {
-	zap *zap.Logger
+	zap          *zap.Logger
+	contextField map[string]any
 }
 
-// Field Type alias dari zap.Field,
-// sehingga core app tidak memerlukan pemanggilan zap core
-type Field = zap.Field
-
-var (
-	Binary     = zap.Binary
-	Bool       = zap.Bool
-	ByteString = zap.ByteString
-	Float64    = zap.Float64
-	Float32    = zap.Float32
-	Int        = zap.Int
-	Int64      = zap.Int64
-	Int32      = zap.Int32
-	String     = zap.String
-	Stringp    = zap.Stringp
-	Stack      = zap.Stack
-	StackSkip  = zap.StackSkip
-	Durationp  = zap.Durationp
-	Any        = zap.Any
-)
-
-func New(level string, output string) *mlog {
+func New(opt Options) *mlog {
 	logConfig := zap.Config{
-		Level:       zap.NewAtomicLevelAt(getLevel(level)),
-		OutputPaths: []string{getOutput(output)},
+		Level:       zap.NewAtomicLevelAt(getLevel(opt.Level)),
+		OutputPaths: []string{getOutput(opt.Output)},
 		Encoding:    "json",
 		EncoderConfig: zapcore.EncoderConfig{
 			LevelKey:     "lvl",
@@ -50,11 +29,12 @@ func New(level string, output string) *mlog {
 		},
 	}
 
-	log := mlog{}
+	var log mlog
 	var err error
 	if log.zap, err = logConfig.Build(); err != nil {
 		panic(err)
 	}
+	log.contextField = opt.ContextField
 
 	return &log
 }
@@ -72,9 +52,9 @@ func (l *mlog) Info(msg string, tags ...Field) {
 }
 
 func (l *mlog) InfoT(ctx context.Context, msg string, tags ...Field) {
-	traceID := getTraceID(ctx)
-	tags = append(tags, zap.String("trace_id", traceID))
-	l.zap.Info(msg, tags...)
+	fields := l.getFieldFromContext(ctx)
+	fields = append(fields, tags...)
+	l.zap.Info(msg, fields...)
 }
 
 func (l *mlog) Warn(msg string, err error, tags ...Field) {
@@ -83,9 +63,10 @@ func (l *mlog) Warn(msg string, err error, tags ...Field) {
 }
 
 func (l *mlog) WarnT(ctx context.Context, msg string, err error, tags ...Field) {
-	traceID := getTraceID(ctx)
-	tags = append(tags, zap.String("trace_id", traceID), zap.NamedError("error", err))
-	l.zap.Info(msg, tags...)
+	fields := l.getFieldFromContext(ctx)
+	fields = append(fields, zap.NamedError("error", err))
+	fields = append(fields, tags...)
+	l.zap.Warn(msg, fields...)
 }
 
 func (l *mlog) Error(msg string, err error, tags ...Field) {
@@ -94,9 +75,10 @@ func (l *mlog) Error(msg string, err error, tags ...Field) {
 }
 
 func (l *mlog) ErrorT(ctx context.Context, msg string, err error, tags ...Field) {
-	traceID := getTraceID(ctx)
-	tags = append(tags, zap.String("trace_id", traceID), zap.NamedError("error", err), zap.StackSkip("stacktrace", 1))
-	l.zap.Error(msg, tags...)
+	fields := l.getFieldFromContext(ctx)
+	fields = append(fields, zap.NamedError("error", err), zap.StackSkip("stacktrace", 1))
+	fields = append(fields, tags...)
+	l.zap.Error(msg, fields...)
 }
 
 // Printf used to mimic setLogger interface on other lib, ex : ElasticSearch
@@ -122,8 +104,12 @@ func getLevel(level string) zapcore.Level {
 		return zap.DebugLevel
 	case "info":
 		return zap.InfoLevel
+	case "warn":
+		return zap.WarnLevel
 	case "error":
 		return zap.ErrorLevel
+	case "panic":
+		return zap.PanicLevel
 	default:
 		return zap.InfoLevel
 	}
@@ -137,12 +123,15 @@ func getOutput(output string) string {
 	return out
 }
 
-func getTraceID(ctx context.Context) string {
+func (l *mlog) getFieldFromContext(ctx context.Context) []zapcore.Field {
 	if ctx == nil {
-		return ""
+		return nil
 	}
-	if reqID, ok := ctx.Value(global.RequestIDKey).(string); ok {
-		return reqID
+	fields := make([]zapcore.Field, 0, len(l.contextField))
+	for key, v := range l.contextField {
+		if ctxValue, ok := ctx.Value(v).(string); ok {
+			fields = append(fields, zap.String(key, ctxValue))
+		}
 	}
-	return ""
+	return fields
 }

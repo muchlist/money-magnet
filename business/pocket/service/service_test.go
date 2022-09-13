@@ -15,7 +15,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var log = mlogger.New("panic", "stdout")
+var log = mlogger.New(mlogger.Options{
+	Level:        "panic",
+	Output:       "stdout",
+	ContextField: nil,
+})
 
 func TestCreatePocketSuccess(t *testing.T) {
 	// input output

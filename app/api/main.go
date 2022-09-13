@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/muchlist/moneymagnet/pkg/db"
+	"github.com/muchlist/moneymagnet/pkg/global"
 	"github.com/muchlist/moneymagnet/pkg/validate"
 
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -65,7 +66,11 @@ func main() {
 	flag.Parse()
 
 	// init log
-	log := mlogger.New("info", "stdout")
+	log := mlogger.New(mlogger.Options{
+		Level:        mlogger.LevelInfo,
+		Output:       "stdout",
+		ContextField: map[string]any{"trace_id": global.RequestIDKey},
+	})
 
 	// init database
 	database, err := db.OpenDB(db.Config{
