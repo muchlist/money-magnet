@@ -13,6 +13,7 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
+	"github.com/muchlist/moneymagnet/pkg/observ"
 
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -46,7 +47,10 @@ func NewCore(
 	}
 }
 
-func (s Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req model.NewPocket) (model.PocketResp, error) {
+func (s Core) CreatePocket(pctx context.Context, claims mjwt.CustomClaim, req model.NewPocket) (model.PocketResp, error) {
+	ctx, span := observ.GetTracer().Start(pctx, "service-CreatePocket")
+	defer span.End()
+
 	// Validate editor and watcher uuids
 	combineUserUUIDs := append(req.EditorID, req.WatcherID...)
 	users, err := s.userRepo.GetByIDs(ctx, combineUserUUIDs)
@@ -116,7 +120,10 @@ func (s Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req mod
 	return pocket.ToPocketResp(), nil
 }
 
-func (s Core) UpdatePocket(ctx context.Context, claims mjwt.CustomClaim, newData model.PocketUpdate) (model.PocketResp, error) {
+func (s Core) UpdatePocket(pctx context.Context, claims mjwt.CustomClaim, newData model.PocketUpdate) (model.PocketResp, error) {
+	ctx, span := observ.GetTracer().Start(pctx, "service-UpdatePocket")
+	defer span.End()
+
 	// Validate Pocket Roles
 	canEdit, _ := shared.IsCanEditOrWatch(newData.ID, claims.PocketRoles)
 	if !canEdit {
@@ -149,7 +156,9 @@ func (s Core) UpdatePocket(ctx context.Context, claims mjwt.CustomClaim, newData
 	return pocketExisting.ToPocketResp(), nil
 }
 
-func (s Core) AddPerson(ctx context.Context, claims mjwt.CustomClaim, data AddPersonData) (model.PocketResp, error) {
+func (s Core) AddPerson(pctx context.Context, claims mjwt.CustomClaim, data AddPersonData) (model.PocketResp, error) {
+	ctx, span := observ.GetTracer().Start(pctx, "service-AddPerson")
+	defer span.End()
 
 	// Validate Pocket Roles
 	canEdit, _ := shared.IsCanEditOrWatch(data.PocketID, claims.PocketRoles)
@@ -204,7 +213,9 @@ func (s Core) AddPerson(ctx context.Context, claims mjwt.CustomClaim, data AddPe
 }
 
 // RemovePerson will remove person from both editor and watcher
-func (s Core) RemovePerson(ctx context.Context, claims mjwt.CustomClaim, data RemovePersonData) (model.PocketResp, error) {
+func (s Core) RemovePerson(pctx context.Context, claims mjwt.CustomClaim, data RemovePersonData) (model.PocketResp, error) {
+	ctx, span := observ.GetTracer().Start(pctx, "service-RemovePerson")
+	defer span.End()
 
 	// Validate Pocket Roles
 	canEdit, _ := shared.IsCanEditOrWatch(data.PocketID, claims.PocketRoles)
@@ -244,7 +255,9 @@ func (s Core) RemovePerson(ctx context.Context, claims mjwt.CustomClaim, data Re
 }
 
 // GetDetail ...
-func (s Core) GetDetail(ctx context.Context, claims mjwt.CustomClaim, pocketID uuid.UUID) (model.PocketResp, error) {
+func (s Core) GetDetail(pctx context.Context, claims mjwt.CustomClaim, pocketID uuid.UUID) (model.PocketResp, error) {
+	ctx, span := observ.GetTracer().Start(pctx, "service-GetDetail")
+	defer span.End()
 
 	// Validate Pocket Roles
 	canEdit, canWatch := shared.IsCanEditOrWatch(pocketID, claims.PocketRoles)
@@ -262,10 +275,12 @@ func (s Core) GetDetail(ctx context.Context, claims mjwt.CustomClaim, pocketID u
 }
 
 // FindAllPocket ...
-func (s Core) FindAllPocket(ctx context.Context, claims mjwt.CustomClaim, filter data.Filters) ([]model.PocketResp, data.Metadata, error) {
+func (s Core) FindAllPocket(pctx context.Context, claims mjwt.CustomClaim, filter data.Filters) ([]model.PocketResp, data.Metadata, error) {
+	ctx, span := observ.GetTracer().Start(pctx, "service-FindAllPocket")
+	defer span.End()
 
 	// Get existing Pocket
-	pockets, metadata, err := s.repo.FindUserPockets(ctx, claims.GetUUID(), filter)
+	pockets, metadata, err := s.repo.FindUserPocketsByRelation(ctx, claims.GetUUID(), filter)
 	if err != nil {
 		return nil, data.Metadata{}, fmt.Errorf("find pocket user: %w", err)
 	}

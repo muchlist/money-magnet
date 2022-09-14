@@ -160,13 +160,24 @@ func ReadInt(qs url.Values, key string, defaultValue int) int {
 	return i
 }
 
-// ReadTraceID helper reads a trace_id value from r.Context() injected by chi middleware.RequestID.
-func ReadTraceID(ctx context.Context) string {
+// ReadRequestID helper reads a request_id value from r.Context() injected by chi middleware.RequestID.
+func ReadRequestID(ctx context.Context) string {
 	if ctx == nil {
 		return ""
 	}
 	if reqID, ok := ctx.Value(global.RequestIDKey).(string); ok {
 		return reqID
+	}
+	return ""
+}
+
+// ReadTraceID helper reads a trace_id value from r.Context() injected by chi middleware.RequestID.
+func ReadTraceID(ctx context.Context) string {
+	if ctx == nil {
+		return ""
+	}
+	if traceID, ok := ctx.Value(global.TraceIDKey).(string); ok {
+		return traceID
 	}
 	return ""
 }

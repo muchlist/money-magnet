@@ -33,7 +33,7 @@ type PocketSaver interface {
 type PocketReader interface {
 	GetByID(ctx context.Context, id uuid.UUID) (model.Pocket, error)
 	Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error)
-	FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error)
+	FindUserPocketsByRelation(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error)
 }
 
 type Transactor interface {

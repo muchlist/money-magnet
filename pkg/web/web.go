@@ -16,18 +16,20 @@ import (
 )
 
 type webServer struct {
-	logger mlogger.Logger
-	wg     sync.WaitGroup // waitgroup for gracefully shutdown background process
-	port   int
-	env    string
+	logger      mlogger.Logger
+	wg          sync.WaitGroup // waitgroup for gracefully shutdown background process
+	port        int
+	env         string
+	serviceName string
 }
 
-func New(logger mlogger.Logger, port int, env string) *webServer {
+func New(logger mlogger.Logger, port int, env string, serviceName string) *webServer {
 	return &webServer{
-		logger: logger,
-		wg:     sync.WaitGroup{},
-		port:   port,
-		env:    env,
+		logger:      logger,
+		wg:          sync.WaitGroup{},
+		port:        port,
+		env:         env,
+		serviceName: serviceName,
 	}
 }
 

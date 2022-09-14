@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/muchlist/moneymagnet/pkg/global"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -28,6 +29,7 @@ func midLogger(l mlogger.Logger) func(next http.Handler) http.Handler {
 			// log incomming request
 			l.Info("request started",
 				zap.String("path", r.URL.Path),
+				zap.String("request_id", ReadRequestID(r.Context())),
 				zap.String("trace_id", ReadTraceID(r.Context())),
 				zap.String("client_id", clientID),
 				zap.String("source_ip", ipAddress),
@@ -37,6 +39,7 @@ func midLogger(l mlogger.Logger) func(next http.Handler) http.Handler {
 			defer func() {
 				l.Info("request completed",
 					zap.String("path", r.URL.Path),
+					zap.String("request_id", ReadRequestID(r.Context())),
 					zap.String("trace_id", ReadTraceID(r.Context())),
 					zap.String("client_id", clientID),
 					zap.String("source_ip", ipAddress),
@@ -59,11 +62,21 @@ var RequestIDHeader = "X-Request-Id"
 func requestID(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+
+		// Get RequestID from header
 		requestID := r.Header.Get(RequestIDHeader)
 		if requestID == "" {
 			requestID = uuid.NewString()
 		}
+
+		// Get TraceID from otel tracer
+		span := trace.SpanFromContext(ctx)
+		traceID := span.SpanContext().TraceID().String()
+
+		// set requestID and traceID to context
 		ctx = context.WithValue(ctx, global.RequestIDKey, requestID)
+		ctx = context.WithValue(ctx, global.TraceIDKey, traceID)
+
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 	return http.HandlerFunc(fn)
