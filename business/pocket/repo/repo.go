@@ -52,8 +52,8 @@ func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) Repo {
 // MANIPULATOR
 
 // Insert ...
-func (r Repo) Insert(pctx context.Context, pocket *model.Pocket) error {
-	ctx, span := observ.GetTracer().Start(pctx, "pocket-repo-Insert")
+func (r Repo) Insert(ctx context.Context, pocket *model.Pocket) error {
+	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-Insert")
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -101,8 +101,8 @@ func (r Repo) Insert(pctx context.Context, pocket *model.Pocket) error {
 }
 
 // Edit ...
-func (r Repo) Edit(pctx context.Context, pocket *model.Pocket) error {
-	ctx, span := observ.GetTracer().Start(pctx, "pocket-repo-Edit")
+func (r Repo) Edit(ctx context.Context, pocket *model.Pocket) error {
+	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-Edit")
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -140,8 +140,8 @@ func (r Repo) Edit(pctx context.Context, pocket *model.Pocket) error {
 }
 
 // UpdateBalance ...
-func (r Repo) UpdateBalance(pctx context.Context, pocketID uuid.UUID, balance int64, isSetOperaton bool) (int64, error) {
-	ctx, span := observ.GetTracer().Start(pctx, "pocket-repo-UpdateBalance")
+func (r Repo) UpdateBalance(ctx context.Context, pocketID uuid.UUID, balance int64, isSetOperaton bool) (int64, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-UpdateBalance")
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -175,8 +175,8 @@ func (r Repo) UpdateBalance(pctx context.Context, pocketID uuid.UUID, balance in
 }
 
 // Delete ...
-func (r Repo) Delete(pctx context.Context, id uuid.UUID) error {
-	ctx, span := observ.GetTracer().Start(pctx, "pocket-repo-Delete")
+func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
+	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-Delete")
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -205,8 +205,8 @@ func (r Repo) Delete(pctx context.Context, id uuid.UUID) error {
 // GETTER
 
 // GetByID get one pocket by id
-func (r Repo) GetByID(pctx context.Context, id uuid.UUID) (model.Pocket, error) {
-	ctx, span := observ.GetTracer().Start(pctx, "pocket-repo-GetByID")
+func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Pocket, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-GetByID")
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -255,8 +255,8 @@ func (r Repo) GetByID(pctx context.Context, id uuid.UUID) (model.Pocket, error) 
 }
 
 // Find get all pocket
-func (r Repo) Find(pctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
-	ctx, span := observ.GetTracer().Start(pctx, "pocket-repo-Find")
+func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-Find")
 	defer span.End()
 
 	// Validation filter
@@ -420,8 +420,8 @@ func (r Repo) Find(pctx context.Context, owner uuid.UUID, filter data.Filters) (
 // }
 
 // FindUserPockets get all pocket user has uuid in it by relation constrain
-func (r Repo) FindUserPocketsByRelation(pctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
-	ctx, span := observ.GetTracer().Start(pctx, "pocket-repo-FindUserPocketsByRelation")
+func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-FindUserPocketsByRelation")
 	defer span.End()
 
 	// Validation filter

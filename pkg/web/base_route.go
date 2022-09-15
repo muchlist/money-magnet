@@ -17,7 +17,9 @@ func (ws *webServer) setupRoutes(injectRoute http.Handler) http.Handler {
 	// convert methodNotAllowedResponse to http handler and set it as the custom error handler for 405 method not allowed
 	router.MethodNotAllowed(MethodNotAllowedResponse)
 
-	router.Use(otelchi.Middleware(ws.serviceName, otelchi.WithChiRoutes(router)))
+	router.Use(otelchi.Middleware(ws.serviceName,
+		otelchi.WithChiRoutes(router)),
+	)
 	router.Use(requestID)
 	router.Use(middleware.RealIP)
 	router.Use(midLogger(ws.logger))

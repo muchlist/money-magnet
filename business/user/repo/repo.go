@@ -49,8 +49,8 @@ func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) Repo {
 // MANIPULATOR
 
 // Insert ...
-func (r Repo) Insert(pctx context.Context, user *model.User) error {
-	ctx, span := observ.GetTracer().Start(pctx, "user-repo-Insert")
+func (r Repo) Insert(ctx context.Context, user *model.User) error {
+	ctx, span := observ.GetTracer().Start(ctx, "user-repo-Insert")
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -91,8 +91,8 @@ func (r Repo) Insert(pctx context.Context, user *model.User) error {
 }
 
 // Edit ...
-func (r Repo) Edit(pctx context.Context, user *model.User) error {
-	ctx, span := observ.GetTracer().Start(pctx, "user-repo-Edit")
+func (r Repo) Edit(ctx context.Context, user *model.User) error {
+	ctx, span := observ.GetTracer().Start(ctx, "user-repo-Edit")
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -124,8 +124,8 @@ func (r Repo) Edit(pctx context.Context, user *model.User) error {
 	return nil
 }
 
-func (r Repo) EditFCM(pctx context.Context, id uuid.UUID, fcm string) error {
-	ctx, span := observ.GetTracer().Start(pctx, "user-repo-EditFCM")
+func (r Repo) EditFCM(ctx context.Context, id uuid.UUID, fcm string) error {
+	ctx, span := observ.GetTracer().Start(ctx, "user-repo-EditFCM")
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -153,8 +153,8 @@ func (r Repo) EditFCM(pctx context.Context, id uuid.UUID, fcm string) error {
 }
 
 // Delete ...
-func (r Repo) Delete(pctx context.Context, id uuid.UUID) error {
-	ctx, span := observ.GetTracer().Start(pctx, "user-repo-Delete")
+func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
+	ctx, span := observ.GetTracer().Start(ctx, "user-repo-Delete")
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -182,8 +182,8 @@ func (r Repo) Delete(pctx context.Context, id uuid.UUID) error {
 }
 
 // ChangePassword ...
-func (r Repo) ChangePassword(pctx context.Context, user *model.User) error {
-	ctx, span := observ.GetTracer().Start(pctx, "user-repo-ChangePassword")
+func (r Repo) ChangePassword(ctx context.Context, user *model.User) error {
+	ctx, span := observ.GetTracer().Start(ctx, "user-repo-ChangePassword")
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -216,8 +216,8 @@ func (r Repo) ChangePassword(pctx context.Context, user *model.User) error {
 // GETTER
 
 // GetByID get one user by uuid
-func (r Repo) GetByID(pctx context.Context, uuid uuid.UUID) (model.User, error) {
-	ctx, span := observ.GetTracer().Start(pctx, "user-repo-GetByID")
+func (r Repo) GetByID(ctx context.Context, uuid uuid.UUID) (model.User, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "user-repo-GetByID")
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -260,8 +260,8 @@ func (r Repo) GetByID(pctx context.Context, uuid uuid.UUID) (model.User, error) 
 }
 
 // GetByIDs get many user by []uuid
-func (r Repo) GetByIDs(pctx context.Context, uuids []uuid.UUID) ([]model.User, error) {
-	ctx, span := observ.GetTracer().Start(pctx, "user-repo-GetByIDs")
+func (r Repo) GetByIDs(ctx context.Context, uuids []uuid.UUID) ([]model.User, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "user-repo-GetByIDs")
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -316,8 +316,8 @@ func (r Repo) GetByIDs(pctx context.Context, uuids []uuid.UUID) ([]model.User, e
 }
 
 // GetByEmail get one user by email
-func (r Repo) GetByEmail(pctx context.Context, email string) (model.User, error) {
-	ctx, span := observ.GetTracer().Start(pctx, "user-repo-GetByEmail")
+func (r Repo) GetByEmail(ctx context.Context, email string) (model.User, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "user-repo-GetByEmail")
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -360,8 +360,8 @@ func (r Repo) GetByEmail(pctx context.Context, email string) (model.User, error)
 }
 
 // Find get all user
-func (r Repo) Find(pctx context.Context, name string, filter data.Filters) ([]model.User, data.Metadata, error) {
-	ctx, span := observ.GetTracer().Start(pctx, "user-repo-Find")
+func (r Repo) Find(ctx context.Context, name string, filter data.Filters) ([]model.User, data.Metadata, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "user-repo-Find")
 	defer span.End()
 
 	// Validation filter

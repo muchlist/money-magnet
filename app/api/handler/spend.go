@@ -9,6 +9,7 @@ import (
 	"github.com/muchlist/moneymagnet/business/spend/service"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/mid"
+	"github.com/muchlist/moneymagnet/pkg/observ"
 	"github.com/muchlist/moneymagnet/pkg/validate"
 
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -42,7 +43,10 @@ type spendHandler struct {
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /spends [post]
 func (pt spendHandler) CreateSpend(w http.ResponseWriter, r *http.Request) {
-	claims, err := mid.GetClaims(r.Context())
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-CreateSpend")
+	defer span.End()
+
+	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
@@ -51,21 +55,21 @@ func (pt spendHandler) CreateSpend(w http.ResponseWriter, r *http.Request) {
 	var req model.NewSpend
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
-		pt.log.WarnT(r.Context(), "bad json", err)
+		pt.log.WarnT(ctx, "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	errMap, err := pt.validator.Struct(req)
 	if err != nil {
-		pt.log.WarnT(r.Context(), "request not valid", err)
+		pt.log.WarnT(ctx, "request not valid", err)
 		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 
-	result, err := pt.service.CreateSpend(r.Context(), claims, req)
+	result, err := pt.service.CreateSpend(ctx, claims, req)
 	if err != nil {
-		pt.log.ErrorT(r.Context(), "error create spend", err)
+		pt.log.ErrorT(ctx, "error create spend", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -92,7 +96,10 @@ func (pt spendHandler) CreateSpend(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /spends/{spend_id} [patch]
 func (pt spendHandler) EditSpend(w http.ResponseWriter, r *http.Request) {
-	claims, err := mid.GetClaims(r.Context())
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-EditSpend")
+	defer span.End()
+
+	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
@@ -101,7 +108,7 @@ func (pt spendHandler) EditSpend(w http.ResponseWriter, r *http.Request) {
 	// extract url path
 	spendID, err := web.ReadUUIDParam(r)
 	if err != nil {
-		pt.log.WarnT(r.Context(), err.Error(), err)
+		pt.log.WarnT(ctx, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -109,7 +116,7 @@ func (pt spendHandler) EditSpend(w http.ResponseWriter, r *http.Request) {
 	var req model.UpdateSpend
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
-		pt.log.WarnT(r.Context(), "bad json", err)
+		pt.log.WarnT(ctx, "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -118,14 +125,14 @@ func (pt spendHandler) EditSpend(w http.ResponseWriter, r *http.Request) {
 
 	errMap, err := pt.validator.Struct(req)
 	if err != nil {
-		pt.log.WarnT(r.Context(), "request not valid", err)
+		pt.log.WarnT(ctx, "request not valid", err)
 		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 
-	result, err := pt.service.UpdatePartialSpend(r.Context(), claims, req)
+	result, err := pt.service.UpdatePartialSpend(ctx, claims, req)
 	if err != nil {
-		pt.log.ErrorT(r.Context(), "error update spend", err)
+		pt.log.ErrorT(ctx, "error update spend", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -151,7 +158,10 @@ func (pt spendHandler) EditSpend(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /spends/sync/{spend_id} [post]
 func (pt spendHandler) SyncBalance(w http.ResponseWriter, r *http.Request) {
-	claims, err := mid.GetClaims(r.Context())
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-SyncBalance")
+	defer span.End()
+
+	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
@@ -160,14 +170,14 @@ func (pt spendHandler) SyncBalance(w http.ResponseWriter, r *http.Request) {
 	// extract url path
 	pocketID, err := web.ReadUUIDParam(r)
 	if err != nil {
-		pt.log.WarnT(r.Context(), err.Error(), err)
+		pt.log.WarnT(ctx, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	newBalance, err := pt.service.SyncBalance(r.Context(), claims, pocketID)
+	newBalance, err := pt.service.SyncBalance(ctx, claims, pocketID)
 	if err != nil {
-		pt.log.ErrorT(r.Context(), "error sync balance", err)
+		pt.log.ErrorT(ctx, "error sync balance", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -193,18 +203,20 @@ func (pt spendHandler) SyncBalance(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /spends/{spend_id} [get]
 func (pt spendHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-GetByID")
+	defer span.End()
 
 	// extract url path
 	spendID, err := web.ReadUUIDParam(r)
 	if err != nil {
-		pt.log.WarnT(r.Context(), err.Error(), err)
+		pt.log.WarnT(ctx, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	result, err := pt.service.GetDetail(r.Context(), spendID)
+	result, err := pt.service.GetDetail(ctx, spendID)
 	if err != nil {
-		pt.log.ErrorT(r.Context(), "error get spend by id", err)
+		pt.log.ErrorT(ctx, "error get spend by id", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -250,8 +262,10 @@ func extractSpendFIlter(values url.Values) model.SpendFilter {
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /spends [get]
 func (pt spendHandler) FindSpend(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-FindSpend")
+	defer span.End()
 
-	claims, err := mid.GetClaims(r.Context())
+	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
@@ -259,7 +273,7 @@ func (pt spendHandler) FindSpend(w http.ResponseWriter, r *http.Request) {
 
 	pocketID, err := web.ReadUUIDParam(r)
 	if err != nil {
-		pt.log.WarnT(r.Context(), err.Error(), err)
+		pt.log.WarnT(ctx, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -272,13 +286,13 @@ func (pt spendHandler) FindSpend(w http.ResponseWriter, r *http.Request) {
 	filter := extractSpendFIlter(r.URL.Query())
 	filter.PocketID.UUID = pocketID
 
-	result, metadata, err := pt.service.FindAllSpend(r.Context(), claims, filter, data.Filters{
+	result, metadata, err := pt.service.FindAllSpend(ctx, claims, filter, data.Filters{
 		Page:     page,
 		PageSize: pageSize,
 		Sort:     sort,
 	})
 	if err != nil {
-		pt.log.ErrorT(r.Context(), "error find spend", err)
+		pt.log.ErrorT(ctx, "error find spend", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return

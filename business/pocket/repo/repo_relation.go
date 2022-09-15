@@ -20,8 +20,8 @@ const (
 )
 
 // InsertPocketUser ...
-func (r Repo) InsertPocketUser(pctx context.Context, userIDs []uuid.UUID, pocketID uuid.UUID) error {
-	ctx, span := observ.GetTracer().Start(pctx, "pocket-repo-CreatePocket")
+func (r Repo) InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketID uuid.UUID) error {
+	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-CreatePocket")
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -54,8 +54,8 @@ func (r Repo) InsertPocketUser(pctx context.Context, userIDs []uuid.UUID, pocket
 }
 
 // DeletePocketUser ...
-func (r Repo) DeletePocketUser(pctx context.Context, userID uuid.UUID, pocketID uuid.UUID) error {
-	ctx, span := observ.GetTracer().Start(pctx, "pocket-repo-DeletePocketUser")
+func (r Repo) DeletePocketUser(ctx context.Context, userID uuid.UUID, pocketID uuid.UUID) error {
+	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-DeletePocketUser")
 	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)

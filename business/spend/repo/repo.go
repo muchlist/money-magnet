@@ -9,6 +9,7 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
+	"github.com/muchlist/moneymagnet/pkg/observ"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -54,6 +55,9 @@ func NewRepo(sqlDB *pgxpool.Pool, logger mlogger.Logger) Repo {
 
 // Insert ...
 func (r Repo) Insert(ctx context.Context, spend *model.Spend) error {
+	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-Insert")
+	defer span.End()
+
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -107,6 +111,9 @@ func (r Repo) Insert(ctx context.Context, spend *model.Spend) error {
 
 // Edit ...
 func (r Repo) Edit(ctx context.Context, spend *model.Spend) error {
+	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-Edit")
+	defer span.End()
+
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -145,6 +152,9 @@ func (r Repo) Edit(ctx context.Context, spend *model.Spend) error {
 
 // Delete ...
 func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
+	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-Delete")
+	defer span.End()
+
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -172,6 +182,9 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 
 // GetByID get one spend by email
 func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-GetByID")
+	defer span.End()
+
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -238,6 +251,8 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error) {
 
 // Find get all spend
 func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter data.Filters) ([]model.Spend, data.Metadata, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-Find")
+	defer span.End()
 
 	// Validation filter
 	filter.SortSafelist = []string{"-date", "date", "updated_at", "-updated_at"}
@@ -368,6 +383,8 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter da
 
 // Count All Price
 func (r Repo) CountAllPrice(ctx context.Context, pocketID uuid.UUID) (int64, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-CountAllPrice")
+	defer span.End()
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()

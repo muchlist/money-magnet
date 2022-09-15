@@ -11,6 +11,7 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
+	"github.com/muchlist/moneymagnet/pkg/observ"
 )
 
 /*
@@ -59,6 +60,9 @@ func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) Repo {
 
 // Insert ...
 func (r Repo) Insert(ctx context.Context, request *model.RequestPocket) error {
+	ctx, span := observ.GetTracer().Start(ctx, "req-repo-Insert")
+	defer span.End()
+
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -95,6 +99,9 @@ func (r Repo) Insert(ctx context.Context, request *model.RequestPocket) error {
 
 // UpdateStatus update approver, is_approved and udpdated_at
 func (r Repo) UpdateStatus(ctx context.Context, request *model.RequestPocket) error {
+	ctx, span := observ.GetTracer().Start(ctx, "req-repo-UpdateStatus")
+	defer span.End()
+
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -142,6 +149,9 @@ func (r Repo) UpdateStatus(ctx context.Context, request *model.RequestPocket) er
 // GETTER
 // GetByID get one pocket by email
 func (r Repo) GetByID(ctx context.Context, id uint64) (model.RequestPocket, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "req-repo-GetByID")
+	defer span.End()
+
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -184,6 +194,8 @@ func (r Repo) GetByID(ctx context.Context, id uint64) (model.RequestPocket, erro
 
 // Find get all request by FIND model
 func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter data.Filters) ([]model.RequestPocket, data.Metadata, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "req-repo-Find")
+	defer span.End()
 
 	// Validation filter
 	filter.SortSafelist = []string{"updated_at", "-updated_at"}

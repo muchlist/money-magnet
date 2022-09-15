@@ -8,6 +8,7 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
+	"github.com/muchlist/moneymagnet/pkg/observ"
 	"github.com/muchlist/moneymagnet/pkg/validate"
 	"github.com/muchlist/moneymagnet/pkg/web"
 )
@@ -190,17 +191,20 @@ func (ch catHandler) FindPocketCategory(w http.ResponseWriter, r *http.Request) 
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /categories/{category_id} [delete]
 func (ch catHandler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-DeleteCategory")
+	defer span.End()
+
 	// extract url query
 	categoryID, err := web.ReadUUIDParam(r)
 	if err != nil {
-		ch.log.WarnT(r.Context(), err.Error(), err)
+		ch.log.WarnT(ctx, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	err = ch.service.DeleteCategory(r.Context(), categoryID)
+	err = ch.service.DeleteCategory(ctx, categoryID)
 	if err != nil {
-		ch.log.ErrorT(r.Context(), "error delete categories", err)
+		ch.log.ErrorT(ctx, "error delete categories", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return

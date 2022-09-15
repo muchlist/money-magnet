@@ -11,6 +11,7 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
+	"github.com/muchlist/moneymagnet/pkg/observ"
 
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/pkg/mcrypto"
@@ -57,6 +58,9 @@ func NewCore(
 
 // Login return detail user with access token and refresh token
 func (s Core) Login(ctx context.Context, email, password string) (model.UserResp, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-Login")
+	defer span.End()
+
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
 		return model.UserResp{}, fmt.Errorf("%v: %w", err, ErrInvalidEmailOrPass)
@@ -120,6 +124,8 @@ func (s Core) Login(ctx context.Context, email, password string) (model.UserResp
 
 // InsertUser used for register user
 func (s Core) InsertUser(ctx context.Context, req model.UserRegisterReq) (model.UserResp, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-InsertUser")
+	defer span.End()
 
 	hashPassword, err := s.crypto.GenerateHash(req.Password)
 	if err != nil {
@@ -162,6 +168,8 @@ func (s Core) InsertUser(ctx context.Context, req model.UserRegisterReq) (model.
 // FetchUser do edit user with ignoring nil field
 // ID is required
 func (s Core) FetchUser(ctx context.Context, req model.UserUpdate) (model.UserResp, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-FetchUser")
+	defer span.End()
 
 	userExisting, err := s.repo.GetByID(ctx, req.ID)
 	if err != nil {
@@ -197,6 +205,9 @@ func (s Core) FetchUser(ctx context.Context, req model.UserUpdate) (model.UserRe
 
 // UpdateFCM do save fcm to database
 func (s Core) UpdateFCM(ctx context.Context, id string, fcm string) error {
+	ctx, span := observ.GetTracer().Start(ctx, "service-UpdateFCM")
+	defer span.End()
+
 	userID, err := uuid.Parse(id)
 	if err != nil {
 		return ErrInvalidID
@@ -209,6 +220,9 @@ func (s Core) UpdateFCM(ctx context.Context, id string, fcm string) error {
 
 // Delete ...
 func (s Core) Delete(ctx context.Context, userIDToDelete uuid.UUID, userIDExecutor uuid.UUID) error {
+	ctx, span := observ.GetTracer().Start(ctx, "service-Delete")
+	defer span.End()
+
 	if userIDExecutor == userIDToDelete {
 		return errr.New("cannot delete self profile", 400)
 	}
@@ -218,6 +232,9 @@ func (s Core) Delete(ctx context.Context, userIDToDelete uuid.UUID, userIDExecut
 // Refresh do refresh token,
 // access token in reslt is new but tagged as not fresh
 func (s Core) Refresh(ctx context.Context, refreshToken string) (model.UserResp, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-Refresh")
+	defer span.End()
+
 	// validate token, signature and exp etc...
 	token, err := s.jwt.ValidateToken(refreshToken)
 	if err != nil {
@@ -278,6 +295,9 @@ func (s Core) Refresh(ctx context.Context, refreshToken string) (model.UserResp,
 
 // GetProfile do load user by id
 func (s Core) GetProfile(ctx context.Context, id string) (model.UserResp, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-GetProfile")
+	defer span.End()
+
 	userID, err := uuid.Parse(id)
 	if err != nil {
 		return model.UserResp{}, ErrInvalidID
@@ -292,6 +312,9 @@ func (s Core) GetProfile(ctx context.Context, id string) (model.UserResp, error)
 
 // FindUserByName do find user filter by *name*
 func (s Core) FindUserByName(ctx context.Context, name string, filter data.Filters) ([]model.UserResp, data.Metadata, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-FindUserByName")
+	defer span.End()
+
 	users, metadata, err := s.repo.Find(ctx, name, filter)
 	if err != nil {
 		return nil, data.Metadata{}, fmt.Errorf("find user: %w", err)
@@ -304,6 +327,9 @@ func (s Core) FindUserByName(ctx context.Context, name string, filter data.Filte
 }
 
 func (s Core) getPocketRoles(ctx context.Context, userID uuid.UUID) ([]string, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-getPocketRoles")
+	defer span.End()
+
 	pockets, _, err := s.pocketRepo.FindUserPocketsByRelation(ctx, userID, data.Filters{})
 	if err != nil {
 		return nil, fmt.Errorf("find user pocket: %w", err)

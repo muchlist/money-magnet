@@ -13,6 +13,7 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
+	"github.com/muchlist/moneymagnet/pkg/observ"
 )
 
 // Core manages the set of APIs for category access.
@@ -33,6 +34,9 @@ func NewCore(
 }
 
 func (s Core) CreateCategory(ctx context.Context, claims mjwt.CustomClaim, req model.NewCategory) (model.CategoryResp, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "category-service-CreateCategory")
+	defer span.End()
+
 	// if cannot edit return error
 	canEdit, _ := shared.IsCanEditOrWatch(req.PocketID, claims.PocketRoles)
 	if !canEdit {
@@ -57,6 +61,8 @@ func (s Core) CreateCategory(ctx context.Context, claims mjwt.CustomClaim, req m
 }
 
 func (s Core) EditCategory(ctx context.Context, claims mjwt.CustomClaim, newData model.UpdateCategory) (model.CategoryResp, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "category-service-EditCategory")
+	defer span.End()
 
 	// Get existing Category
 	categoryExisting, err := s.repo.GetByID(ctx, newData.ID)
@@ -84,6 +90,8 @@ func (s Core) EditCategory(ctx context.Context, claims mjwt.CustomClaim, newData
 
 // FindAllCategory ...
 func (s Core) FindAllCategory(ctx context.Context, pocketID uuid.UUID, filter data.Filters) ([]model.CategoryResp, data.Metadata, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "category-service-FindAllCategory")
+	defer span.End()
 
 	// Get category
 	cats, metadata, err := s.repo.Find(ctx, pocketID, filter)
@@ -101,6 +109,9 @@ func (s Core) FindAllCategory(ctx context.Context, pocketID uuid.UUID, filter da
 
 // DeleteCategory ...
 func (s Core) DeleteCategory(ctx context.Context, categoryID uuid.UUID) error {
+	ctx, span := observ.GetTracer().Start(ctx, "category-service-DeleteCategory")
+	defer span.End()
+
 	err := s.repo.Delete(ctx, categoryID)
 	if err != nil {
 		return fmt.Errorf("delete category: %w", err)
