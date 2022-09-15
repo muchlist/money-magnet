@@ -9,6 +9,7 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
+	"github.com/muchlist/moneymagnet/pkg/observ"
 	"github.com/muchlist/moneymagnet/pkg/validate"
 	"github.com/muchlist/moneymagnet/pkg/web"
 )
@@ -40,8 +41,10 @@ type requestHandler struct {
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /request [post]
 func (pt requestHandler) CreateRequest(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-CreateRequest")
+	defer span.End()
 
-	claims, err := mid.GetClaims(r.Context())
+	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
@@ -50,21 +53,21 @@ func (pt requestHandler) CreateRequest(w http.ResponseWriter, r *http.Request) {
 	var req model.NewRequestPocket
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
-		pt.log.WarnT(r.Context(), "bad json", err)
+		pt.log.WarnT(ctx, "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	errMap, err := pt.validator.Struct(req)
 	if err != nil {
-		pt.log.WarnT(r.Context(), "request not valid", err)
+		pt.log.WarnT(ctx, "request not valid", err)
 		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 
-	result, err := pt.service.CreateRequest(r.Context(), claims, req.PocketID)
+	result, err := pt.service.CreateRequest(ctx, claims, req.PocketID)
 	if err != nil {
-		pt.log.ErrorT(r.Context(), "error create request", err)
+		pt.log.ErrorT(ctx, "error create request", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -91,8 +94,10 @@ func (pt requestHandler) CreateRequest(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /request/{request_id}/action [post]
 func (pt requestHandler) ApproveOrRejectRequest(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-ApproveOrRejectRequest")
+	defer span.End()
 
-	claims, err := mid.GetClaims(r.Context())
+	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
@@ -100,7 +105,7 @@ func (pt requestHandler) ApproveOrRejectRequest(w http.ResponseWriter, r *http.R
 
 	id, err := web.ReadIDParam(r)
 	if err != nil {
-		pt.log.WarnT(r.Context(), err.Error(), err)
+		pt.log.WarnT(ctx, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -108,7 +113,7 @@ func (pt requestHandler) ApproveOrRejectRequest(w http.ResponseWriter, r *http.R
 	isApprovedStr := web.ReadString(r.URL.Query(), "approve", "")
 	isApprovedBool := false
 	if isApprovedStr == "" {
-		pt.log.WarnT(r.Context(), "bad request", err)
+		pt.log.WarnT(ctx, "bad request", err)
 		web.ErrorResponse(w, http.StatusBadRequest, "?approve=<must be bool>")
 		return
 	}
@@ -116,9 +121,9 @@ func (pt requestHandler) ApproveOrRejectRequest(w http.ResponseWriter, r *http.R
 		isApprovedBool = true
 	}
 
-	err = pt.service.ApproveRequest(r.Context(), claims, isApprovedBool, id)
+	err = pt.service.ApproveRequest(ctx, claims, isApprovedBool, id)
 	if err != nil {
-		pt.log.ErrorT(r.Context(), "error change status request", err)
+		pt.log.ErrorT(ctx, "error change status request", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -143,8 +148,10 @@ func (pt requestHandler) ApproveOrRejectRequest(w http.ResponseWriter, r *http.R
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /request/in [get]
 func (pt requestHandler) FindRequestByApprover(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-FindRequestByApprover")
+	defer span.End()
 
-	claims, err := mid.GetClaims(r.Context())
+	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
@@ -155,13 +162,13 @@ func (pt requestHandler) FindRequestByApprover(w http.ResponseWriter, r *http.Re
 	page := web.ReadInt(r.URL.Query(), "page", 0)
 	pageSize := web.ReadInt(r.URL.Query(), "page_size", 0)
 
-	result, metadata, err := pt.service.FindAllByApprover(r.Context(), claims, data.Filters{
+	result, metadata, err := pt.service.FindAllByApprover(ctx, claims, data.Filters{
 		Page:     page,
 		PageSize: pageSize,
 		Sort:     sort,
 	})
 	if err != nil {
-		pt.log.ErrorT(r.Context(), "error find request", err)
+		pt.log.ErrorT(ctx, "error find request", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -187,8 +194,10 @@ func (pt requestHandler) FindRequestByApprover(w http.ResponseWriter, r *http.Re
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /request/out [get]
 func (pt requestHandler) FindByRequester(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-FindByRequester")
+	defer span.End()
 
-	claims, err := mid.GetClaims(r.Context())
+	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
@@ -199,13 +208,13 @@ func (pt requestHandler) FindByRequester(w http.ResponseWriter, r *http.Request)
 	page := web.ReadInt(r.URL.Query(), "page", 0)
 	pageSize := web.ReadInt(r.URL.Query(), "page_size", 0)
 
-	result, metadata, err := pt.service.FindAllByRequester(r.Context(), claims, data.Filters{
+	result, metadata, err := pt.service.FindAllByRequester(ctx, claims, data.Filters{
 		Page:     page,
 		PageSize: pageSize,
 		Sort:     sort,
 	})
 	if err != nil {
-		pt.log.ErrorT(r.Context(), "error find request", err)
+		pt.log.ErrorT(ctx, "error find request", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return

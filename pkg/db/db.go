@@ -5,6 +5,9 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
+
+	// Make sure to import this so the instrumented driver is registered.
+	_ "github.com/signalfx/splunk-otel-go/instrumentation/github.com/jackc/pgx/splunkpgx"
 )
 
 type Config struct {

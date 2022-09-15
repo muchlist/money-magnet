@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/muchlist/moneymagnet/pkg/db"
+	"github.com/muchlist/moneymagnet/pkg/observ"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -20,6 +21,9 @@ const (
 
 // InsertPocketUser ...
 func (r Repo) InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketID uuid.UUID) error {
+	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-CreatePocket")
+	defer span.End()
+
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -51,6 +55,9 @@ func (r Repo) InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketI
 
 // DeletePocketUser ...
 func (r Repo) DeletePocketUser(ctx context.Context, userID uuid.UUID, pocketID uuid.UUID) error {
+	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-DeletePocketUser")
+	defer span.End()
+
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 

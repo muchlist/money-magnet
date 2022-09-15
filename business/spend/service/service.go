@@ -12,6 +12,7 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
+	"github.com/muchlist/moneymagnet/pkg/observ"
 
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -44,6 +45,8 @@ func NewCore(
 }
 
 func (s Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req model.NewSpend) (model.SpendResp, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-CreateSpend")
+	defer span.End()
 
 	canEdit, _ := shared.IsCanEditOrWatch(req.PocketID, claims.PocketRoles)
 	if !canEdit {
@@ -87,6 +90,8 @@ func (s Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req mode
 }
 
 func (s Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, req model.UpdateSpend) (model.SpendResp, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-UpdatePartialSpend")
+	defer span.End()
 
 	// Get existing Spend
 	spendExisting, err := s.repo.GetByID(ctx, req.ID)
@@ -151,6 +156,9 @@ func (s Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, r
 
 // GetDetail ...
 func (s Core) GetDetail(ctx context.Context, spendID uuid.UUID) (model.SpendResp, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-GetDetail")
+	defer span.End()
+
 	// Get existing Spend
 	spendDetail, err := s.repo.GetByID(ctx, spendID)
 	if err != nil {
@@ -162,6 +170,8 @@ func (s Core) GetDetail(ctx context.Context, spendID uuid.UUID) (model.SpendResp
 
 // FindAllSpend ...
 func (s Core) FindAllSpend(ctx context.Context, claims mjwt.CustomClaim, spendFilter model.SpendFilter, filter data.Filters) ([]model.SpendResp, data.Metadata, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-FindAllSpend")
+	defer span.End()
 
 	// if cannot edit and cannot watch, return error
 	canEdit, canWatch := shared.IsCanEditOrWatch(spendFilter.PocketID.UUID, claims.PocketRoles)
@@ -184,6 +194,8 @@ func (s Core) FindAllSpend(ctx context.Context, claims mjwt.CustomClaim, spendFi
 
 // SyncBalance ...
 func (s Core) SyncBalance(ctx context.Context, claims mjwt.CustomClaim, pocketID uuid.UUID) (int64, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-SyncBalance")
+	defer span.End()
 
 	// if cannot edit and cannot watch, return error
 	canEdit, canWatch := shared.IsCanEditOrWatch(pocketID, claims.PocketRoles)

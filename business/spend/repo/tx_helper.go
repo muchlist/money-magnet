@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/muchlist/moneymagnet/pkg/db"
+	"github.com/muchlist/moneymagnet/pkg/observ"
 )
 
 // =========================================================================
@@ -13,6 +14,9 @@ import (
 // WithinTransaction runs function within transaction
 // The transaction commits when function were finished without error
 func (r Repo) WithinTransaction(ctx context.Context, tFunc func(ctx context.Context) error) error {
+	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-WithinTransaction")
+	defer span.End()
+
 	// begin transaction
 	tx, err := r.db.Begin(ctx)
 	if err != nil {

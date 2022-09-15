@@ -12,6 +12,7 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
+	"github.com/muchlist/moneymagnet/pkg/observ"
 )
 
 // Core manages the set of APIs for request access.
@@ -35,6 +36,9 @@ func NewCore(
 }
 
 func (s Core) CreateRequest(ctx context.Context, claims mjwt.CustomClaim, pocketID uuid.UUID) (model.RequestPocket, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-CreateRequest")
+	defer span.End()
+
 	timeNow := time.Now()
 
 	// GET Pocket BY ID
@@ -61,6 +65,8 @@ func (s Core) CreateRequest(ctx context.Context, claims mjwt.CustomClaim, pocket
 }
 
 func (s Core) ApproveRequest(ctx context.Context, claims mjwt.CustomClaim, IsApproved bool, requestID uint64) error {
+	ctx, span := observ.GetTracer().Start(ctx, "service-ApproveRequest")
+	defer span.End()
 
 	// GET Request by ID
 	req, err := s.repo.GetByID(ctx, requestID)
@@ -127,6 +133,8 @@ func (s Core) ApproveRequest(ctx context.Context, claims mjwt.CustomClaim, IsApp
 
 // FindAllByRequester ...
 func (s Core) FindAllByRequester(ctx context.Context, claims mjwt.CustomClaim, filter data.Filters) ([]model.RequestPocket, data.Metadata, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-FindAllByRequester")
+	defer span.End()
 
 	// Get All Request
 	findBy := model.FindBy{
@@ -143,6 +151,9 @@ func (s Core) FindAllByRequester(ctx context.Context, claims mjwt.CustomClaim, f
 
 // FindAllByApprover ...
 func (s Core) FindAllByApprover(ctx context.Context, claims mjwt.CustomClaim, filter data.Filters) ([]model.RequestPocket, data.Metadata, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-FindAllByApprover")
+	defer span.End()
+
 	// Get All Request
 	findBy := model.FindBy{
 		ApproverID: claims.Identity,

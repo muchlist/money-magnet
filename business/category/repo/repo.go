@@ -12,6 +12,7 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
+	"github.com/muchlist/moneymagnet/pkg/observ"
 )
 
 const (
@@ -45,6 +46,9 @@ func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) Repo {
 
 // Insert ...
 func (r Repo) Insert(ctx context.Context, category *model.Category) error {
+	ctx, span := observ.GetTracer().Start(ctx, "category-repo-Insert")
+	defer span.End()
+
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -82,6 +86,9 @@ func (r Repo) Insert(ctx context.Context, category *model.Category) error {
 
 // Edit ...
 func (r Repo) Edit(ctx context.Context, category *model.Category) error {
+	ctx, span := observ.GetTracer().Start(ctx, "category-repo-Edit")
+	defer span.End()
+
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -111,6 +118,9 @@ func (r Repo) Edit(ctx context.Context, category *model.Category) error {
 
 // Delete ...
 func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
+	ctx, span := observ.GetTracer().Start(ctx, "category-repo-Delete")
+	defer span.End()
+
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -138,6 +148,9 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 
 // GetByID get one category by email
 func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Category, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "category-repo-GetByID")
+	defer span.End()
+
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -174,6 +187,8 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Category, error)
 
 // Find get all category within user
 func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters) ([]model.Category, data.Metadata, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "category-repo-Find")
+	defer span.End()
 
 	// Validation filter
 	filter.SortSafelist = []string{"category_name", "-category_name", "updated_at", "-updated_at"}

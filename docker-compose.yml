@@ -1,0 +1,21 @@
+version: '3.9'
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    expose:
+      - "4317"
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      # - "1888:1888"   # pprof extension
+      # - "8888:8888"   # Prometheus metrics exposed by the collector
+      # - "8889:8889"   # Prometheus exporter metrics
+      # - "13133:13133" # health_check extension
+      # - "55679:55679" # zpages extension
+    volumes:
+      - "${PWD}/obs_cfg:/observability"
+      - ./obs_cfg/secrets/otel-collector.json:/etc/otel/key.json
+    command: ["--config=/observability/otel-config.yaml", "${OTELCOL_ARGS}"]
+    restart: always
+    environment:
+      - OTEL_NEW_RELIC_EXPORTER_OTLP_ENDPOINT=${OTEL_NEW_RELIC_EXPORTER_OTLP_ENDPOINT}
+      - OTEL_NEW_RELIC_EXPORTER_API_KEY=${OTEL_NEW_RELIC_EXPORTER_API_KEY}

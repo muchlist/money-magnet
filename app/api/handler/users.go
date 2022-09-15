@@ -12,6 +12,7 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
+	"github.com/muchlist/moneymagnet/pkg/observ"
 	"github.com/muchlist/moneymagnet/pkg/validate"
 
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -35,25 +36,27 @@ type userHandler struct {
 }
 
 func (usr userHandler) Register(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-Register")
+	defer span.End()
 
 	var req model.UserRegisterReq
 	err := web.ReadJSON(w, r, &req)
 	if err != nil {
-		usr.log.WarnT(r.Context(), "bad json", err)
+		usr.log.WarnT(ctx, "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	errMap, err := usr.validator.Struct(req)
 	if err != nil {
-		usr.log.WarnT(r.Context(), "request not valid", err)
+		usr.log.WarnT(ctx, "request not valid", err)
 		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 
-	message, err := usr.service.InsertUser(r.Context(), req)
+	message, err := usr.service.InsertUser(ctx, req)
 	if err != nil {
-		usr.log.ErrorT(r.Context(), "error insert user", err)
+		usr.log.ErrorT(ctx, "error insert user", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -69,25 +72,27 @@ func (usr userHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (usr userHandler) Login(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-Login")
+	defer span.End()
 
 	var req model.UserLoginReq
 	err := web.ReadJSON(w, r, &req)
 	if err != nil {
-		usr.log.WarnT(r.Context(), "bad json", err)
+		usr.log.WarnT(ctx, "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	errMap, err := usr.validator.Struct(req)
 	if err != nil {
-		usr.log.WarnT(r.Context(), "request not valid", err)
+		usr.log.WarnT(ctx, "request not valid", err)
 		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 
-	result, err := usr.service.Login(r.Context(), req.Email, req.Password)
+	result, err := usr.service.Login(ctx, req.Email, req.Password)
 	if err != nil {
-		usr.log.ErrorT(r.Context(), "error login", err)
+		usr.log.ErrorT(ctx, "error login", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -105,8 +110,10 @@ func (usr userHandler) Login(w http.ResponseWriter, r *http.Request) {
 // EditSelfUser
 // TODO : remove edit roles and pocket roles by user input
 func (usr userHandler) EditSelfUser(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-EditSelfUser")
+	defer span.End()
 
-	claims, err := mid.GetClaims(r.Context())
+	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
@@ -115,7 +122,7 @@ func (usr userHandler) EditSelfUser(w http.ResponseWriter, r *http.Request) {
 	var req model.UserUpdate
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
-		usr.log.WarnT(r.Context(), "bad json", err)
+		usr.log.WarnT(ctx, "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -123,14 +130,14 @@ func (usr userHandler) EditSelfUser(w http.ResponseWriter, r *http.Request) {
 	// Not have validate, because no field required
 	req.ID, err = uuid.Parse(claims.Identity)
 	if err != nil {
-		usr.log.ErrorT(r.Context(), "uuid from claims must be uuid", err)
+		usr.log.ErrorT(ctx, "uuid from claims must be uuid", err)
 		web.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	result, err := usr.service.FetchUser(r.Context(), req)
+	result, err := usr.service.FetchUser(ctx, req)
 	if err != nil {
-		usr.log.ErrorT(r.Context(), "error edit user", err)
+		usr.log.ErrorT(ctx, "error edit user", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -146,8 +153,10 @@ func (usr userHandler) EditSelfUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-EditUser")
+	defer span.End()
 
-	claims, err := mid.GetClaims(r.Context())
+	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
@@ -156,7 +165,7 @@ func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	// Get data from url path
 	id, err := web.ReadUUIDParam(r)
 	if err != nil {
-		usr.log.WarnT(r.Context(), "error edit user", err, mlogger.String("identity", claims.Identity))
+		usr.log.WarnT(ctx, "error edit user", err, mlogger.String("identity", claims.Identity))
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -164,7 +173,7 @@ func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	var req model.UserUpdate
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
-		usr.log.WarnT(r.Context(), "bad json", err)
+		usr.log.WarnT(ctx, "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -172,9 +181,9 @@ func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	// Not have validate, because no field required
 	req.ID = id
 
-	result, err := usr.service.FetchUser(r.Context(), req)
+	result, err := usr.service.FetchUser(ctx, req)
 	if err != nil {
-		usr.log.ErrorT(r.Context(), "error edit user", err)
+		usr.log.ErrorT(ctx, "error edit user", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -190,8 +199,10 @@ func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (usr userHandler) UpdateFCM(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-UpdateFCM")
+	defer span.End()
 
-	claims, err := mid.GetClaims(r.Context())
+	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
@@ -200,14 +211,14 @@ func (usr userHandler) UpdateFCM(w http.ResponseWriter, r *http.Request) {
 	// Get data from url path
 	fcm, err := web.ReadStrIDParam(r)
 	if err != nil {
-		usr.log.WarnT(r.Context(), "fcm required", err, mlogger.String("identity", claims.Identity))
+		usr.log.WarnT(ctx, "fcm required", err, mlogger.String("identity", claims.Identity))
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	err = usr.service.UpdateFCM(r.Context(), claims.Identity, fcm)
+	err = usr.service.UpdateFCM(ctx, claims.Identity, fcm)
 	if err != nil {
-		usr.log.ErrorT(r.Context(), "error update fcm", err)
+		usr.log.ErrorT(ctx, "error update fcm", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -223,8 +234,10 @@ func (usr userHandler) UpdateFCM(w http.ResponseWriter, r *http.Request) {
 }
 
 func (usr userHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-DeleteUser")
+	defer span.End()
 
-	claims, err := mid.GetClaims(r.Context())
+	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
@@ -233,21 +246,21 @@ func (usr userHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	// Get data from url path
 	userIDToDelete, err := web.ReadUUIDParam(r)
 	if err != nil {
-		usr.log.WarnT(r.Context(), err.Error(), err, mlogger.String("identity", claims.Identity))
+		usr.log.WarnT(ctx, err.Error(), err, mlogger.String("identity", claims.Identity))
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	claimsUUID, err := uuid.Parse(claims.Identity)
 	if err != nil {
-		usr.log.ErrorT(r.Context(), "uuid from claims must be uuid", err)
+		usr.log.ErrorT(ctx, "uuid from claims must be uuid", err)
 		web.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	err = usr.service.Delete(r.Context(), userIDToDelete, claimsUUID)
+	err = usr.service.Delete(ctx, userIDToDelete, claimsUUID)
 	if err != nil {
-		usr.log.ErrorT(r.Context(), "error delete user", err)
+		usr.log.ErrorT(ctx, "error delete user", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -263,6 +276,8 @@ func (usr userHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (usr userHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-RefreshToken")
+	defer span.End()
 
 	type refresh struct {
 		RefreshToken string `json:"refresh_token" validate:"required"`
@@ -271,20 +286,20 @@ func (usr userHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	var req refresh
 	err := web.ReadJSON(w, r, &req)
 	if err != nil {
-		usr.log.WarnT(r.Context(), "bad json", err)
+		usr.log.WarnT(ctx, "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	errMap, err := usr.validator.Struct(req)
 	if err != nil {
-		usr.log.WarnT(r.Context(), "request not valid", err)
+		usr.log.WarnT(ctx, "request not valid", err)
 		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 
-	result, err := usr.service.Refresh(r.Context(), req.RefreshToken)
+	result, err := usr.service.Refresh(ctx, req.RefreshToken)
 	if err != nil {
-		usr.log.ErrorT(r.Context(), "error refresh token", err)
+		usr.log.ErrorT(ctx, "error refresh token", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -301,16 +316,18 @@ func (usr userHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 
 // ==================================================GET
 func (usr userHandler) Profile(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-Profile")
+	defer span.End()
 
-	claims, err := mid.GetClaims(r.Context())
+	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
 	}
 
-	result, err := usr.service.GetProfile(r.Context(), claims.Identity)
+	result, err := usr.service.GetProfile(ctx, claims.Identity)
 	if err != nil {
-		usr.log.ErrorT(r.Context(), "error get profile", err)
+		usr.log.ErrorT(ctx, "error get profile", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -327,18 +344,20 @@ func (usr userHandler) Profile(w http.ResponseWriter, r *http.Request) {
 
 // GetByID...
 func (usr userHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-GetByID")
+	defer span.End()
 
 	// extract url path
 	userID, err := web.ReadStrIDParam(r)
 	if err != nil {
-		usr.log.WarnT(r.Context(), err.Error(), err)
+		usr.log.WarnT(ctx, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	result, err := usr.service.GetProfile(r.Context(), userID)
+	result, err := usr.service.GetProfile(ctx, userID)
 	if err != nil {
-		usr.log.ErrorT(r.Context(), "error get user by id", err)
+		usr.log.ErrorT(ctx, "error get user by id", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -354,6 +373,8 @@ func (usr userHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (usr userHandler) FindByName(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-FindByName")
+	defer span.End()
 
 	// extract url query
 	name := web.ReadString(r.URL.Query(), "name", "")
@@ -361,13 +382,13 @@ func (usr userHandler) FindByName(w http.ResponseWriter, r *http.Request) {
 	page := web.ReadInt(r.URL.Query(), "page", 0)
 	pageSize := web.ReadInt(r.URL.Query(), "page_size", 0)
 
-	result, metadata, err := usr.service.FindUserByName(r.Context(), name, data.Filters{
+	result, metadata, err := usr.service.FindUserByName(ctx, name, data.Filters{
 		Page:     page,
 		PageSize: pageSize,
 		Sort:     sort,
 	})
 	if err != nil {
-		usr.log.ErrorT(r.Context(), "error get profile", err)
+		usr.log.ErrorT(ctx, "error get profile", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return

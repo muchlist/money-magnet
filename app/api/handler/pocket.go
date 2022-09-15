@@ -7,6 +7,7 @@ import (
 	"github.com/muchlist/moneymagnet/business/pocket/service"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/mid"
+	"github.com/muchlist/moneymagnet/pkg/observ"
 	"github.com/muchlist/moneymagnet/pkg/validate"
 
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -40,7 +41,12 @@ type pocketHandler struct {
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /pockets [post]
 func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
-	claims, err := mid.GetClaims(r.Context())
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-CreatePocket")
+	defer span.End()
+
+	pt.log.InfoT(ctx, "sample info to get otel")
+
+	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
@@ -49,21 +55,21 @@ func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
 	var req model.NewPocket
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
-		pt.log.WarnT(r.Context(), "bad json", err)
+		pt.log.WarnT(ctx, "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	errMap, err := pt.validator.Struct(req)
 	if err != nil {
-		pt.log.WarnT(r.Context(), "request not valid", err)
+		pt.log.WarnT(ctx, "request not valid", err)
 		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 
-	result, err := pt.service.CreatePocket(r.Context(), claims, req)
+	result, err := pt.service.CreatePocket(ctx, claims, req)
 	if err != nil {
-		pt.log.ErrorT(r.Context(), "error create pocket", err)
+		pt.log.ErrorT(ctx, "error create pocket", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -90,8 +96,10 @@ func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /pockets/{pocket_id} [patch]
 func (pt pocketHandler) UpdatePocket(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-UpdatePocket")
+	defer span.End()
 
-	claims, err := mid.GetClaims(r.Context())
+	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
@@ -100,7 +108,7 @@ func (pt pocketHandler) UpdatePocket(w http.ResponseWriter, r *http.Request) {
 	// extract url path
 	pocketID, err := web.ReadUUIDParam(r)
 	if err != nil {
-		pt.log.WarnT(r.Context(), err.Error(), err)
+		pt.log.WarnT(ctx, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -108,7 +116,7 @@ func (pt pocketHandler) UpdatePocket(w http.ResponseWriter, r *http.Request) {
 	var req model.PocketUpdate
 	err = web.ReadJSON(w, r, &req)
 	if err != nil {
-		pt.log.WarnT(r.Context(), "bad json", err)
+		pt.log.WarnT(ctx, "bad json", err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -116,14 +124,14 @@ func (pt pocketHandler) UpdatePocket(w http.ResponseWriter, r *http.Request) {
 
 	errMap, err := pt.validator.Struct(req)
 	if err != nil {
-		pt.log.WarnT(r.Context(), "request not valid", err)
+		pt.log.WarnT(ctx, "request not valid", err)
 		web.ErrorPayloadResponse(w, err.Error(), errMap)
 		return
 	}
 
-	result, err := pt.service.UpdatePocket(r.Context(), claims, req)
+	result, err := pt.service.UpdatePocket(ctx, claims, req)
 	if err != nil {
-		pt.log.ErrorT(r.Context(), "error update pocket", err)
+		pt.log.ErrorT(ctx, "error update pocket", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -149,8 +157,10 @@ func (pt pocketHandler) UpdatePocket(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /pockets/{pocket_id} [get]
 func (pt pocketHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-GetByID")
+	defer span.End()
 
-	claims, err := mid.GetClaims(r.Context())
+	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
@@ -159,14 +169,14 @@ func (pt pocketHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	// extract url path
 	pocketID, err := web.ReadUUIDParam(r)
 	if err != nil {
-		pt.log.WarnT(r.Context(), err.Error(), err)
+		pt.log.WarnT(ctx, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	result, err := pt.service.GetDetail(r.Context(), claims, pocketID)
+	result, err := pt.service.GetDetail(ctx, claims, pocketID)
 	if err != nil {
-		pt.log.ErrorT(r.Context(), "error get pocket by id", err)
+		pt.log.ErrorT(ctx, "error get pocket by id", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
@@ -194,8 +204,10 @@ func (pt pocketHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /pockets [get]
 func (pt pocketHandler) FindUserPocket(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-GetByID")
+	defer span.End()
 
-	claims, err := mid.GetClaims(r.Context())
+	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
@@ -206,13 +218,13 @@ func (pt pocketHandler) FindUserPocket(w http.ResponseWriter, r *http.Request) {
 	page := web.ReadInt(r.URL.Query(), "page", 0)
 	pageSize := web.ReadInt(r.URL.Query(), "page_size", 0)
 
-	result, metadata, err := pt.service.FindAllPocket(r.Context(), claims, data.Filters{
+	result, metadata, err := pt.service.FindAllPocket(ctx, claims, data.Filters{
 		Page:     page,
 		PageSize: pageSize,
 		Sort:     sort,
 	})
 	if err != nil {
-		pt.log.ErrorT(r.Context(), "error find pocket", err)
+		pt.log.ErrorT(ctx, "error find pocket", err)
 		statusCode, msg := parseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return

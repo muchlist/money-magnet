@@ -22,6 +22,10 @@ run/api:
 run/api-log:
 	go run ./app/api | go run app/tooling/logfmt/main.go
 
+## run/collector: run the otel collector
+run/collector:
+	docker compose --env-file .env up
+
 ## db/psql: connect to the database using psql
 db/psql:
 	psql ${MONEYMAGNET_DB_DSN}
@@ -39,6 +43,7 @@ db/migrations/up: confirm
 ## swagger: generate doc for swagger
 swagger:
 	swag init -g app/api/main.go --parseDependency --overridesFile .swaggo
+
 
 
 # ==================================================================================== #
@@ -73,4 +78,4 @@ vendor:
 	go mod vendor
 
 
-.PHONY: help confirm run/api run/api-log db/psql db/migrations/new db/migrations/up audit vendor test/coverage swagger
+.PHONY: help confirm run/api run/api-log run/collector db/psql db/migrations/new db/migrations/up audit vendor test/coverage swagger

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -75,6 +77,11 @@ func (l *mlog) Error(msg string, err error, tags ...Field) {
 }
 
 func (l *mlog) ErrorT(ctx context.Context, msg string, err error, tags ...Field) {
+	// send error to otel
+	span := trace.SpanFromContext(ctx)
+	span.RecordError(err)
+	span.SetStatus(codes.Error, err.Error())
+
 	fields := l.getFieldFromContext(ctx)
 	fields = append(fields, zap.NamedError("error", err), zap.StackSkip("stacktrace", 1))
 	fields = append(fields, tags...)

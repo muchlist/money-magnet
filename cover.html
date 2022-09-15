@@ -55,11 +55,13 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">github.com/muchlist/moneymagnet/business/pocket/service/service.go (22.7%)</option>
+				<option value="file0">github.com/muchlist/moneymagnet/business/pocket/service/service.go (22.5%)</option>
 				
 				<option value="file1">github.com/muchlist/moneymagnet/business/request/repo/repo.go (0.0%)</option>
 				
-				<option value="file2">github.com/muchlist/moneymagnet/pkg/utils/slicer/slicer.go (65.8%)</option>
+				<option value="file2">github.com/muchlist/moneymagnet/business/request/repo/tx_helper.go (0.0%)</option>
+				
+				<option value="file3">github.com/muchlist/moneymagnet/pkg/utils/slicer/slicer.go (65.8%)</option>
 				
 				</select>
 			</div>
@@ -83,9 +85,12 @@ import (
 
         "github.com/muchlist/moneymagnet/business/pocket/model"
         "github.com/muchlist/moneymagnet/business/pocket/storer"
+        "github.com/muchlist/moneymagnet/business/shared"
         "github.com/muchlist/moneymagnet/pkg/data"
         "github.com/muchlist/moneymagnet/pkg/db"
         "github.com/muchlist/moneymagnet/pkg/errr"
+        "github.com/muchlist/moneymagnet/pkg/mjwt"
+        "github.com/muchlist/moneymagnet/pkg/observ"
 
         "github.com/google/uuid"
         "github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -119,7 +124,10 @@ func NewCore(
         }
 }</span>
 
-func (s Core) CreatePocket(ctx context.Context, owner uuid.UUID, req model.NewPocket) (model.PocketResp, error) <span class="cov8" title="1">{
+func (s Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req model.NewPocket) (model.PocketResp, error) <span class="cov8" title="1">{
+        ctx, span := observ.GetTracer().Start(ctx, "service-CreatePocket")
+        defer span.End()
+
         // Validate editor and watcher uuids
         combineUserUUIDs := append(req.EditorID, req.WatcherID...)
         users, err := s.userRepo.GetByIDs(ctx, combineUserUUIDs)
@@ -140,15 +148,15 @@ func (s Core) CreatePocket(ctx context.Context, owner uuid.UUID, req model.NewPo
         }
 
         <span class="cov8" title="1">if req.EditorID == nil || len(req.EditorID) == 0 </span><span class="cov8" title="1">{
-                req.EditorID = []uuid.UUID{owner}
+                req.EditorID = []uuid.UUID{claims.GetUUID()}
         }</span>
         <span class="cov8" title="1">if req.WatcherID == nil || len(req.WatcherID) == 0 </span><span class="cov8" title="1">{
-                req.WatcherID = []uuid.UUID{owner}
+                req.WatcherID = []uuid.UUID{claims.GetUUID()}
         }</span>
 
         <span class="cov8" title="1">timeNow := time.Now()
         pocket := model.Pocket{
-                OwnerID:    owner,
+                OwnerID:    claims.GetUUID(),
                 EditorID:   req.EditorID,
                 WatcherID:  req.WatcherID,
                 PocketName: req.PocketName,
@@ -170,7 +178,7 @@ func (s Core) CreatePocket(ctx context.Context, owner uuid.UUID, req model.NewPo
 
                         // insert relation
                         <span class="cov8" title="1">uuidUserSet := ds.NewUUIDSet()
-                        uuidUserSet.Add(owner)
+                        uuidUserSet.Add(claims.GetUUID())
                         uuidUserSet.AddAll(combineUserUUIDs)
                         uniqueUsers := uuidUserSet.Reveal()
 
@@ -189,18 +197,20 @@ func (s Core) CreatePocket(ctx context.Context, owner uuid.UUID, req model.NewPo
         <span class="cov8" title="1">return pocket.ToPocketResp(), nil</span>
 }
 
-func (s Core) UpdatePocket(ctx context.Context, owner uuid.UUID, newData model.PocketUpdate) (model.PocketResp, error) <span class="cov0" title="0">{
+func (s Core) UpdatePocket(ctx context.Context, claims mjwt.CustomClaim, newData model.PocketUpdate) (model.PocketResp, error) <span class="cov0" title="0">{
+        ctx, span := observ.GetTracer().Start(ctx, "service-UpdatePocket")
+        defer span.End()
 
-        // Get existing Pocket
-        pocketExisting, err := s.repo.GetByID(ctx, newData.ID)
-        if err != nil </span><span class="cov0" title="0">{
-                return model.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
+        // Validate Pocket Roles
+        canEdit, _ := shared.IsCanEditOrWatch(newData.ID, claims.PocketRoles)
+        if !canEdit </span><span class="cov0" title="0">{
+                return model.PocketResp{}, errr.New("not have access to this pocket", 400)
         }</span>
 
-        // Check if owner not have access to pocket
-        <span class="cov0" title="0">if !(pocketExisting.OwnerID == owner ||
-                slicer.In(owner, pocketExisting.EditorID)) </span><span class="cov0" title="0">{
-                return model.PocketResp{}, errr.New("not have access to this pocket", 400)
+        // Get existing Pocket
+        <span class="cov0" title="0">pocketExisting, err := s.repo.GetByID(ctx, newData.ID)
+        if err != nil </span><span class="cov0" title="0">{
+                return model.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
         }</span>
 
         // Modify data
@@ -223,18 +233,20 @@ func (s Core) UpdatePocket(ctx context.Context, owner uuid.UUID, newData model.P
         <span class="cov0" title="0">return pocketExisting.ToPocketResp(), nil</span>
 }
 
-func (s Core) AddPerson(ctx context.Context, data AddPersonData) (model.PocketResp, error) <span class="cov0" title="0">{
+func (s Core) AddPerson(ctx context.Context, claims mjwt.CustomClaim, data AddPersonData) (model.PocketResp, error) <span class="cov0" title="0">{
+        ctx, span := observ.GetTracer().Start(ctx, "service-AddPerson")
+        defer span.End()
 
-        // Get existing Pocket
-        pocketExisting, err := s.repo.GetByID(ctx, data.PocketID)
-        if err != nil </span><span class="cov0" title="0">{
-                return model.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
+        // Validate Pocket Roles
+        canEdit, _ := shared.IsCanEditOrWatch(data.PocketID, claims.PocketRoles)
+        if !canEdit </span><span class="cov0" title="0">{
+                return model.PocketResp{}, errr.New("not have access to this pocket", 400)
         }</span>
 
-        // Check if owner not have access to pocket
-        <span class="cov0" title="0">if !(pocketExisting.OwnerID == data.Owner ||
-                slicer.In(data.Owner, pocketExisting.EditorID)) </span><span class="cov0" title="0">{
-                return model.PocketResp{}, errr.New("not have access to this pocket", 400)
+        // Get existing Pocket
+        <span class="cov0" title="0">pocketExisting, err := s.repo.GetByID(ctx, data.PocketID)
+        if err != nil </span><span class="cov0" title="0">{
+                return model.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
         }</span>
 
         // Check if person to add is exist
@@ -278,17 +290,20 @@ func (s Core) AddPerson(ctx context.Context, data AddPersonData) (model.PocketRe
 }
 
 // RemovePerson will remove person from both editor and watcher
-func (s Core) RemovePerson(ctx context.Context, data RemovePersonData) (model.PocketResp, error) <span class="cov0" title="0">{
-        // Get existing Pocket
-        pocketExisting, err := s.repo.GetByID(ctx, data.PocketID)
-        if err != nil </span><span class="cov0" title="0">{
-                return model.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
+func (s Core) RemovePerson(ctx context.Context, claims mjwt.CustomClaim, data RemovePersonData) (model.PocketResp, error) <span class="cov0" title="0">{
+        ctx, span := observ.GetTracer().Start(ctx, "service-RemovePerson")
+        defer span.End()
+
+        // Validate Pocket Roles
+        canEdit, _ := shared.IsCanEditOrWatch(data.PocketID, claims.PocketRoles)
+        if !canEdit </span><span class="cov0" title="0">{
+                return model.PocketResp{}, errr.New("not have access to this pocket", 400)
         }</span>
 
-        // Check if owner not have access to pocket
-        <span class="cov0" title="0">if !(pocketExisting.OwnerID == data.Owner ||
-                slicer.In(data.Owner, pocketExisting.EditorID)) </span><span class="cov0" title="0">{
-                return model.PocketResp{}, errr.New("not have access to this pocket", 400)
+        // Get existing Pocket
+        <span class="cov0" title="0">pocketExisting, err := s.repo.GetByID(ctx, data.PocketID)
+        if err != nil </span><span class="cov0" title="0">{
+                return model.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
         }</span>
 
         <span class="cov0" title="0">pocketExisting.EditorID = slicer.RemoveFrom(data.Person, pocketExisting.EditorID)
@@ -317,10 +332,14 @@ func (s Core) RemovePerson(ctx context.Context, data RemovePersonData) (model.Po
 }
 
 // GetDetail ...
-func (s Core) GetDetail(ctx context.Context, userID string, pocketID uuid.UUID) (model.PocketResp, error) <span class="cov0" title="0">{
-        userUUID, err := uuid.Parse(userID)
-        if err != nil </span><span class="cov0" title="0">{
-                return model.PocketResp{}, ErrInvalidID
+func (s Core) GetDetail(ctx context.Context, claims mjwt.CustomClaim, pocketID uuid.UUID) (model.PocketResp, error) <span class="cov0" title="0">{
+        ctx, span := observ.GetTracer().Start(ctx, "service-GetDetail")
+        defer span.End()
+
+        // Validate Pocket Roles
+        canEdit, canWatch := shared.IsCanEditOrWatch(pocketID, claims.PocketRoles)
+        if !(canEdit || canWatch) </span><span class="cov0" title="0">{
+                return model.PocketResp{}, errr.New("not have access to this pocket", 400)
         }</span>
 
         // Get existing Pocket
@@ -329,24 +348,16 @@ func (s Core) GetDetail(ctx context.Context, userID string, pocketID uuid.UUID) 
                 return model.PocketResp{}, fmt.Errorf("get pocket detail by id: %w", err)
         }</span>
 
-        // Check if owner not have access to pocket
-        <span class="cov0" title="0">if !(pocketDetail.OwnerID == userUUID ||
-                slicer.In(userUUID, pocketDetail.WatcherID)) </span><span class="cov0" title="0">{
-                return model.PocketResp{}, errr.New("not have access to this pocket", 400)
-        }</span>
-
         <span class="cov0" title="0">return pocketDetail.ToPocketResp(), nil</span>
 }
 
 // FindAllPocket ...
-func (s Core) FindAllPocket(ctx context.Context, userID string, filter data.Filters) ([]model.PocketResp, data.Metadata, error) <span class="cov0" title="0">{
-        userUUID, err := uuid.Parse(userID)
-        if err != nil </span><span class="cov0" title="0">{
-                return nil, data.Metadata{}, ErrInvalidID
-        }</span>
+func (s Core) FindAllPocket(ctx context.Context, claims mjwt.CustomClaim, filter data.Filters) ([]model.PocketResp, data.Metadata, error) <span class="cov0" title="0">{
+        ctx, span := observ.GetTracer().Start(ctx, "service-FindAllPocket")
+        defer span.End()
 
         // Get existing Pocket
-        <span class="cov0" title="0">pockets, metadata, err := s.repo.FindUserPockets(ctx, userUUID, filter)
+        pockets, metadata, err := s.repo.FindUserPocketsByRelation(ctx, claims.GetUUID(), filter)
         if err != nil </span><span class="cov0" title="0">{
                 return nil, data.Metadata{}, fmt.Errorf("find pocket user: %w", err)
         }</span>
@@ -373,6 +384,7 @@ import (
         "github.com/muchlist/moneymagnet/pkg/data"
         "github.com/muchlist/moneymagnet/pkg/db"
         "github.com/muchlist/moneymagnet/pkg/mlogger"
+        "github.com/muchlist/moneymagnet/pkg/observ"
 )
 
 /*
@@ -421,6 +433,9 @@ func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) Repo <span class="cov0" ti
 
 // Insert ...
 func (r Repo) Insert(ctx context.Context, request *model.RequestPocket) error <span class="cov0" title="0">{
+        ctx, span := observ.GetTracer().Start(ctx, "req-repo-Insert")
+        defer span.End()
+
         ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
         defer cancel()
 
@@ -446,7 +461,7 @@ func (r Repo) Insert(ctx context.Context, request *model.RequestPocket) error <s
                 return fmt.Errorf("build query insert request: %w", err)
         }</span>
 
-        <span class="cov0" title="0">err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&amp;request.ID)
+        <span class="cov0" title="0">err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&amp;request.ID)
         if err != nil </span><span class="cov0" title="0">{
                 r.log.InfoT(ctx, err.Error())
                 return db.ParseError(err)
@@ -457,6 +472,9 @@ func (r Repo) Insert(ctx context.Context, request *model.RequestPocket) error <s
 
 // UpdateStatus update approver, is_approved and udpdated_at
 func (r Repo) UpdateStatus(ctx context.Context, request *model.RequestPocket) error <span class="cov0" title="0">{
+        ctx, span := observ.GetTracer().Start(ctx, "req-repo-UpdateStatus")
+        defer span.End()
+
         ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
         defer cancel()
 
@@ -481,7 +499,7 @@ func (r Repo) UpdateStatus(ctx context.Context, request *model.RequestPocket) er
                 return fmt.Errorf("build query update request: %w", err)
         }</span>
 
-        <span class="cov0" title="0">err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(
+        <span class="cov0" title="0">err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(
                 &amp;request.ID,
                 &amp;request.RequesterID,
                 &amp;request.ApproverID,
@@ -504,6 +522,9 @@ func (r Repo) UpdateStatus(ctx context.Context, request *model.RequestPocket) er
 // GETTER
 // GetByID get one pocket by email
 func (r Repo) GetByID(ctx context.Context, id uint64) (model.RequestPocket, error) <span class="cov0" title="0">{
+        ctx, span := observ.GetTracer().Start(ctx, "req-repo-GetByID")
+        defer span.End()
+
         ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
         defer cancel()
 
@@ -524,7 +545,7 @@ func (r Repo) GetByID(ctx context.Context, id uint64) (model.RequestPocket, erro
         }</span>
 
         <span class="cov0" title="0">var request model.RequestPocket
-        err = r.db.QueryRow(ctx, sqlStatement, args...).
+        err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).
                 Scan(
                         &amp;request.ID,
                         &amp;request.RequesterID,
@@ -546,6 +567,8 @@ func (r Repo) GetByID(ctx context.Context, id uint64) (model.RequestPocket, erro
 
 // Find get all request by FIND model
 func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter data.Filters) ([]model.RequestPocket, data.Metadata, error) <span class="cov0" title="0">{
+        ctx, span := observ.GetTracer().Start(ctx, "req-repo-Find")
+        defer span.End()
 
         // Validation filter
         filter.SortSafelist = []string{"updated_at", "-updated_at"}
@@ -599,7 +622,7 @@ func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter data.Filters
                 return nil, data.Metadata{}, fmt.Errorf("build query find request: %w", err)
         }</span>
 
-        <span class="cov0" title="0">rows, err := r.db.Query(ctx, sqlStatement, args...)
+        <span class="cov0" title="0">rows, err := r.mod(ctx).Query(ctx, sqlStatement, args...)
         if err != nil </span><span class="cov0" title="0">{
                 r.log.InfoT(ctx, err.Error())
                 return nil, data.Metadata{}, db.ParseError(err)
@@ -639,7 +662,58 @@ func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter data.Filters
 }
 </pre>
 		
-		<pre class="file" id="file2" style="display: none">package slicer
+		<pre class="file" id="file2" style="display: none">package repo
+
+import (
+        "context"
+        "fmt"
+
+        "github.com/muchlist/moneymagnet/pkg/db"
+        "github.com/muchlist/moneymagnet/pkg/observ"
+)
+
+// =========================================================================
+// TRANSACTION
+
+// WithinTransaction runs function within transaction
+// The transaction commits when function were finished without error
+func (r Repo) WithinTransaction(ctx context.Context, tFunc func(ctx context.Context) error) error <span class="cov0" title="0">{
+        ctx, span := observ.GetTracer().Start(ctx, "req-repo-WithinTransaction")
+        defer span.End()
+
+        // begin transaction
+        tx, err := r.db.Begin(ctx)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("begin transaction: %w", err)
+        }</span>
+
+        // run callback
+        <span class="cov0" title="0">err = tFunc(db.InjectTx(ctx, tx))
+        if err != nil </span><span class="cov0" title="0">{
+                // if error, rollback
+                if errRollback := tx.Rollback(ctx); errRollback != nil </span><span class="cov0" title="0">{
+                        r.log.Error("rollback transaction", errRollback)
+                }</span>
+                <span class="cov0" title="0">return err</span>
+        }
+        // if no error, commit
+        <span class="cov0" title="0">if errCommit := tx.Commit(ctx); errCommit != nil </span><span class="cov0" title="0">{
+                r.log.Error("commit transaction", errCommit)
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+// mod returns query model with context with or without transaction extracted from context
+func (r Repo) mod(ctx context.Context) db.DBTX <span class="cov0" title="0">{
+        tx := db.ExtractTx(ctx)
+        if tx != nil </span><span class="cov0" title="0">{
+                return db.NewPGStore(nil, tx)
+        }</span>
+        <span class="cov0" title="0">return db.NewPGStore(r.db, nil)</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package slicer
 
 import (
         "errors"
