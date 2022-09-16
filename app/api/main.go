@@ -61,7 +61,7 @@ type application struct {
 func main() {
 	var cfg config
 
-	flag.StringVar(&cfg.applicationName, "name", "Money Magnet", "Application Name")
+	flag.StringVar(&cfg.applicationName, "name", "money-magnet", "Application Name")
 	flag.IntVar(&cfg.port, "port", 8081, "Api server port")
 	flag.IntVar(&cfg.debugPort, "debug-port", 4000, "Debug server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
@@ -70,7 +70,7 @@ func main() {
 	flag.IntVar(&cfg.db.minOpenCons, "db-min", 1, "PostgreSQL min open connections")
 	flag.StringVar(&cfg.secret, "secret", "xoxoxoxo", "jwt secret")
 	flag.StringVar(&cfg.collectorURL, "otel-url", "localhost:4317", "open telemetry collector url")
-	flag.BoolVar(&cfg.collectorInsecure, "otel-insecure", false, "open telemetry insecure")
+	flag.BoolVar(&cfg.collectorInsecure, "otel-insecure", true, "open telemetry insecure")
 
 	flag.Parse()
 
@@ -86,14 +86,16 @@ func main() {
 		},
 	})
 
-	// Set Tracer Open Telemetry
+	// Set Tracer and Metrics Open Telemetry
 	otelCfg := observ.Option{
 		ServiceName:  cfg.applicationName,
 		CollectorURL: cfg.collectorURL,
 		Insecure:     cfg.collectorInsecure,
 	}
-	cleanUp := observ.InitTracer(otelCfg, log)
+	cleanUp := observ.InitTracer(ctx, otelCfg, log)
 	defer cleanUp(ctx)
+	cleanUpMetric := observ.InitMeter(ctx, otelCfg, log)
+	defer cleanUpMetric(ctx)
 
 	// init database
 	database, err := db.OpenDB(db.Config{

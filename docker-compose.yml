@@ -7,8 +7,8 @@ services:
     ports:
       - "4317:4317"   # OTLP gRPC receiver
       # - "1888:1888"   # pprof extension
-      # - "8888:8888"   # Prometheus metrics exposed by the collector
-      # - "8889:8889"   # Prometheus exporter metrics
+      - "8888:8888"   # Prometheus metrics exposed by the collector
+      - "8889:8889"   # Prometheus exporter metrics
       # - "13133:13133" # health_check extension
       # - "55679:55679" # zpages extension
     volumes:
@@ -19,3 +19,13 @@ services:
     environment:
       - OTEL_NEW_RELIC_EXPORTER_OTLP_ENDPOINT=${OTEL_NEW_RELIC_EXPORTER_OTLP_ENDPOINT}
       - OTEL_NEW_RELIC_EXPORTER_API_KEY=${OTEL_NEW_RELIC_EXPORTER_API_KEY}
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./obs_cfg/prometheus.yaml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+
+volumes:
+  prometheus_data:

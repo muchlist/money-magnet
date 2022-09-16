@@ -8,6 +8,9 @@ exporters:
     endpoint: ${OTEL_NEW_RELIC_EXPORTER_OTLP_ENDPOINT}
     headers:
       api-key: ${OTEL_NEW_RELIC_EXPORTER_API_KEY}
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    const_labels: { }
 
 processors:
   batch:
@@ -28,4 +31,6 @@ service:
       processors:
         - memory_limiter
         - batch
-      exporters: [ otlp ]
+      exporters:
+        - otlp
+        - prometheus

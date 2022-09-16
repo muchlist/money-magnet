@@ -18,7 +18,9 @@ func (ws *webServer) setupRoutes(injectRoute http.Handler) http.Handler {
 	router.MethodNotAllowed(MethodNotAllowedResponse)
 
 	router.Use(otelchi.Middleware(ws.serviceName,
-		otelchi.WithChiRoutes(router)),
+		otelchi.WithChiRoutes(router),
+		otelchi.WithRequestMethodInSpanName(true),
+	),
 	)
 	router.Use(requestID)
 	router.Use(middleware.RealIP)
