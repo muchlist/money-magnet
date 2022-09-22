@@ -24,14 +24,16 @@ import (
 )
 
 type Option struct {
-	ServiceName  string
+	ServiceName string
+	// Without https:// (example: localhost:4317)
 	CollectorURL string
+	ApiKey       string
 	Insecure     bool
 }
 
 // InitTracer ...
 func InitTracer(ctx context.Context, opt Option, log mlogger.Logger) func(context.Context) error {
-	exporter, err := getTraceExporter(ctx, opt.Insecure, opt.CollectorURL)
+	exporter, err := getTraceExporter(ctx, opt)
 	if err != nil {
 		log.Error("failed create exporter", err)
 		panic(err)
@@ -43,7 +45,7 @@ func InitTracer(ctx context.Context, opt Option, log mlogger.Logger) func(contex
 
 	otel.SetTracerProvider(
 		trace.NewTracerProvider(
-			trace.WithSampler(trace.AlwaysSample()), // TODO dont use always
+			trace.WithSampler(trace.AlwaysSample()),
 			trace.WithBatcher(exporter),
 			trace.WithResource(resources),
 		),
@@ -51,16 +53,21 @@ func InitTracer(ctx context.Context, opt Option, log mlogger.Logger) func(contex
 	return exporter.Shutdown
 }
 
-func getTraceExporter(ctx context.Context, insecure bool, address string) (*otlptrace.Exporter, error) {
+func getTraceExporter(ctx context.Context, opt Option) (*otlptrace.Exporter, error) {
 	secureOption := otlptracegrpc.WithTLSCredentials(credentials.NewClientTLSFromCert(nil, ""))
-	if insecure {
+	if opt.Insecure {
 		secureOption = otlptracegrpc.WithInsecure()
 	}
 	return otlptrace.New(
 		ctx,
 		otlptracegrpc.NewClient(
 			secureOption,
-			otlptracegrpc.WithEndpoint(address),
+			otlptracegrpc.WithEndpoint(opt.CollectorURL),
+			otlptracegrpc.WithHeaders(
+				map[string]string{
+					"api-key": opt.ApiKey,
+				},
+			),
 		),
 	)
 }

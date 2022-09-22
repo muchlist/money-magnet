@@ -34,6 +34,7 @@ type config struct {
 	}
 	secret            string
 	collectorURL      string
+	collectorKey      string
 	collectorInsecure bool
 }
 
@@ -70,6 +71,7 @@ func main() {
 	flag.IntVar(&cfg.db.minOpenCons, "db-min", 1, "PostgreSQL min open connections")
 	flag.StringVar(&cfg.secret, "secret", "xoxoxoxo", "jwt secret")
 	flag.StringVar(&cfg.collectorURL, "otel-url", "localhost:4317", "open telemetry collector url")
+	flag.StringVar(&cfg.collectorKey, "otel-key", "example-api-key", "open telemetry api-key")
 	flag.BoolVar(&cfg.collectorInsecure, "otel-insecure", true, "open telemetry insecure")
 
 	flag.Parse()
@@ -90,6 +92,7 @@ func main() {
 	otelCfg := observ.Option{
 		ServiceName:  cfg.applicationName,
 		CollectorURL: cfg.collectorURL,
+		ApiKey:       cfg.collectorKey,
 		Insecure:     cfg.collectorInsecure,
 	}
 	cleanUp := observ.InitTracer(ctx, otelCfg, log)
