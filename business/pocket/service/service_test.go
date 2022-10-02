@@ -23,8 +23,10 @@ var log = mlogger.New(mlogger.Options{
 	ContextField: nil,
 })
 
-func TestCreatePocketSuccess(t *testing.T) {
-	// input output
+// EXAMPLE TEST TABLE
+func TestCreatePocket(t *testing.T) {
+
+	// Reusable Vars
 	ctx := context.Background()
 	ownerUUID := uuid.New()
 	pocketUUID := uuid.New()
@@ -58,49 +60,72 @@ func TestCreatePocketSuccess(t *testing.T) {
 		Version:    1,
 	}
 
-	// dependency
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	// Test CASES
+	cases := []struct {
+		name        string
+		mock        func(ur *mstore.MockUserReader, pr *mstore.MockPocketStorer)
+		expectedRes model.PocketResp
+		expectedErr error
+	}{
+		// CASES 1 ====================================================================
+		{
+			name: "success create pocket",
+			mock: func(ur *mstore.MockUserReader, pr *mstore.MockPocketStorer) {
+				ur.EXPECT().GetByIDs(gomock.Any(), gomock.Any()).Return(
+					[]urmodel.User{
+						{
+							ID: ownerUUID,
+						},
+					}, nil,
+				)
 
-	// mock user
-	userRepo := mstore.NewMockUserReader(ctrl)
-	userRepo.EXPECT().GetByIDs(gomock.Any(), gomock.Any()).Return(
-		[]urmodel.User{
-			{
-				ID: ownerUUID,
+				pocketReplacePtr := model.Pocket{
+					ID:         pocketUUID,
+					OwnerID:    ownerUUID,
+					EditorID:   []uuid.UUID{ownerUUID},
+					WatcherID:  []uuid.UUID{ownerUUID},
+					PocketName: "example pocket",
+					Icon:       1,
+					Level:      1,
+					CreatedAt:  timeNow,
+					UpdatedAt:  timeNow,
+					Version:    1,
+				}
+				pr.EXPECT().Insert(gomock.Any(), gomock.Any()).SetArg(1, pocketReplacePtr).Return(nil)
+				pr.EXPECT().InsertPocketUser(gomock.Any(), gomock.Any(), gomock.Eq(pocketReplacePtr.ID)).Return(nil)
+				pr.EXPECT().WithinTransaction(gomock.Any(), gomock.Any()).DoAndReturn(func(x any, tFunc func(ctx context.Context) error) error {
+					return tFunc(ctx)
+				})
+
 			},
-		}, nil,
-	)
-
-	// mock pocket
-	pocketReplacePtr := model.Pocket{
-		ID:         pocketUUID,
-		OwnerID:    ownerUUID,
-		EditorID:   []uuid.UUID{ownerUUID},
-		WatcherID:  []uuid.UUID{ownerUUID},
-		PocketName: "example pocket",
-		Icon:       1,
-		Level:      1,
-		CreatedAt:  timeNow,
-		UpdatedAt:  timeNow,
-		Version:    1,
+			expectedRes: expect,
+			expectedErr: nil,
+		},
 	}
-	pocketRepo := mstore.NewMockPocketStorer(ctrl)
-	pocketRepo.EXPECT().Insert(gomock.Any(), gomock.Any()).SetArg(1, pocketReplacePtr).Return(nil)
-	pocketRepo.EXPECT().InsertPocketUser(gomock.Any(), gomock.Any(), gomock.Eq(pocketReplacePtr.ID)).Return(nil)
-	pocketRepo.EXPECT().WithinTransaction(gomock.Any(), gomock.Any()).DoAndReturn(func(x any, tFunc func(ctx context.Context) error) error {
-		return tFunc(ctx)
-	})
 
-	// init service
-	service := NewCore(log, pocketRepo, userRepo)
+	// Execute Test
+	for _, tcase := range cases {
+		t.Run(tcase.name, func(t *testing.T) {
+			ctx := context.Background()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-	// Assertion
-	result, err := service.CreatePocket(ctx, claims, payload)
-	assert.Nil(t, err)
-	assert.Equal(t, expect, result)
+			userRepo := mstore.NewMockUserReader(ctrl)
+			pocketRepo := mstore.NewMockPocketStorer(ctrl)
+
+			tcase.mock(userRepo, pocketRepo)
+
+			// init service
+			service := NewCore(log, pocketRepo, userRepo)
+			result, err := service.CreatePocket(ctx, claims, payload)
+
+			assert.Equal(t, tcase.expectedErr, err)
+			assert.Equal(t, tcase.expectedRes, result)
+		})
+	}
 }
 
+// EXAMPLE NON TEST TABLE
 func TestCreatePocketFailInsertUser(t *testing.T) {
 	// input output
 	ctx := context.Background()

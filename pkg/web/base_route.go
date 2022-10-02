@@ -20,9 +20,8 @@ func (ws *webServer) setupRoutes(injectRoute http.Handler) http.Handler {
 	router.Use(otelchi.Middleware(ws.serviceName,
 		otelchi.WithChiRoutes(router),
 		otelchi.WithRequestMethodInSpanName(true),
-	),
-	)
-	router.Use(requestID)
+	))
+	router.Use(requestAndTraceID)
 	router.Use(middleware.RealIP)
 	router.Use(midLogger(ws.logger))
 	router.Use(panicRecovery(ws.logger))

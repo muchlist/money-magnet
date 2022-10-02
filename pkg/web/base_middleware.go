@@ -59,7 +59,7 @@ var RequestIDHeader = "X-Request-Id"
 
 // requestID read header with key X-Request-Id, if exist that value used to traceID
 // if not, generate uuid for traceID
-func requestID(next http.Handler) http.Handler {
+func requestAndTraceID(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
