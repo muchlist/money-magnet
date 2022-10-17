@@ -12,8 +12,8 @@ import (
 
 type Config struct {
 	DSN          string
-	MaxOpenConns int32
-	MinOpenConns int32
+	MaxOpenConns int
+	MinOpenConns int
 }
 
 // OpenDB init open database pool
@@ -23,8 +23,8 @@ func OpenDB(cfg Config) (*pgxpool.Pool, error) {
 		return nil, err
 	}
 
-	config.MaxConns = cfg.MaxOpenConns
-	config.MinConns = cfg.MinOpenConns
+	config.MaxConns = int32(cfg.MaxOpenConns)
+	config.MinConns = int32(cfg.MinOpenConns)
 
 	db, err := pgxpool.ConnectConfig(context.Background(), config)
 	if err != nil {

@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/muchlist/moneymagnet/cfg"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/global"
 	"github.com/muchlist/moneymagnet/pkg/observ"
@@ -22,24 +22,8 @@ import (
 
 const version = "1.0.0"
 
-type config struct {
-	applicationName string
-	port            int
-	debugPort       int
-	env             string
-	db              struct {
-		dsn         string
-		maxOpenCons int
-		minOpenCons int
-	}
-	secret            string
-	collectorURL      string
-	collectorKey      string
-	collectorInsecure bool
-}
-
 type application struct {
-	config    config
+	config    *cfg.Config
 	logger    mlogger.Logger
 	validator validate.Validator
 	db        *pgxpool.Pool
@@ -60,22 +44,7 @@ type application struct {
 // @host localhost
 // @BasePath /
 func main() {
-	var cfg config
-
-	flag.StringVar(&cfg.applicationName, "name", "money-magnet", "Application Name")
-	flag.IntVar(&cfg.port, "port", 8081, "Api server port")
-	flag.IntVar(&cfg.debugPort, "debug-port", 4000, "Debug server port")
-	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://postgres:postgres@localhost:5432/money_magnet?sslmode=disable", "PostgreSQL DSN")
-	flag.IntVar(&cfg.db.maxOpenCons, "db-max", 100, "PostgreSQL max open connections")
-	flag.IntVar(&cfg.db.minOpenCons, "db-min", 1, "PostgreSQL min open connections")
-	flag.StringVar(&cfg.secret, "secret", "xoxoxoxo", "jwt secret")
-	flag.StringVar(&cfg.collectorURL, "otel-url", "localhost:4317", "open telemetry collector url")
-	flag.StringVar(&cfg.collectorKey, "otel-key", "example-api-key", "open telemetry api-key")
-	flag.BoolVar(&cfg.collectorInsecure, "otel-insecure", true, "open telemetry insecure")
-
-	flag.Parse()
-
+	config := cfg.Load()
 	ctx := context.Background()
 
 	// init log
@@ -90,10 +59,10 @@ func main() {
 
 	// Set Tracer and Metrics Open Telemetry
 	otelCfg := observ.Option{
-		ServiceName:  cfg.applicationName,
-		CollectorURL: cfg.collectorURL,
-		ApiKey:       cfg.collectorKey,
-		Insecure:     cfg.collectorInsecure,
+		ServiceName:  config.App.Name,
+		CollectorURL: config.Telemetry.URL,
+		ApiKey:       config.Telemetry.Key,
+		Insecure:     config.Telemetry.Insecure,
 	}
 	cleanUp := observ.InitTracer(ctx, otelCfg, log)
 	defer cleanUp(ctx)
@@ -102,9 +71,9 @@ func main() {
 
 	// init database
 	database, err := db.OpenDB(db.Config{
-		DSN:          cfg.db.dsn,
-		MaxOpenConns: int32(cfg.db.maxOpenCons),
-		MinOpenConns: int32(cfg.db.minOpenCons),
+		DSN:          config.DB.DSN,
+		MaxOpenConns: config.DB.MaxOpenCons,
+		MinOpenConns: config.DB.MinOpenCons,
 	})
 	if err != nil {
 		log.Error("connection to database", err)
@@ -129,7 +98,7 @@ func main() {
 
 	// init application
 	app := application{
-		config:    cfg,
+		config:    config,
 		logger:    log,
 		validator: validatorInst,
 		db:        database,
@@ -138,13 +107,13 @@ func main() {
 	// start debug server
 	debugMux := debugMux(database)
 	go func(mux *http.ServeMux) {
-		if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", cfg.debugPort), mux); err != nil {
+		if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", config.App.DebugPort), mux); err != nil {
 			log.Error("serve debug api", err)
 		}
 	}(debugMux)
 
 	// create and start api server
-	webApi := web.New(app.logger, app.config.port, app.config.env, app.config.applicationName)
+	webApi := web.New(app.logger, config.App.Port, config.App.Env, config.App.Name)
 	err = webApi.Serve(app.routes())
 	if err != nil {
 		log.Error("serve web api", err)

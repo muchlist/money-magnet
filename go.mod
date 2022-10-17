@@ -15,6 +15,7 @@ require (
 	github.com/jackc/pgconn v1.12.1
 	github.com/jackc/pgerrcode v0.0.0-20201024163028-a0d42d470451
 	github.com/jackc/pgx/v4 v4.16.1
+	github.com/joho/godotenv v1.4.0
 	github.com/riandyrn/otelchi v0.4.0
 	github.com/signalfx/splunk-otel-go/instrumentation/github.com/jackc/pgx/splunkpgx v1.1.0
 	github.com/stretchr/testify v1.8.0

@@ -27,7 +27,7 @@ func (app *application) routes() http.Handler {
 	r := chi.NewRouter()
 
 	// dependency
-	jwt := mjwt.New(app.config.secret)
+	jwt := mjwt.New(app.config.App.Secret)
 	bcrypt := mcrypto.New()
 
 	userRepo := urrepo.NewRepo(app.db, app.logger)
