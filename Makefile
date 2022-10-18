@@ -77,5 +77,12 @@ vendor:
 	@echo 'Vendoring dependencies...'
 	go mod vendor
 
+## profil: analyse heap
+profil:
+	@echo 'generate heap from :4000'
+	curl -sK -v http://localhost:4000/debug/pprof/heap > heap.out;
+	@echo 'open go tool -- use [top, png or gif]'
+	go tool pprof heap.out;
 
-.PHONY: help confirm run/api run/api-log run/collector db/psql db/migrations/new db/migrations/up audit vendor test/coverage swagger
+
+.PHONY: help confirm run/api run/api-log run/collector db/psql db/migrations/new db/migrations/up audit vendor test/coverage swagger profil
