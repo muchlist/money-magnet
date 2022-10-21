@@ -23,7 +23,7 @@ func New(opt Options) *mlog {
 		Encoding:    "json",
 		EncoderConfig: zapcore.EncoderConfig{
 			LevelKey:     "lvl",
-			TimeKey:      "time",
+			TimeKey:      "@timestamp",
 			MessageKey:   "msg",
 			EncodeTime:   zapcore.ISO8601TimeEncoder,
 			EncodeLevel:  zapcore.LowercaseLevelEncoder,
