@@ -55,7 +55,7 @@ func main() {
 		// I want them in.
 		b.Reset()
 		b.WriteString(fmt.Sprintf("%s: %s: %s: %s: ",
-			m["time"],
+			m["@timestamp"],
 			m["lvl"],
 			traceID,
 			status,
@@ -65,7 +65,7 @@ func main() {
 		// added for the log.
 		for k, v := range m {
 			switch k {
-			case "time", "lvl", "trace_id", "status", "size":
+			case "@timestamp", "lvl", "trace_id", "status", "size":
 				continue
 			}
 

@@ -1,11 +1,12 @@
 package cfg
 
 type App struct {
-	Name      string
-	Port      int
-	DebugPort int
-	Env       string
-	Secret    string
+	Name         string
+	Port         int
+	DebugPort    int
+	Env          string
+	Secret       string
+	LoggerOutput string
 }
 
 type DbConfig struct {

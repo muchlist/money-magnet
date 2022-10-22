@@ -50,7 +50,7 @@ func main() {
 	// init log
 	log := mlogger.New(mlogger.Options{
 		Level:  mlogger.LevelInfo,
-		Output: "stdout",
+		Output: config.App.LoggerOutput,
 		ContextField: map[string]any{
 			"request_id": global.RequestIDKey,
 			"trace_id":   global.TraceIDKey,

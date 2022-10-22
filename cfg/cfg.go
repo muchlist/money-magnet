@@ -22,11 +22,12 @@ func Load() *Config {
 
 	return &Config{
 		App: App{
-			Name:      env.Get("APP_NAME", "money-magnet"),
-			Port:      env.Get("APP_PORT", 8081),
-			DebugPort: env.Get("APP_DEBUG_PORT", 4000),
-			Env:       env.Get("APP_ENV", "dev"),
-			Secret:    env.Get("APP_SECRET", "xoxoxoxo"),
+			Name:         env.Get("APP_NAME", "money-magnet"),
+			Port:         env.Get("APP_PORT", 8081),
+			DebugPort:    env.Get("APP_DEBUG_PORT", 4000),
+			Env:          env.Get("APP_ENV", "dev"),
+			Secret:       env.Get("APP_SECRET", "xoxoxoxo"),
+			LoggerOutput: env.Get("APP_LOGGER_OUTPUT", "stdout"),
 		},
 		DB: DbConfig{
 			DSN:         env.Get("DB_DSN", "postgres://postgres:postgres@localhost:5432/money_magnet?sslmode=disable"),
