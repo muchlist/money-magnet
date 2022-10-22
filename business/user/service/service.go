@@ -165,10 +165,10 @@ func (s Core) InsertUser(ctx context.Context, req model.UserRegisterReq) (model.
 	}, nil
 }
 
-// FetchUser do edit user with ignoring nil field
+// PatchUser do edit user with ignoring nil field
 // ID is required
-func (s Core) FetchUser(ctx context.Context, req model.UserUpdate) (model.UserResp, error) {
-	ctx, span := observ.GetTracer().Start(ctx, "service-FetchUser")
+func (s Core) PatchUser(ctx context.Context, req model.UserUpdate) (model.UserResp, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-PatchUser")
 	defer span.End()
 
 	userExisting, err := s.repo.GetByID(ctx, req.ID)

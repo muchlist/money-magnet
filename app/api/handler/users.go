@@ -1,17 +1,13 @@
 package handler
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/business/user/model"
 	"github.com/muchlist/moneymagnet/business/user/service"
 	"github.com/muchlist/moneymagnet/pkg/data"
-	"github.com/muchlist/moneymagnet/pkg/db"
-	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mid"
-	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/observ"
 	"github.com/muchlist/moneymagnet/pkg/validate"
 	"go.opentelemetry.io/otel/attribute"
@@ -115,7 +111,6 @@ func (usr userHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // EditSelfUser
-// TODO : remove edit roles and pocket roles by user input
 func (usr userHandler) EditSelfUser(w http.ResponseWriter, r *http.Request) {
 	ctx, span := observ.GetTracer().Start(r.Context(), "handler-EditSelfUser")
 	defer span.End()
@@ -133,6 +128,7 @@ func (usr userHandler) EditSelfUser(w http.ResponseWriter, r *http.Request) {
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	req.Roles = nil
 
 	// Not have validate, because no field required
 	req.ID, err = uuid.Parse(claims.Identity)
@@ -142,7 +138,7 @@ func (usr userHandler) EditSelfUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := usr.service.FetchUser(ctx, req)
+	result, err := usr.service.PatchUser(ctx, req)
 	if err != nil {
 		usr.log.ErrorT(ctx, "error edit user", err)
 		statusCode, msg := parseError(err)
@@ -159,6 +155,7 @@ func (usr userHandler) EditSelfUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// EditUser do edit user detail by admin
 func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	ctx, span := observ.GetTracer().Start(r.Context(), "handler-EditUser")
 	defer span.End()
@@ -188,7 +185,7 @@ func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	// Not have validate, because no field required
 	req.ID = id
 
-	result, err := usr.service.FetchUser(ctx, req)
+	result, err := usr.service.PatchUser(ctx, req)
 	if err != nil {
 		usr.log.ErrorT(ctx, "error edit user", err)
 		statusCode, msg := parseError(err)
@@ -408,32 +405,5 @@ func (usr userHandler) FindByName(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
-	}
-}
-
-// =================================================FUNC
-
-func parseError(err error) (int, string) {
-	switch err := err.(type) {
-	case errr.StatusCodeError:
-		return err.StatusCode, err.Error()
-	default:
-		if errors.Is(err, db.ErrDBDuplicatedEntry) ||
-			errors.Is(err, db.ErrDBNotFound) ||
-			errors.Is(err, db.ErrDBRelationNotFound) ||
-			errors.Is(err, service.ErrInvalidID) ||
-			errors.Is(err, db.ErrDBSortFilter) {
-			return http.StatusBadRequest, err.Error()
-		}
-
-		if errors.Is(err, mjwt.ErrInvalidToken) {
-			return http.StatusUnauthorized, err.Error()
-		}
-
-		if errors.Is(err, service.ErrInvalidEmailOrPass) {
-			return http.StatusBadRequest, "invalid email or password"
-		}
-
-		return http.StatusInternalServerError, err.Error()
 	}
 }

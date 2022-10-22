@@ -18,4 +18,3 @@ vendor/
 .vscode
 .env
 myapp.log
-api
