@@ -23,8 +23,8 @@ func midLogger(l mlogger.Logger) func(next http.Handler) http.Handler {
 			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 			t1 := time.Now()
 
-			clientID := getFirstValueFromHeader(r, "X-Client-Id")
-			ipAddress := getFirstValueFromHeader(r, "X-Forwarded-For")
+			clientID := r.Header.Get("X-Client-Id")
+			ipAddress := r.Header.Get("X-Forwarded-For")
 
 			// log incomming request
 			l.Info("request started",
@@ -101,14 +101,4 @@ func panicRecovery(l mlogger.Logger) func(next http.Handler) http.Handler {
 		}
 		return http.HandlerFunc(fn)
 	}
-}
-
-func getFirstValueFromHeader(req *http.Request, key string) string {
-	vs, ok := req.Header[key]
-	if ok {
-		if len(vs) != 0 {
-			return vs[0]
-		}
-	}
-	return ""
 }

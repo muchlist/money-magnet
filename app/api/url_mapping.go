@@ -13,6 +13,7 @@ import (
 	spnserv "github.com/muchlist/moneymagnet/business/spend/service"
 	urrepo "github.com/muchlist/moneymagnet/business/user/repo"
 	urserv "github.com/muchlist/moneymagnet/business/user/service"
+	"github.com/muchlist/moneymagnet/pkg/lrucache"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -29,6 +30,7 @@ func (app *application) routes() http.Handler {
 	// dependency
 	jwt := mjwt.New(app.config.App.Secret)
 	bcrypt := mcrypto.New()
+	cache := lrucache.NewLRUCache()
 
 	userRepo := urrepo.NewRepo(app.db, app.logger)
 	pocketRepo := ptrepo.NewRepo(app.db, app.logger)
@@ -40,7 +42,7 @@ func (app *application) routes() http.Handler {
 	userHandler := handler.NewUserHandler(app.logger, app.validator, userService)
 
 	pocketService := ptserv.NewCore(app.logger, pocketRepo, userRepo)
-	pocketHandler := handler.NewPocketHandler(app.logger, app.validator, pocketService)
+	pocketHandler := handler.NewPocketHandler(app.logger, app.validator, cache, pocketService)
 
 	categoryService := cyserv.NewCore(app.logger, categoryRepo)
 	categoryHandler := handler.NewCatHandler(app.logger, app.validator, categoryService)
@@ -49,7 +51,7 @@ func (app *application) routes() http.Handler {
 	requestHandler := handler.NewRequestHandler(app.logger, app.validator, requestService)
 
 	spendService := spnserv.NewCore(app.logger, spendRepo, pocketRepo)
-	spendHandler := handler.NewSpendHandler(app.logger, app.validator, spendService)
+	spendHandler := handler.NewSpendHandler(app.logger, app.validator, cache, spendService)
 
 	// swagger endpoint
 	r.Get("/swagger/*", httpSwagger.Handler(

@@ -8,6 +8,7 @@ import (
 	"github.com/muchlist/moneymagnet/business/spend/model"
 	"github.com/muchlist/moneymagnet/business/spend/service"
 	"github.com/muchlist/moneymagnet/pkg/data"
+	"github.com/muchlist/moneymagnet/pkg/lrucache"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/observ"
 	"github.com/muchlist/moneymagnet/pkg/validate"
@@ -18,10 +19,12 @@ import (
 
 func NewSpendHandler(log mlogger.Logger,
 	validator validate.Validator,
+	cache lrucache.CacheStorer,
 	spendService service.Core) spendHandler {
 	return spendHandler{
 		log:       log,
 		validator: validator,
+		cache:     cache,
 		service:   spendService,
 	}
 }
@@ -29,6 +32,7 @@ func NewSpendHandler(log mlogger.Logger,
 type spendHandler struct {
 	log       mlogger.Logger
 	validator validate.Validator
+	cache     lrucache.CacheStorer
 	service   service.Core
 }
 
@@ -45,6 +49,16 @@ type spendHandler struct {
 func (pt spendHandler) CreateSpend(w http.ResponseWriter, r *http.Request) {
 	ctx, span := observ.GetTracer().Start(r.Context(), "handler-CreateSpend")
 	defer span.End()
+
+	data, ok := idempotencyExtract(r, pt.cache)
+	if ok {
+		err := web.WriteJSON(w, data.Status, data.Data, nil)
+		if err != nil {
+			web.ServerErrorResponse(w, r, err)
+			return
+		}
+		return
+	}
 
 	claims, err := mid.GetClaims(ctx)
 	if err != nil {
@@ -77,6 +91,12 @@ func (pt spendHandler) CreateSpend(w http.ResponseWriter, r *http.Request) {
 	env := web.Envelope{
 		"data": result,
 	}
+
+	idempotencyInjector(r, pt.cache, lrucache.Payload{
+		Status: http.StatusCreated,
+		Data:   env,
+	})
+
 	err = web.WriteJSON(w, http.StatusCreated, env, nil)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -98,6 +118,16 @@ func (pt spendHandler) CreateSpend(w http.ResponseWriter, r *http.Request) {
 func (pt spendHandler) EditSpend(w http.ResponseWriter, r *http.Request) {
 	ctx, span := observ.GetTracer().Start(r.Context(), "handler-EditSpend")
 	defer span.End()
+
+	data, ok := idempotencyExtract(r, pt.cache)
+	if ok {
+		err := web.WriteJSON(w, data.Status, data.Data, nil)
+		if err != nil {
+			web.ServerErrorResponse(w, r, err)
+			return
+		}
+		return
+	}
 
 	claims, err := mid.GetClaims(ctx)
 	if err != nil {
@@ -140,7 +170,13 @@ func (pt spendHandler) EditSpend(w http.ResponseWriter, r *http.Request) {
 	env := web.Envelope{
 		"data": result,
 	}
-	err = web.WriteJSON(w, http.StatusCreated, env, nil)
+
+	idempotencyInjector(r, pt.cache, lrucache.Payload{
+		Status: http.StatusOK,
+		Data:   env,
+	})
+
+	err = web.WriteJSON(w, http.StatusOK, env, nil)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return

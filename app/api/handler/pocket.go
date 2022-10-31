@@ -6,6 +6,7 @@ import (
 	"github.com/muchlist/moneymagnet/business/pocket/model"
 	"github.com/muchlist/moneymagnet/business/pocket/service"
 	"github.com/muchlist/moneymagnet/pkg/data"
+	"github.com/muchlist/moneymagnet/pkg/lrucache"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/observ"
 	"github.com/muchlist/moneymagnet/pkg/validate"
@@ -16,10 +17,12 @@ import (
 
 func NewPocketHandler(log mlogger.Logger,
 	validator validate.Validator,
+	cache lrucache.CacheStorer,
 	pocketService service.Core) pocketHandler {
 	return pocketHandler{
 		log:       log,
 		validator: validator,
+		cache:     cache,
 		service:   pocketService,
 	}
 }
@@ -27,6 +30,7 @@ func NewPocketHandler(log mlogger.Logger,
 type pocketHandler struct {
 	log       mlogger.Logger
 	validator validate.Validator
+	cache     lrucache.CacheStorer
 	service   service.Core
 }
 
@@ -43,6 +47,16 @@ type pocketHandler struct {
 func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
 	ctx, span := observ.GetTracer().Start(r.Context(), "handler-CreatePocket")
 	defer span.End()
+
+	data, ok := idempotencyExtract(r, pt.cache)
+	if ok {
+		err := web.WriteJSON(w, data.Status, data.Data, nil)
+		if err != nil {
+			web.ServerErrorResponse(w, r, err)
+			return
+		}
+		return
+	}
 
 	pt.log.InfoT(ctx, "sample info to get otel")
 
@@ -77,6 +91,12 @@ func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
 	env := web.Envelope{
 		"data": result,
 	}
+
+	idempotencyInjector(r, pt.cache, lrucache.Payload{
+		Status: http.StatusCreated,
+		Data:   env,
+	})
+
 	err = web.WriteJSON(w, http.StatusCreated, env, nil)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -98,6 +118,16 @@ func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
 func (pt pocketHandler) UpdatePocket(w http.ResponseWriter, r *http.Request) {
 	ctx, span := observ.GetTracer().Start(r.Context(), "handler-UpdatePocket")
 	defer span.End()
+
+	data, ok := idempotencyExtract(r, pt.cache)
+	if ok {
+		err := web.WriteJSON(w, data.Status, data.Data, nil)
+		if err != nil {
+			web.ServerErrorResponse(w, r, err)
+			return
+		}
+		return
+	}
 
 	claims, err := mid.GetClaims(ctx)
 	if err != nil {
@@ -139,7 +169,13 @@ func (pt pocketHandler) UpdatePocket(w http.ResponseWriter, r *http.Request) {
 	env := web.Envelope{
 		"data": result,
 	}
-	err = web.WriteJSON(w, http.StatusCreated, env, nil)
+
+	idempotencyInjector(r, pt.cache, lrucache.Payload{
+		Status: http.StatusOK,
+		Data:   env,
+	})
+
+	err = web.WriteJSON(w, http.StatusOK, env, nil)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
 		return
