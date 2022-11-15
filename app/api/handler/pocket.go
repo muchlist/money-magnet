@@ -48,18 +48,6 @@ func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
 	ctx, span := observ.GetTracer().Start(r.Context(), "handler-CreatePocket")
 	defer span.End()
 
-	data, ok := idempotencyExtract(r, pt.cache)
-	if ok {
-		err := web.WriteJSON(w, data.Status, data.Data, nil)
-		if err != nil {
-			web.ServerErrorResponse(w, r, err)
-			return
-		}
-		return
-	}
-
-	pt.log.InfoT(ctx, "sample info to get otel")
-
 	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -92,11 +80,6 @@ func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
 		"data": result,
 	}
 
-	idempotencyInjector(r, pt.cache, lrucache.Payload{
-		Status: http.StatusCreated,
-		Data:   env,
-	})
-
 	err = web.WriteJSON(w, http.StatusCreated, env, nil)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -118,16 +101,6 @@ func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
 func (pt pocketHandler) UpdatePocket(w http.ResponseWriter, r *http.Request) {
 	ctx, span := observ.GetTracer().Start(r.Context(), "handler-UpdatePocket")
 	defer span.End()
-
-	data, ok := idempotencyExtract(r, pt.cache)
-	if ok {
-		err := web.WriteJSON(w, data.Status, data.Data, nil)
-		if err != nil {
-			web.ServerErrorResponse(w, r, err)
-			return
-		}
-		return
-	}
 
 	claims, err := mid.GetClaims(ctx)
 	if err != nil {
@@ -169,11 +142,6 @@ func (pt pocketHandler) UpdatePocket(w http.ResponseWriter, r *http.Request) {
 	env := web.Envelope{
 		"data": result,
 	}
-
-	idempotencyInjector(r, pt.cache, lrucache.Payload{
-		Status: http.StatusOK,
-		Data:   env,
-	})
 
 	err = web.WriteJSON(w, http.StatusOK, env, nil)
 	if err != nil {
