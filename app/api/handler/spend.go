@@ -50,16 +50,6 @@ func (pt spendHandler) CreateSpend(w http.ResponseWriter, r *http.Request) {
 	ctx, span := observ.GetTracer().Start(r.Context(), "handler-CreateSpend")
 	defer span.End()
 
-	data, ok := idempotencyExtract(r, pt.cache)
-	if ok {
-		err := web.WriteJSON(w, data.Status, data.Data, nil)
-		if err != nil {
-			web.ServerErrorResponse(w, r, err)
-			return
-		}
-		return
-	}
-
 	claims, err := mid.GetClaims(ctx)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -92,11 +82,6 @@ func (pt spendHandler) CreateSpend(w http.ResponseWriter, r *http.Request) {
 		"data": result,
 	}
 
-	idempotencyInjector(r, pt.cache, lrucache.Payload{
-		Status: http.StatusCreated,
-		Data:   env,
-	})
-
 	err = web.WriteJSON(w, http.StatusCreated, env, nil)
 	if err != nil {
 		web.ServerErrorResponse(w, r, err)
@@ -118,16 +103,6 @@ func (pt spendHandler) CreateSpend(w http.ResponseWriter, r *http.Request) {
 func (pt spendHandler) EditSpend(w http.ResponseWriter, r *http.Request) {
 	ctx, span := observ.GetTracer().Start(r.Context(), "handler-EditSpend")
 	defer span.End()
-
-	data, ok := idempotencyExtract(r, pt.cache)
-	if ok {
-		err := web.WriteJSON(w, data.Status, data.Data, nil)
-		if err != nil {
-			web.ServerErrorResponse(w, r, err)
-			return
-		}
-		return
-	}
 
 	claims, err := mid.GetClaims(ctx)
 	if err != nil {
@@ -170,11 +145,6 @@ func (pt spendHandler) EditSpend(w http.ResponseWriter, r *http.Request) {
 	env := web.Envelope{
 		"data": result,
 	}
-
-	idempotencyInjector(r, pt.cache, lrucache.Payload{
-		Status: http.StatusOK,
-		Data:   env,
-	})
 
 	err = web.WriteJSON(w, http.StatusOK, env, nil)
 	if err != nil {

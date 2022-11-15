@@ -32,6 +32,9 @@ func (app *application) routes() http.Handler {
 	bcrypt := mcrypto.New()
 	cache := lrucache.NewLRUCache()
 
+	// middleware
+	idempo := mid.NewIdempotencyMiddleware(cache)
+
 	userRepo := urrepo.NewRepo(app.db, app.logger)
 	pocketRepo := ptrepo.NewRepo(app.db, app.logger)
 	categoryRepo := cyrepo.NewRepo(app.db, app.logger)
@@ -82,10 +85,12 @@ func (app *application) routes() http.Handler {
 		})
 
 		r.Route("/pockets", func(r chi.Router) {
-			r.Post("/", pocketHandler.CreatePocket)
 			r.Get("/{id}", pocketHandler.GetByID)
 			r.Get("/", pocketHandler.FindUserPocket)
-			r.Patch("/{id}", pocketHandler.UpdatePocket)
+
+			i := r.With(idempo.IdempotentCheck)
+			i.Post("/", pocketHandler.CreatePocket)
+			i.Patch("/{id}", pocketHandler.UpdatePocket)
 		})
 
 		r.Route("/categories", func(r chi.Router) {
@@ -103,11 +108,13 @@ func (app *application) routes() http.Handler {
 		})
 
 		r.Route("/spends", func(r chi.Router) {
-			r.Post("/", spendHandler.CreateSpend)
-			r.Patch("/{id}", spendHandler.EditSpend)
 			r.Get("/from-pocket/{id}", spendHandler.FindSpend)
 			r.Get("/{id}", spendHandler.GetByID)
 			r.Post("/sync/{id}", spendHandler.SyncBalance)
+
+			i := r.With(idempo.IdempotentCheck)
+			i.Post("/", spendHandler.CreateSpend)
+			i.Patch("/{id}", spendHandler.EditSpend)
 		})
 
 	})
