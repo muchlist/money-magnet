@@ -1,5 +1,20 @@
 # Moneymagnet
-Aplikasi managemen keuangan online yang bisa dikelola banyak orang sekaligus. Membantu menekan pengeluaran yang tidak perlu.
+Shared online financial management apps. The goals is to help reducing unnecessary expenses.
+I experimented a lot with this repository.
+- [x] Log with tracer-ID
+- [x] Mini web framework
+- [x] Open telemetry
+- [x] Idempotency
+- [x] Raw SQL x Query builder with squirell
+- [x] Database transaction with clean architecture
+- [x] Unit testing
+- [x] Swagger
+- [x] Profiling
+- [x] expvar
+- [ ] Circuit breaker
+
+Something different :
+- Handler separated with business folder (because i think handler is non reusable code)
 
 # How to Run
 Lihat file Makefile, disitu ada banyak command termasuk cara menjalankan service ini.
