@@ -34,6 +34,7 @@ func (app *application) routes() http.Handler {
 
 	// middleware
 	idempo := mid.NewIdempotencyMiddleware(cache)
+	r.Use(mid.EndpoitnCounter)
 
 	userRepo := urrepo.NewRepo(app.db, app.logger)
 	pocketRepo := ptrepo.NewRepo(app.db, app.logger)

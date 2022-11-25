@@ -61,7 +61,7 @@ func main() {
 	otelCfg := observ.Option{
 		ServiceName:  config.App.Name,
 		CollectorURL: config.Telemetry.URL,
-		ApiKey:       config.Telemetry.Key,
+		Headers:      map[string]string{"api-key": config.Telemetry.Key},
 		Insecure:     config.Telemetry.Insecure,
 	}
 	cleanUp := observ.InitTracer(ctx, otelCfg, log)
