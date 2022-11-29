@@ -22,7 +22,7 @@ func AddLoginFailedCounter(ctx context.Context) {
 	// atrs := []attribute.KeyValue{
 	// 	attribute.String("uid", uniqueDeploymentCode), // untuk membedakan antar node
 	// }
-	loginFailCounter.Add(ctx, 1, globalAtrs...)
+	loginFailCounter.Add(ctx, 1, uniquePerNodeID)
 }
 
 // End of Login counter =====================

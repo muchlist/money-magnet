@@ -8,7 +8,5 @@ import (
 
 // Global meter
 var meter = global.Meter("github.com/muchlist/moneymagnet")
-var uniqueDeploymentCode = shortuuid.New()
-var globalAtrs = []attribute.KeyValue{
-	attribute.String("uid", uniqueDeploymentCode),
-}
+var uniqueDeploymentCode = "money-magnet." + shortuuid.New()
+var uniquePerNodeID = attribute.String("uid", uniqueDeploymentCode)

@@ -9,6 +9,8 @@ import (
 	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/aggregation"
+	"go.opentelemetry.io/otel/sdk/metric/view"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 )
@@ -64,9 +66,21 @@ func InitMeter(ctx context.Context, opt Option, log mlogger.Logger) func(context
 		log.Error("failed create resource", err)
 	}
 
+	// custom bucket for histogram response latency
+	customBucketsView, _ := view.New(
+		view.MatchInstrumentName("response.*"),
+		view.MatchInstrumentKind(view.SyncHistogram),
+		view.WithSetAggregation(
+			aggregation.ExplicitBucketHistogram{
+				// 25ms, 50ms, 100ms, 250ms, 500ms, 1000ms, 2500ms, 5000ms
+				Boundaries: []float64{25_000, 50_000, 100_000, 250_000, 500_000, 1_000_000, 2_500_000, 5_000_000},
+			},
+		),
+	)
+
 	provider := metric.NewMeterProvider(
 		// metric.WithReader(exporter),
-		metric.WithReader(metric.NewPeriodicReader(exporter)),
+		metric.WithReader(metric.NewPeriodicReader(exporter), customBucketsView),
 		metric.WithResource(resources),
 	)
 

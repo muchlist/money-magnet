@@ -24,7 +24,7 @@ run/api-log:
 
 ## run/collector: run the otel collector
 run/collector:
-	docker compose --env-file .env up
+	docker compose -f docker-compose.observ.yml --env-file .env up
 
 ## db/psql: connect to the database using psql
 db/psql:

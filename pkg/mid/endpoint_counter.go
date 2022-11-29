@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/muchlist/moneymagnet/pkg/observ/mmetric"
 	"github.com/muchlist/moneymagnet/pkg/web"
@@ -18,13 +19,16 @@ func EndpoitnCounter(h http.Handler) http.Handler {
 		if !ok {
 			w1 = web.NewResponseWritter(w)
 		}
+		t1 := time.Now()
 
 		h.ServeHTTP(w1, r)
 
 		// cache data
 		statusCode := w1.StatusCode()
+		path := fmt.Sprintf("%s_%s", r.Method, r.URL.Path)
 
-		mmetric.AddStatusCodeCounter(context.Background(), statusCode)
-		mmetric.AddEndpointHitCounter(context.Background(), statusCode, fmt.Sprintf("%s_%s", r.Method, r.URL.Path))
+		mmetric.AddEndpointHitCounter(context.Background(), statusCode, path)
+		mmetric.AddLatencyPerPath(context.Background(), time.Since(t1).Microseconds(), path)
+
 	})
 }

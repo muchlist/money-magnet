@@ -8,15 +8,15 @@ import (
 	"go.opentelemetry.io/otel/metric/unit"
 )
 
-// endpoint hit counter =========================
-var endpointHitCounter, _ = meter.SyncInt64().Counter("endpoint hit",
-	instrument.WithDescription("number of endpoint hit per path"),
+// http request counter =========================
+var endpointHitCounter, _ = meter.SyncInt64().Counter("http.request",
+	instrument.WithDescription("number of request per path"),
 	instrument.WithUnit(unit.Dimensionless),
 )
 
 func AddEndpointHitCounter(ctx context.Context, code int, path string) {
 	atrs := []attribute.KeyValue{
-		attribute.String("uid", uniqueDeploymentCode),
+		uniquePerNodeID,
 		attribute.String("method_path", path),
 		attribute.Int("code", code),
 	}
@@ -25,18 +25,18 @@ func AddEndpointHitCounter(ctx context.Context, code int, path string) {
 
 // End of endpoint hit counter =====================
 
-// status code counter =========================
-var statusCodeCounter, _ = meter.SyncInt64().Counter("response code",
-	instrument.WithDescription("number of response code"),
-	instrument.WithUnit(unit.Dimensionless),
+// Latency histogram =========================
+var latencyHisto, _ = meter.SyncInt64().Histogram("response.latency",
+	instrument.WithDescription("latency of request"),
+	instrument.WithUnit("microseconds"),
 )
 
-func AddStatusCodeCounter(ctx context.Context, code int) {
+func AddLatencyPerPath(ctx context.Context, durMicrosecond int64, path string) {
 	atrs := []attribute.KeyValue{
-		attribute.String("uid", uniqueDeploymentCode),
-		attribute.Int("code", code),
+		uniquePerNodeID,
+		attribute.String("method_path", path),
 	}
-	statusCodeCounter.Add(ctx, 1, atrs...)
+	latencyHisto.Record(ctx, durMicrosecond, atrs...)
 }
 
-// End of status code counter =====================
+// End of Latency histogram =====================
