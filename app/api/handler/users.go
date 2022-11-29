@@ -9,8 +9,8 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/observ/mmetric"
 	"github.com/muchlist/moneymagnet/pkg/validate"
-	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/web"
@@ -89,11 +89,9 @@ func (usr userHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	result, err := usr.service.Login(ctx, req.Email, req.Password)
 	if err != nil {
+
 		// send metric
-		atrs := []attribute.KeyValue{
-			attribute.String("username", req.Email),
-		}
-		observ.GetCounterLoginFailed().Add(ctx, 1, atrs...)
+		mmetric.AddLoginFailedCounter(ctx)
 
 		usr.log.ErrorT(ctx, "error login", err)
 		statusCode, msg := parseError(err)

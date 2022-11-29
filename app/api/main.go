@@ -11,6 +11,7 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/global"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/observ/mmetric"
 
 	"github.com/muchlist/moneymagnet/pkg/validate"
 
@@ -58,16 +59,21 @@ func main() {
 	})
 
 	// Set Tracer and Metrics Open Telemetry
+	ctxWC, cancle := context.WithCancel(ctx)
+	defer cancle()
 	otelCfg := observ.Option{
 		ServiceName:  config.App.Name,
 		CollectorURL: config.Telemetry.URL,
-		ApiKey:       config.Telemetry.Key,
+		Headers:      map[string]string{"api-key": config.Telemetry.Key},
 		Insecure:     config.Telemetry.Insecure,
 	}
 	cleanUp := observ.InitTracer(ctx, otelCfg, log)
 	defer cleanUp(ctx)
 	cleanUpMetric := observ.InitMeter(ctx, otelCfg, log)
 	defer cleanUpMetric(ctx)
+
+	// register monitor metrics
+	mmetric.RegisterMonitorMetric(ctxWC)
 
 	// init database
 	database, err := db.OpenDB(db.Config{

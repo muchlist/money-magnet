@@ -1,14 +1,14 @@
-package observ
+package mmetric
 
 import (
-	"go.opentelemetry.io/otel/metric/global"
+	"context"
+
 	"go.opentelemetry.io/otel/metric/instrument"
 	"go.opentelemetry.io/otel/metric/instrument/syncint64"
 	"go.opentelemetry.io/otel/metric/unit"
 )
 
-var meter = global.Meter("github.com/muchlist/moneymagnet")
-
+// Login counter =========================
 var loginFailCounter, _ = meter.SyncInt64().Counter("login failed",
 	instrument.WithDescription("number of login failed"),
 	instrument.WithUnit(unit.Dimensionless),
@@ -17,3 +17,12 @@ var loginFailCounter, _ = meter.SyncInt64().Counter("login failed",
 func GetCounterLoginFailed() syncint64.Counter {
 	return loginFailCounter
 }
+
+func AddLoginFailedCounter(ctx context.Context) {
+	// atrs := []attribute.KeyValue{
+	// 	attribute.String("uid", uniqueDeploymentCode), // untuk membedakan antar node
+	// }
+	loginFailCounter.Add(ctx, 1, uniquePerNodeID)
+}
+
+// End of Login counter =====================
