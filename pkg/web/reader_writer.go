@@ -176,7 +176,8 @@ func ReadTraceID(ctx context.Context) string {
 	if ctx == nil {
 		return ""
 	}
-	if traceID, ok := ctx.Value(global.TraceIDKey).(string); ok {
+	traceID, ok := ctx.Value(global.TraceIDKey).(string)
+	if ok && traceID != "00000000000000000000000000000000" {
 		return traceID
 	}
 	return ""

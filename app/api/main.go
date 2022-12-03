@@ -49,11 +49,9 @@ func main() {
 	ctx := context.Background()
 
 	// init log
-	contextField := map[string]any{}
-	if config.Toggle.MetricON {
+	contextField := map[string]any{"request_id": global.RequestIDKey}
+	if config.Toggle.TraceON {
 		contextField["trace_id"] = global.TraceIDKey
-	} else {
-		contextField["trace_id"] = global.RequestIDKey
 	}
 	log := mlogger.New(mlogger.Options{
 		Level:        mlogger.LevelInfo,

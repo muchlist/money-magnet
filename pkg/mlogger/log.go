@@ -3,6 +3,7 @@ package mlogger
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"strings"
 
 	"go.opentelemetry.io/otel/codes"
@@ -11,9 +12,12 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+const skipCallerUserByThisLib = 2
+
 type mlog struct {
 	zap          *zap.Logger
 	contextField map[string]any
+	skipCaller   int
 }
 
 func New(opt Options) *mlog {
@@ -31,14 +35,16 @@ func New(opt Options) *mlog {
 		},
 	}
 
-	var log mlog
-	var err error
-	if log.zap, err = logConfig.Build(); err != nil {
+	zapInst, err := logConfig.Build()
+	if err != nil {
 		panic(err)
 	}
-	log.contextField = opt.ContextField
 
-	return &log
+	return &mlog{
+		zap:          zapInst,
+		contextField: opt.ContextField,
+		skipCaller:   opt.SkipCaller + skipCallerUserByThisLib,
+	}
 }
 
 func (l *mlog) Sync() error {
@@ -72,18 +78,20 @@ func (l *mlog) WarnT(ctx context.Context, msg string, err error, tags ...Field) 
 }
 
 func (l *mlog) Error(msg string, err error, tags ...Field) {
-	tags = append(tags, zap.NamedError("error", err), zap.StackSkip("stacktrace", 1))
+	tags = append(tags, zap.NamedError("error", err), zap.String("caller", getCallerPosition(l.skipCaller)))
 	l.zap.Error(msg, tags...)
 }
 
 func (l *mlog) ErrorT(ctx context.Context, msg string, err error, tags ...Field) {
 	// send error to otel
 	span := trace.SpanFromContext(ctx)
-	span.RecordError(err)
-	span.SetStatus(codes.Error, err.Error())
+	if span.IsRecording() {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+	}
 
 	fields := l.getFieldFromContext(ctx)
-	fields = append(fields, zap.NamedError("error", err), zap.StackSkip("stacktrace", 1))
+	fields = append(fields, zap.NamedError("error", err), zap.String("caller", getCallerPosition(l.skipCaller)))
 	fields = append(fields, tags...)
 	l.zap.Error(msg, fields...)
 }
@@ -141,4 +149,11 @@ func (l *mlog) getFieldFromContext(ctx context.Context) []zapcore.Field {
 		}
 	}
 	return fields
+}
+
+func getCallerPosition(skip int) string {
+	if _, file, line, ok := runtime.Caller(skip); ok {
+		return fmt.Sprintf("%s:%d", file, line)
+	}
+	return ""
 }

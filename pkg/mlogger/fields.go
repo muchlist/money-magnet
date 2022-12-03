@@ -36,4 +36,5 @@ type Options struct {
 	Level        string
 	Output       string
 	ContextField map[string]any
+	SkipCaller   int
 }
