@@ -11,6 +11,7 @@ type Config struct {
 	App       App
 	DB        DbConfig
 	Telemetry Telemetry
+	Toggle    Toggle
 }
 
 func Load() *Config {
@@ -38,6 +39,10 @@ func Load() *Config {
 			URL:      env.Get("OTEL_URL", "localhost:4317"),
 			Key:      env.Get("OTEL_KEY", "example-api-key"),
 			Insecure: env.Get("OTEL_INSECURE", true),
+		},
+		Toggle: Toggle{
+			TraceON:  env.Get("TRACE_ON", false),
+			MetricON: env.Get("METRIC_ON", false),
 		},
 	}
 

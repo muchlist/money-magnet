@@ -26,6 +26,14 @@ run/api-log:
 run/collector:
 	docker compose -f docker-compose.observ.yml --env-file .env up
 
+## build/api/linux: build application for linux server
+build/api/linux:
+	export GOOS=linux GOARCH=amd64; go build -o build/magnet-api ./app/api
+
+## build/admintools/linux: build admin tools for linux server
+build/admintools/linux:
+	export GOOS=linux GOARCH=amd64; go build -o build/magnet-api ./app/tooling/admin
+
 ## db/psql: connect to the database using psql
 db/psql:
 	psql ${MONEYMAGNET_DB_DSN}
