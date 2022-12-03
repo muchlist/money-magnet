@@ -49,13 +49,16 @@ func main() {
 	ctx := context.Background()
 
 	// init log
+	contextField := map[string]any{}
+	if config.Toggle.MetricON {
+		contextField["trace_id"] = global.TraceIDKey
+	} else {
+		contextField["trace_id"] = global.RequestIDKey
+	}
 	log := mlogger.New(mlogger.Options{
-		Level:  mlogger.LevelInfo,
-		Output: config.App.LoggerOutput,
-		ContextField: map[string]any{
-			"request_id": global.RequestIDKey,
-			"trace_id":   global.TraceIDKey,
-		},
+		Level:        mlogger.LevelInfo,
+		Output:       config.App.LoggerOutput,
+		ContextField: contextField,
 	})
 
 	// Set Tracer and Metrics Open Telemetry
@@ -67,13 +70,16 @@ func main() {
 		Headers:      map[string]string{"api-key": config.Telemetry.Key},
 		Insecure:     config.Telemetry.Insecure,
 	}
-	cleanUp := observ.InitTracer(ctx, otelCfg, log)
-	defer cleanUp(ctx)
-	cleanUpMetric := observ.InitMeter(ctx, otelCfg, log)
-	defer cleanUpMetric(ctx)
-
-	// register monitor metrics
-	mmetric.RegisterMonitorMetric(ctxWC)
+	if config.Toggle.TraceON {
+		cleanUp := observ.InitTracer(ctx, otelCfg, log)
+		defer cleanUp(ctx)
+	}
+	if config.Toggle.MetricON {
+		cleanUpMetric := observ.InitMeter(ctx, otelCfg, log)
+		defer cleanUpMetric(ctx)
+		// register monitor metrics
+		mmetric.RegisterMonitorMetric(ctxWC)
+	}
 
 	// init database
 	database, err := db.OpenDB(db.Config{
