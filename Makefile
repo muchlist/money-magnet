@@ -32,7 +32,7 @@ build/api/linux:
 
 ## build/admintools/linux: build admin tools for linux server
 build/admintools/linux:
-	export GOOS=linux GOARCH=amd64; go build -o build/magnet-api ./app/tooling/admin
+	export GOOS=linux GOARCH=amd64; go build -o build/admin-tools ./app/tooling/admin
 
 ## db/psql: connect to the database using psql
 db/psql:
