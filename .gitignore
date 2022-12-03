@@ -16,5 +16,7 @@ vendor/
 
 .idea/
 .vscode
+
 .env
 myapp.log
+build/

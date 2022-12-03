@@ -6,7 +6,6 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"google.golang.org/grpc/credentials"
 )
@@ -43,9 +42,9 @@ func getOtlpMetricExporter(ctx context.Context, opt Option) (metric.Exporter, er
 	return exp, nil
 }
 
-func getPrometheuspMetricExporter(ctx context.Context, opt Option) (*prometheus.Exporter, error) {
-	// need to import "go.opentelemetry.io/otel/exporters/prometheus"
-	// need to enable expose /metrics using prometheus http middlware
+// func getPrometheuspMetricExporter(ctx context.Context, opt Option) (*prometheus.Exporter, error) {
+// -- need to import "go.opentelemetry.io/otel/exporters/prometheus"
+// -- need to enable expose /metrics using prometheus http middlware
 
-	return prometheus.New()
-}
+// 	return prometheus.New()
+// }

@@ -20,3 +20,8 @@ type Telemetry struct {
 	Key      string
 	Insecure bool
 }
+
+type Toggle struct {
+	TraceON  bool
+	MetricON bool
+}
