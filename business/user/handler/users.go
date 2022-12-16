@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/business/user/model"
 	"github.com/muchlist/moneymagnet/business/user/service"
+	"github.com/muchlist/moneymagnet/business/zhelper"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/observ"
@@ -54,7 +55,7 @@ func (usr userHandler) Register(w http.ResponseWriter, r *http.Request) {
 	message, err := usr.service.InsertUser(ctx, req)
 	if err != nil {
 		usr.log.ErrorT(ctx, "error insert user", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -94,7 +95,7 @@ func (usr userHandler) Login(w http.ResponseWriter, r *http.Request) {
 		mmetric.AddLoginFailedCounter(ctx)
 
 		usr.log.ErrorT(ctx, "error login", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -139,7 +140,7 @@ func (usr userHandler) EditSelfUser(w http.ResponseWriter, r *http.Request) {
 	result, err := usr.service.PatchUser(ctx, req)
 	if err != nil {
 		usr.log.ErrorT(ctx, "error edit user", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -186,7 +187,7 @@ func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	result, err := usr.service.PatchUser(ctx, req)
 	if err != nil {
 		usr.log.ErrorT(ctx, "error edit user", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -221,7 +222,7 @@ func (usr userHandler) UpdateFCM(w http.ResponseWriter, r *http.Request) {
 	err = usr.service.UpdateFCM(ctx, claims.Identity, fcm)
 	if err != nil {
 		usr.log.ErrorT(ctx, "error update fcm", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -263,7 +264,7 @@ func (usr userHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	err = usr.service.Delete(ctx, userIDToDelete, claimsUUID)
 	if err != nil {
 		usr.log.ErrorT(ctx, "error delete user", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -302,7 +303,7 @@ func (usr userHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	result, err := usr.service.Refresh(ctx, req.RefreshToken)
 	if err != nil {
 		usr.log.ErrorT(ctx, "error refresh token", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -330,7 +331,7 @@ func (usr userHandler) Profile(w http.ResponseWriter, r *http.Request) {
 	result, err := usr.service.GetProfile(ctx, claims.Identity)
 	if err != nil {
 		usr.log.ErrorT(ctx, "error get profile", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -360,7 +361,7 @@ func (usr userHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	result, err := usr.service.GetProfile(ctx, userID)
 	if err != nil {
 		usr.log.ErrorT(ctx, "error get user by id", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -391,7 +392,7 @@ func (usr userHandler) FindByName(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		usr.log.ErrorT(ctx, "error get profile", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}

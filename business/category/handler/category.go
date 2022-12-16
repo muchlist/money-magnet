@@ -5,6 +5,7 @@ import (
 
 	"github.com/muchlist/moneymagnet/business/category/model"
 	"github.com/muchlist/moneymagnet/business/category/service"
+	"github.com/muchlist/moneymagnet/business/zhelper"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -64,7 +65,7 @@ func (ch catHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 	result, err := ch.service.CreateCategory(r.Context(), claims, req)
 	if err != nil {
 		ch.log.ErrorT(r.Context(), "error create pocket", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -122,7 +123,7 @@ func (ch catHandler) EditCategory(w http.ResponseWriter, r *http.Request) {
 	result, err := ch.service.EditCategory(r.Context(), claims, req)
 	if err != nil {
 		ch.log.ErrorT(r.Context(), "error rename category", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -165,7 +166,7 @@ func (ch catHandler) FindPocketCategory(w http.ResponseWriter, r *http.Request) 
 	})
 	if err != nil {
 		ch.log.ErrorT(r.Context(), "error find categories", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -205,7 +206,7 @@ func (ch catHandler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
 	err = ch.service.DeleteCategory(ctx, categoryID)
 	if err != nil {
 		ch.log.ErrorT(ctx, "error delete categories", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}

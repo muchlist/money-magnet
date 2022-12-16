@@ -5,6 +5,7 @@ import (
 
 	"github.com/muchlist/moneymagnet/business/pocket/model"
 	"github.com/muchlist/moneymagnet/business/pocket/service"
+	"github.com/muchlist/moneymagnet/business/zhelper"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/lrucache"
 	"github.com/muchlist/moneymagnet/pkg/mid"
@@ -72,7 +73,7 @@ func (pt pocketHandler) CreatePocket(w http.ResponseWriter, r *http.Request) {
 	result, err := pt.service.CreatePocket(ctx, claims, req)
 	if err != nil {
 		pt.log.ErrorT(ctx, "error create pocket", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -135,7 +136,7 @@ func (pt pocketHandler) UpdatePocket(w http.ResponseWriter, r *http.Request) {
 	result, err := pt.service.UpdatePocket(ctx, claims, req)
 	if err != nil {
 		pt.log.ErrorT(ctx, "error update pocket", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -181,7 +182,7 @@ func (pt pocketHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	result, err := pt.service.GetDetail(ctx, claims, pocketID)
 	if err != nil {
 		pt.log.ErrorT(ctx, "error get pocket by id", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -229,7 +230,7 @@ func (pt pocketHandler) FindUserPocket(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		pt.log.ErrorT(ctx, "error find pocket", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}

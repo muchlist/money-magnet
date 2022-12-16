@@ -7,6 +7,7 @@ import (
 
 	"github.com/muchlist/moneymagnet/business/spend/model"
 	"github.com/muchlist/moneymagnet/business/spend/service"
+	"github.com/muchlist/moneymagnet/business/zhelper"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/lrucache"
 	"github.com/muchlist/moneymagnet/pkg/mid"
@@ -74,7 +75,7 @@ func (pt spendHandler) CreateSpend(w http.ResponseWriter, r *http.Request) {
 	result, err := pt.service.CreateSpend(ctx, claims, req)
 	if err != nil {
 		pt.log.ErrorT(ctx, "error create spend", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -138,7 +139,7 @@ func (pt spendHandler) EditSpend(w http.ResponseWriter, r *http.Request) {
 	result, err := pt.service.UpdatePartialSpend(ctx, claims, req)
 	if err != nil {
 		pt.log.ErrorT(ctx, "error update spend", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -184,7 +185,7 @@ func (pt spendHandler) SyncBalance(w http.ResponseWriter, r *http.Request) {
 	newBalance, err := pt.service.SyncBalance(ctx, claims, pocketID)
 	if err != nil {
 		pt.log.ErrorT(ctx, "error sync balance", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -223,7 +224,7 @@ func (pt spendHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	result, err := pt.service.GetDetail(ctx, spendID)
 	if err != nil {
 		pt.log.ErrorT(ctx, "error get spend by id", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -299,7 +300,7 @@ func (pt spendHandler) FindSpend(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		pt.log.ErrorT(ctx, "error find spend", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}

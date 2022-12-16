@@ -1,4 +1,4 @@
-package handler
+package zhelper
 
 import (
 	"errors"
@@ -10,7 +10,7 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 )
 
-func parseError(err error) (int, string) {
+func ParseError(err error) (int, string) {
 	switch err := err.(type) {
 	case errr.StatusCodeError:
 		return err.StatusCode, err.Error()
