@@ -6,6 +6,7 @@ import (
 
 	"github.com/muchlist/moneymagnet/business/request/model"
 	"github.com/muchlist/moneymagnet/business/request/service"
+	"github.com/muchlist/moneymagnet/business/zhelper"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -68,7 +69,7 @@ func (pt requestHandler) CreateRequest(w http.ResponseWriter, r *http.Request) {
 	result, err := pt.service.CreateRequest(ctx, claims, req.PocketID)
 	if err != nil {
 		pt.log.ErrorT(ctx, "error create request", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -124,7 +125,7 @@ func (pt requestHandler) ApproveOrRejectRequest(w http.ResponseWriter, r *http.R
 	err = pt.service.ApproveRequest(ctx, claims, isApprovedBool, id)
 	if err != nil {
 		pt.log.ErrorT(ctx, "error change status request", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -169,7 +170,7 @@ func (pt requestHandler) FindRequestByApprover(w http.ResponseWriter, r *http.Re
 	})
 	if err != nil {
 		pt.log.ErrorT(ctx, "error find request", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
@@ -215,7 +216,7 @@ func (pt requestHandler) FindByRequester(w http.ResponseWriter, r *http.Request)
 	})
 	if err != nil {
 		pt.log.ErrorT(ctx, "error find request", err)
-		statusCode, msg := parseError(err)
+		statusCode, msg := zhelper.ParseError(err)
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}

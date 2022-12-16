@@ -3,14 +3,19 @@ package main
 import (
 	"net/http"
 
+	cyhand "github.com/muchlist/moneymagnet/business/category/handler"
 	cyrepo "github.com/muchlist/moneymagnet/business/category/repo"
 	cyserv "github.com/muchlist/moneymagnet/business/category/service"
+	pthand "github.com/muchlist/moneymagnet/business/pocket/handler"
 	ptrepo "github.com/muchlist/moneymagnet/business/pocket/repo"
 	ptserv "github.com/muchlist/moneymagnet/business/pocket/service"
+	reqhand "github.com/muchlist/moneymagnet/business/request/handler"
 	reqrepo "github.com/muchlist/moneymagnet/business/request/repo"
 	reqserv "github.com/muchlist/moneymagnet/business/request/service"
+	spnhand "github.com/muchlist/moneymagnet/business/spend/handler"
 	spnrepo "github.com/muchlist/moneymagnet/business/spend/repo"
 	spnserv "github.com/muchlist/moneymagnet/business/spend/service"
+	urhand "github.com/muchlist/moneymagnet/business/user/handler"
 	urrepo "github.com/muchlist/moneymagnet/business/user/repo"
 	urserv "github.com/muchlist/moneymagnet/business/user/service"
 	"github.com/muchlist/moneymagnet/pkg/lrucache"
@@ -18,7 +23,6 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	httpSwagger "github.com/swaggo/http-swagger"
 
-	"github.com/muchlist/moneymagnet/app/api/handler"
 	"github.com/muchlist/moneymagnet/pkg/mcrypto"
 
 	"github.com/go-chi/chi/v5"
@@ -43,19 +47,19 @@ func (app *application) routes() http.Handler {
 	spendRepo := spnrepo.NewRepo(app.db, app.logger)
 
 	userService := urserv.NewCore(app.logger, userRepo, pocketRepo, bcrypt, jwt)
-	userHandler := handler.NewUserHandler(app.logger, app.validator, userService)
+	userHandler := urhand.NewUserHandler(app.logger, app.validator, userService)
 
 	pocketService := ptserv.NewCore(app.logger, pocketRepo, userRepo)
-	pocketHandler := handler.NewPocketHandler(app.logger, app.validator, cache, pocketService)
+	pocketHandler := pthand.NewPocketHandler(app.logger, app.validator, cache, pocketService)
 
 	categoryService := cyserv.NewCore(app.logger, categoryRepo)
-	categoryHandler := handler.NewCatHandler(app.logger, app.validator, categoryService)
+	categoryHandler := cyhand.NewCatHandler(app.logger, app.validator, categoryService)
 
 	requestService := reqserv.NewCore(app.logger, requestRepo, pocketRepo)
-	requestHandler := handler.NewRequestHandler(app.logger, app.validator, requestService)
+	requestHandler := reqhand.NewRequestHandler(app.logger, app.validator, requestService)
 
 	spendService := spnserv.NewCore(app.logger, spendRepo, pocketRepo)
-	spendHandler := handler.NewSpendHandler(app.logger, app.validator, cache, spendService)
+	spendHandler := spnhand.NewSpendHandler(app.logger, app.validator, cache, spendService)
 
 	// swagger endpoint
 	r.Get("/swagger/*", httpSwagger.Handler(
@@ -63,7 +67,7 @@ func (app *application) routes() http.Handler {
 	))
 
 	// Endpoint with no auth required
-	r.Get("/healthcheck", handler.HealthCheckHandler)
+	r.Get("/healthcheck", HealthCheckHandler)
 	r.Post("/user/login", userHandler.Login)
 	r.Post("/user/refresh", userHandler.RefreshToken)
 

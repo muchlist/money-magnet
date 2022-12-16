@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -34,8 +33,6 @@ func main() {
 		Level:  mlogger.LevelInfo,
 		Output: "stdout",
 	})
-
-	log.Error("test", errors.New("error here"))
 
 	// dependency
 	// init database

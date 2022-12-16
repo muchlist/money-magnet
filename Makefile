@@ -22,6 +22,10 @@ run/api:
 run/api-log:
 	go run ./app/api | go run app/tooling/logfmt/main.go
 
+## run/admin: run the run/admin application
+run/admin:
+	go run ./app/tooling/admin
+
 ## run/collector: run the otel collector
 run/collector:
 	docker compose -f docker-compose.observ.yml --env-file .env up
@@ -93,4 +97,4 @@ profil:
 	go tool pprof heap.out;
 
 
-.PHONY: help confirm run/api run/api-log run/collector db/psql db/migrations/new db/migrations/up audit vendor test/coverage swagger profil
+.PHONY: help confirm run/api run/api-log run/collector run/admin db/psql db/migrations/new db/migrations/up audit vendor test/coverage swagger profil
