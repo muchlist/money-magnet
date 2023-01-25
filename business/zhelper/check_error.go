@@ -11,26 +11,27 @@ import (
 )
 
 func ParseError(err error) (int, string) {
-	switch err := err.(type) {
-	case errr.StatusCodeError:
-		return err.StatusCode, err.Error()
-	default:
-		if errors.Is(err, db.ErrDBDuplicatedEntry) ||
-			errors.Is(err, db.ErrDBNotFound) ||
-			errors.Is(err, db.ErrDBRelationNotFound) ||
-			errors.Is(err, service.ErrInvalidID) ||
-			errors.Is(err, db.ErrDBSortFilter) {
-			return http.StatusBadRequest, err.Error()
-		}
-
-		if errors.Is(err, mjwt.ErrInvalidToken) {
-			return http.StatusUnauthorized, err.Error()
-		}
-
-		if errors.Is(err, service.ErrInvalidEmailOrPass) {
-			return http.StatusBadRequest, "invalid email or password"
-		}
-
-		return http.StatusInternalServerError, err.Error()
+	var stcErr errr.StatusCodeError
+	if errors.As(err, &stcErr) {
+		return stcErr.StatusCode, err.Error()
 	}
+
+	if errors.Is(err, db.ErrDBDuplicatedEntry) ||
+		errors.Is(err, db.ErrDBNotFound) ||
+		errors.Is(err, db.ErrDBRelationNotFound) ||
+		errors.Is(err, service.ErrInvalidID) ||
+		errors.Is(err, db.ErrDBSortFilter) {
+		return http.StatusBadRequest, err.Error()
+	}
+
+	if errors.Is(err, mjwt.ErrInvalidToken) {
+		return http.StatusUnauthorized, err.Error()
+	}
+
+	if errors.Is(err, service.ErrInvalidEmailOrPass) {
+		return http.StatusBadRequest, "invalid email or password"
+	}
+
+	return http.StatusInternalServerError, err.Error()
+
 }
