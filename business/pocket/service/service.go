@@ -51,6 +51,14 @@ func (s Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req mod
 	ctx, span := observ.GetTracer().Start(ctx, "service-CreatePocket")
 	defer span.End()
 
+	// Sanitize editor and watcher
+	if req.EditorID == nil || len(req.EditorID) == 0 {
+		req.EditorID = []uuid.UUID{claims.GetUUID()}
+	}
+	if req.WatcherID == nil || len(req.WatcherID) == 0 {
+		req.WatcherID = []uuid.UUID{claims.GetUUID()}
+	}
+
 	// Validate editor and watcher uuids
 	combineUserUUIDs := append(req.EditorID, req.WatcherID...)
 	users, err := s.userRepo.GetByIDs(ctx, combineUserUUIDs)
@@ -70,19 +78,13 @@ func (s Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req mod
 		}
 	}
 
-	if req.EditorID == nil || len(req.EditorID) == 0 {
-		req.EditorID = []uuid.UUID{claims.GetUUID()}
-	}
-	if req.WatcherID == nil || len(req.WatcherID) == 0 {
-		req.WatcherID = []uuid.UUID{claims.GetUUID()}
-	}
-
 	timeNow := time.Now()
 	pocket := model.Pocket{
 		OwnerID:    claims.GetUUID(),
 		EditorID:   req.EditorID,
 		WatcherID:  req.WatcherID,
 		PocketName: req.PocketName,
+		Currency:   req.Currency,
 		Level:      1,
 		CreatedAt:  timeNow,
 		UpdatedAt:  timeNow,
