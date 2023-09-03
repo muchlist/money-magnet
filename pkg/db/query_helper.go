@@ -64,6 +64,11 @@ func CoalesceInt(text string, def int) string {
 	return fmt.Sprintf("Coalesce(%s,%d)", text, def)
 }
 
+// CoalesceInt Coalesce(null,default)
+func CoalesceFloat64(text string, def float64) string {
+	return fmt.Sprintf("Coalesce(%s,%f)", text, def)
+}
+
 // CoalesceString Coalesce(null,default)
 func CoalesceString(text string, def string) string {
 	return fmt.Sprintf("Coalesce(%s,'%s')", text, def)
