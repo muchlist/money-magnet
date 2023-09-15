@@ -47,13 +47,12 @@ type core struct {
 func (j *core) GenerateToken(claims CustomClaim) (string, error) {
 
 	jwtClaim := jwt.MapClaims{
-		identityKey:    claims.Identity,
-		nameKey:        claims.Name,
-		rolesKey:       claims.Roles,
-		pocketRolesKey: claims.PocketRoles,
-		expKey:         claims.Exp,
-		tokenTypeKey:   claims.Type,
-		freshKey:       claims.Fresh,
+		identityKey:  claims.Identity,
+		nameKey:      claims.Name,
+		rolesKey:     claims.Roles,
+		expKey:       claims.Exp,
+		tokenTypeKey: claims.Type,
+		freshKey:     claims.Fresh,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtClaim)
@@ -98,19 +97,14 @@ func (j *core) ReadToken(token *jwt.Token) (CustomClaim, error) {
 	if err != nil {
 		return CustomClaim{}, fmt.Errorf("%v: %w", err.Error(), ErrCastingClaims)
 	}
-	pocketRoles, err := slicer.ToStringSlice(claims[pocketRolesKey])
-	if err != nil {
-		return CustomClaim{}, fmt.Errorf("%v: %w", err.Error(), ErrCastingClaims)
-	}
 
 	customClaim := CustomClaim{
-		Identity:    identity,
-		Name:        name,
-		Exp:         int64(exp),
-		Roles:       roles,
-		PocketRoles: pocketRoles,
-		Type:        TokenType(tokenType),
-		Fresh:       fresh,
+		Identity: identity,
+		Name:     name,
+		Exp:      int64(exp),
+		Roles:    roles,
+		Type:     TokenType(tokenType),
+		Fresh:    fresh,
 	}
 
 	return customClaim, nil

@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/muchlist/moneymagnet/business/shared"
 	"github.com/muchlist/moneymagnet/business/spend/model"
 	"github.com/muchlist/moneymagnet/business/spend/storer"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/utils/slicer"
 
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -48,9 +48,15 @@ func (s Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req mode
 	ctx, span := observ.GetTracer().Start(ctx, "service-CreateSpend")
 	defer span.End()
 
-	canEdit, _ := shared.IsCanEditOrWatch(req.PocketID, claims.PocketRoles)
-	if !canEdit {
-		return model.SpendResp{}, errr.New("user doesn't have access to write this pocket", 400)
+	// Get existing Pocket
+	pocketExisting, err := s.pocketRepo.GetByID(ctx, req.PocketID)
+	if err != nil {
+		return model.SpendResp{}, fmt.Errorf("get pocket by id: %w", err)
+	}
+
+	// Validate Pocket Roles Editor
+	if !slicer.In(uuid.MustParse(claims.Identity), pocketExisting.EditorID) {
+		return model.SpendResp{}, errr.New("not have access to this pocket", 400)
 	}
 
 	timeNow := time.Now()
@@ -75,7 +81,7 @@ func (s Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req mode
 		Version:          1,
 	}
 
-	err := s.repo.Insert(ctx, &spend)
+	err = s.repo.Insert(ctx, &spend)
 	if err != nil {
 		return model.SpendResp{}, fmt.Errorf("insert spend to db: %w", err)
 	}
@@ -104,10 +110,15 @@ func (s Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, r
 		return model.SpendResp{}, errr.New("user cannot edit this transaction", 400)
 	}
 
-	// validate pocket roles
-	canEdit, _ := shared.IsCanEditOrWatch(spendExisting.PocketID, claims.PocketRoles)
-	if !canEdit {
-		return model.SpendResp{}, errr.New("user doesn't have access to write this pocket", 400)
+	// Get existing Pocket
+	pocketExisting, err := s.pocketRepo.GetByID(ctx, spendExisting.PocketID)
+	if err != nil {
+		return model.SpendResp{}, fmt.Errorf("get pocket by id: %w", err)
+	}
+
+	// Validate Pocket Roles Editor
+	if !slicer.In(uuid.MustParse(claims.Identity), pocketExisting.EditorID) {
+		return model.SpendResp{}, errr.New("not have access to this pocket", 400)
 	}
 
 	// Modify data
@@ -173,10 +184,16 @@ func (s Core) FindAllSpend(ctx context.Context, claims mjwt.CustomClaim, spendFi
 	ctx, span := observ.GetTracer().Start(ctx, "service-FindAllSpend")
 	defer span.End()
 
-	// if cannot edit and cannot watch, return error
-	canEdit, canWatch := shared.IsCanEditOrWatch(spendFilter.PocketID.UUID, claims.PocketRoles)
-	if !(canEdit || canWatch) {
-		return nil, data.Metadata{}, errr.New("user doesn't have access to read this resource", 400)
+	// Get existing Pocket
+	pocketExisting, err := s.pocketRepo.GetByID(ctx, spendFilter.PocketID.UUID)
+	if err != nil {
+		return nil, data.Metadata{}, fmt.Errorf("get pocket by id: %w", err)
+	}
+
+	// Validate Pocket Roles Editor
+	if !slicer.In(uuid.MustParse(claims.Identity), pocketExisting.EditorID) &&
+		!slicer.In(uuid.MustParse(claims.Identity), pocketExisting.WatcherID) {
+		return nil, data.Metadata{}, errr.New("not have access to this pocket", 400)
 	}
 
 	spends, metadata, err := s.repo.Find(ctx, spendFilter, filter)
@@ -197,10 +214,16 @@ func (s Core) SyncBalance(ctx context.Context, claims mjwt.CustomClaim, pocketID
 	ctx, span := observ.GetTracer().Start(ctx, "service-SyncBalance")
 	defer span.End()
 
-	// if cannot edit and cannot watch, return error
-	canEdit, canWatch := shared.IsCanEditOrWatch(pocketID, claims.PocketRoles)
-	if !(canEdit || canWatch) {
-		return 0, errr.New("user doesn't have access to read this resource", 400)
+	// Get existing Pocket
+	pocketExisting, err := s.pocketRepo.GetByID(ctx, pocketID)
+	if err != nil {
+		return 0, fmt.Errorf("get pocket by id: %w", err)
+	}
+
+	// Validate Pocket Roles Editor
+	if !slicer.In(uuid.MustParse(claims.Identity), pocketExisting.EditorID) &&
+		!slicer.In(uuid.MustParse(claims.Identity), pocketExisting.WatcherID) {
+		return 0, errr.New("not have access to this pocket", 400)
 	}
 
 	balance, err := s.repo.CountAllPrice(ctx, pocketID)

@@ -32,27 +32,24 @@ const (
 
 // Core manages the set of APIs for user access.
 type Core struct {
-	log        mlogger.Logger
-	repo       storer.UserStorer
-	pocketRepo storer.PocketReader
-	crypto     mcrypto.Crypter
-	jwt        mjwt.TokenHandler
+	log    mlogger.Logger
+	repo   storer.UserStorer
+	crypto mcrypto.Crypter
+	jwt    mjwt.TokenHandler
 }
 
 // NewCore constructs a core for user api access.
 func NewCore(
 	log mlogger.Logger,
 	repo storer.UserStorer,
-	pocketRepo storer.PocketReader,
 	crypto mcrypto.Crypter,
 	jwt mjwt.TokenHandler,
 ) Core {
 	return Core{
-		log:        log,
-		repo:       repo,
-		pocketRepo: pocketRepo,
-		crypto:     crypto,
-		jwt:        jwt,
+		log:    log,
+		repo:   repo,
+		crypto: crypto,
+		jwt:    jwt,
 	}
 }
 
@@ -72,30 +69,23 @@ func (s Core) Login(ctx context.Context, email, password string) (model.UserResp
 
 	expired := time.Now().Add(time.Minute * expiredJWTToken).Unix()
 
-	pocketRoles, err := s.getPocketRoles(ctx, user.ID)
-	if err != nil {
-		return model.UserResp{}, fmt.Errorf("get role on pocket: %w", err)
-	}
-
 	AccessClaims := mjwt.CustomClaim{
-		Identity:    user.ID.String(),
-		Name:        user.Name,
-		Exp:         expired,
-		Type:        mjwt.Access,
-		Fresh:       true,
-		Roles:       user.Roles,
-		PocketRoles: pocketRoles,
+		Identity: user.ID.String(),
+		Name:     user.Name,
+		Exp:      expired,
+		Type:     mjwt.Access,
+		Fresh:    true,
+		Roles:    user.Roles,
 	}
 
 	expired = time.Now().Add(time.Minute * expiredJWTRefreshToken).Unix()
 	RefreshClaims := mjwt.CustomClaim{
-		Identity:    user.ID.String(),
-		Name:        user.Name,
-		Exp:         expired,
-		Type:        mjwt.Refresh,
-		Fresh:       false,
-		Roles:       user.Roles,
-		PocketRoles: pocketRoles,
+		Identity: user.ID.String(),
+		Name:     user.Name,
+		Exp:      expired,
+		Type:     mjwt.Refresh,
+		Fresh:    false,
+		Roles:    user.Roles,
 	}
 
 	accessToken, err := s.jwt.GenerateToken(AccessClaims)
@@ -258,19 +248,13 @@ func (s Core) Refresh(ctx context.Context, refreshToken string) (model.UserResp,
 
 	expired := time.Now().Add(time.Minute * expiredJWTToken).Unix()
 
-	pocketRoles, err := s.getPocketRoles(ctx, user.ID)
-	if err != nil {
-		return model.UserResp{}, fmt.Errorf("get role on pocket: %w", err)
-	}
-
 	AccessClaims := mjwt.CustomClaim{
-		Identity:    user.ID.String(),
-		Name:        user.Name,
-		Exp:         expired,
-		Type:        mjwt.Access,
-		Fresh:       false,
-		Roles:       user.Roles,
-		PocketRoles: pocketRoles,
+		Identity: user.ID.String(),
+		Name:     user.Name,
+		Exp:      expired,
+		Type:     mjwt.Access,
+		Fresh:    false,
+		Roles:    user.Roles,
 	}
 
 	accessToken, err := s.jwt.GenerateToken(AccessClaims)
@@ -324,29 +308,4 @@ func (s Core) FindUserByName(ctx context.Context, name string, filter data.Filte
 		usersResult[i] = users[i].ToUserResp()
 	}
 	return usersResult, metadata, nil
-}
-
-func (s Core) getPocketRoles(ctx context.Context, userID uuid.UUID) ([]string, error) {
-	ctx, span := observ.GetTracer().Start(ctx, "service-getPocketRoles")
-	defer span.End()
-
-	pockets, _, err := s.pocketRepo.FindUserPocketsByRelation(ctx, userID, data.Filters{})
-	if err != nil {
-		return nil, fmt.Errorf("find user pocket: %w", err)
-	}
-
-	pocketRoles := make([]string, 0)
-	for _, v := range pockets {
-		for _, edit := range v.EditorID {
-			if userID == edit {
-				pocketRoles = append(pocketRoles, fmt.Sprintf("%s:%s", v.ID.String(), "edit"))
-			}
-		}
-		for _, watch := range v.WatcherID {
-			if userID == watch {
-				pocketRoles = append(pocketRoles, fmt.Sprintf("%s:%s", v.ID.String(), "watch"))
-			}
-		}
-	}
-	return pocketRoles, nil
 }

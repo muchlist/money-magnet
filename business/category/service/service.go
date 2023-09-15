@@ -8,28 +8,32 @@ import (
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/business/category/model"
 	"github.com/muchlist/moneymagnet/business/category/storer"
-	"github.com/muchlist/moneymagnet/business/shared"
+	pocketStore "github.com/muchlist/moneymagnet/business/pocket/storer"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/utils/slicer"
 )
 
 // Core manages the set of APIs for category access.
 type Core struct {
-	log  mlogger.Logger
-	repo storer.CategoryStorer
+	log          mlogger.Logger
+	repo         storer.CategoryStorer
+	pockerReader pocketStore.PocketReader
 }
 
 // NewCore constructs a core for category api access.
 func NewCore(
 	log mlogger.Logger,
 	repo storer.CategoryStorer,
+	pockerReader pocketStore.PocketReader,
 ) Core {
 	return Core{
-		log:  log,
-		repo: repo,
+		log:          log,
+		repo:         repo,
+		pockerReader: pockerReader,
 	}
 }
 
@@ -37,10 +41,15 @@ func (s Core) CreateCategory(ctx context.Context, claims mjwt.CustomClaim, req m
 	ctx, span := observ.GetTracer().Start(ctx, "category-service-CreateCategory")
 	defer span.End()
 
-	// if cannot edit return error
-	canEdit, _ := shared.IsCanEditOrWatch(req.PocketID, claims.PocketRoles)
-	if !canEdit {
-		return model.CategoryResp{}, errr.New("user doesn't have access to write this resource", 400)
+	// Get existing Pocket
+	pocketExisting, err := s.pockerReader.GetByID(ctx, req.PocketID)
+	if err != nil {
+		return model.CategoryResp{}, fmt.Errorf("get pocket by id: %w", err)
+	}
+
+	// Validate Pocket Roles Editor
+	if !slicer.In(uuid.MustParse(claims.Identity), pocketExisting.EditorID) {
+		return model.CategoryResp{}, errr.New("not have access to this pocket", 400)
 	}
 
 	timeNow := time.Now()
@@ -70,10 +79,15 @@ func (s Core) EditCategory(ctx context.Context, claims mjwt.CustomClaim, newData
 		return model.CategoryResp{}, fmt.Errorf("get category by id: %w", err)
 	}
 
-	// if cannot edit return error
-	canEdit, _ := shared.IsCanEditOrWatch(categoryExisting.PocketID, claims.PocketRoles)
-	if !canEdit {
-		return model.CategoryResp{}, errr.New("user doesn't have access to write this resource", 400)
+	// Get existing Pocket
+	pocketExisting, err := s.pockerReader.GetByID(ctx, categoryExisting.PocketID)
+	if err != nil {
+		return model.CategoryResp{}, fmt.Errorf("get pocket by id: %w", err)
+	}
+
+	// Validate Pocket Roles Editor
+	if !slicer.In(uuid.MustParse(claims.Identity), pocketExisting.EditorID) {
+		return model.CategoryResp{}, errr.New("not have access to this pocket", 400)
 	}
 
 	// Modify data
