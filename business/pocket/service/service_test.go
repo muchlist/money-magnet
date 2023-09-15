@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 	"time"
 
@@ -31,13 +30,12 @@ func TestCreatePocket(t *testing.T) {
 	ownerUUID := uuid.New()
 	pocketUUID := uuid.New()
 	claims := mjwt.CustomClaim{
-		Identity:    ownerUUID.String(),
-		Name:        "muchlis",
-		Exp:         999999999999,
-		Type:        "access",
-		Fresh:       true,
-		Roles:       []string{"admin"},
-		PocketRoles: []string{fmt.Sprintf("%s:edit", pocketUUID)},
+		Identity: ownerUUID.String(),
+		Name:     "muchlis",
+		Exp:      999999999999,
+		Type:     "access",
+		Fresh:    true,
+		Roles:    []string{"admin"},
 	}
 	payload := model.NewPocket{
 		PocketName: "example pocket",
@@ -132,13 +130,12 @@ func TestCreatePocketFailInsertUser(t *testing.T) {
 	ownerUUID := uuid.New()
 	pocketUUID := uuid.New()
 	claims := mjwt.CustomClaim{
-		Identity:    ownerUUID.String(),
-		Name:        "muchlis",
-		Exp:         999999999999,
-		Type:        "access",
-		Fresh:       true,
-		Roles:       []string{"admin"},
-		PocketRoles: []string{fmt.Sprintf("%s:edit", pocketUUID)},
+		Identity: ownerUUID.String(),
+		Name:     "muchlis",
+		Exp:      999999999999,
+		Type:     "access",
+		Fresh:    true,
+		Roles:    []string{"admin"},
 	}
 	payload := model.NewPocket{
 		PocketName: "example pocket",

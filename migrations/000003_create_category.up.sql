@@ -8,3 +8,6 @@ CREATE TABLE IF NOT EXISTS "categories" (
 );
 
 ALTER TABLE "categories" ADD FOREIGN KEY ("pocket_id") REFERENCES "pockets" ("id") ON DELETE SET NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS "unique_category_name_pocket_id"
+    ON "categories" ("category_name", "pocket_id");

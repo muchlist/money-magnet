@@ -10,13 +10,12 @@ const (
 )
 
 type CustomClaim struct {
-	Identity    string
-	Name        string
-	Exp         int64
-	Type        TokenType
-	Fresh       bool
-	Roles       []string
-	PocketRoles []string
+	Identity string
+	Name     string
+	Exp      int64
+	Type     TokenType
+	Fresh    bool
+	Roles    []string
 }
 
 func (c CustomClaim) GetUUID() uuid.UUID {

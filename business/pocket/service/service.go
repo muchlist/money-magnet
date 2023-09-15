@@ -8,7 +8,6 @@ import (
 
 	"github.com/muchlist/moneymagnet/business/pocket/model"
 	"github.com/muchlist/moneymagnet/business/pocket/storer"
-	"github.com/muchlist/moneymagnet/business/shared"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/errr"
@@ -126,16 +125,15 @@ func (s Core) UpdatePocket(ctx context.Context, claims mjwt.CustomClaim, newData
 	ctx, span := observ.GetTracer().Start(ctx, "service-UpdatePocket")
 	defer span.End()
 
-	// Validate Pocket Roles
-	canEdit, _ := shared.IsCanEditOrWatch(newData.ID, claims.PocketRoles)
-	if !canEdit {
-		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
-	}
-
 	// Get existing Pocket
 	pocketExisting, err := s.repo.GetByID(ctx, newData.ID)
 	if err != nil {
 		return model.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
+	}
+
+	// Validate Pocket Roles Editor
+	if !slicer.In(uuid.MustParse(claims.Identity), pocketExisting.EditorID) {
+		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
 	}
 
 	// Modify data
@@ -162,16 +160,15 @@ func (s Core) AddPerson(ctx context.Context, claims mjwt.CustomClaim, data AddPe
 	ctx, span := observ.GetTracer().Start(ctx, "service-AddPerson")
 	defer span.End()
 
-	// Validate Pocket Roles
-	canEdit, _ := shared.IsCanEditOrWatch(data.PocketID, claims.PocketRoles)
-	if !canEdit {
-		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
-	}
-
 	// Get existing Pocket
 	pocketExisting, err := s.repo.GetByID(ctx, data.PocketID)
 	if err != nil {
 		return model.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
+	}
+
+	// Validate Pocket Roles Editor
+	if !slicer.In(uuid.MustParse(claims.Identity), pocketExisting.EditorID) {
+		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
 	}
 
 	// Check if person to add is exist
@@ -219,16 +216,15 @@ func (s Core) RemovePerson(ctx context.Context, claims mjwt.CustomClaim, data Re
 	ctx, span := observ.GetTracer().Start(ctx, "service-RemovePerson")
 	defer span.End()
 
-	// Validate Pocket Roles
-	canEdit, _ := shared.IsCanEditOrWatch(data.PocketID, claims.PocketRoles)
-	if !canEdit {
-		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
-	}
-
 	// Get existing Pocket
 	pocketExisting, err := s.repo.GetByID(ctx, data.PocketID)
 	if err != nil {
 		return model.PocketResp{}, fmt.Errorf("get pocket by id: %w", err)
+	}
+
+	// Validate Pocket Roles Editor
+	if !slicer.In(uuid.MustParse(claims.Identity), pocketExisting.EditorID) {
+		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
 	}
 
 	pocketExisting.EditorID = slicer.RemoveFrom(data.Person, pocketExisting.EditorID)
@@ -261,16 +257,15 @@ func (s Core) GetDetail(ctx context.Context, claims mjwt.CustomClaim, pocketID u
 	ctx, span := observ.GetTracer().Start(ctx, "service-GetDetail")
 	defer span.End()
 
-	// Validate Pocket Roles
-	canEdit, canWatch := shared.IsCanEditOrWatch(pocketID, claims.PocketRoles)
-	if !(canEdit || canWatch) {
-		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
-	}
-
 	// Get existing Pocket
 	pocketDetail, err := s.repo.GetByID(ctx, pocketID)
 	if err != nil {
 		return model.PocketResp{}, fmt.Errorf("get pocket detail by id: %w", err)
+	}
+
+	// Validate Pocket Roles Watcher or Editor
+	if !slicer.In(uuid.MustParse(claims.Identity), pocketDetail.WatcherID) && !slicer.In(uuid.MustParse(claims.Identity), pocketDetail.EditorID) {
+		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
 	}
 
 	return pocketDetail.ToPocketResp(), nil

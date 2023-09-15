@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 
-	ptrepo "github.com/muchlist/moneymagnet/business/pocket/repo"
 	"github.com/muchlist/moneymagnet/business/user/model"
 	urrepo "github.com/muchlist/moneymagnet/business/user/repo"
 	urserv "github.com/muchlist/moneymagnet/business/user/service"
@@ -52,9 +51,8 @@ func main() {
 
 	// middleware
 	userRepo := urrepo.NewRepo(database, log)
-	pocketRepo := ptrepo.NewRepo(database, log)
 
-	userService := urserv.NewCore(log, userRepo, pocketRepo, bcrypt, jwt)
+	userService := urserv.NewCore(log, userRepo, bcrypt, jwt)
 
 	inputHint := []string{"name", "email", "password", "roles"}
 	inputValue := make([]string, len(inputHint))

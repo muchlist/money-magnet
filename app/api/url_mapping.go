@@ -46,13 +46,13 @@ func (app *application) routes() http.Handler {
 	requestRepo := reqrepo.NewRepo(app.db, app.logger)
 	spendRepo := spnrepo.NewRepo(app.db, app.logger)
 
-	userService := urserv.NewCore(app.logger, userRepo, pocketRepo, bcrypt, jwt)
+	userService := urserv.NewCore(app.logger, userRepo, bcrypt, jwt)
 	userHandler := urhand.NewUserHandler(app.logger, app.validator, userService)
 
 	pocketService := ptserv.NewCore(app.logger, pocketRepo, userRepo)
 	pocketHandler := pthand.NewPocketHandler(app.logger, app.validator, cache, pocketService)
 
-	categoryService := cyserv.NewCore(app.logger, categoryRepo)
+	categoryService := cyserv.NewCore(app.logger, categoryRepo, pocketRepo)
 	categoryHandler := cyhand.NewCatHandler(app.logger, app.validator, categoryService)
 
 	requestService := reqserv.NewCore(app.logger, requestRepo, pocketRepo)
