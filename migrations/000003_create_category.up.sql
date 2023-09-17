@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "categories" (
-  "id" uuid PRIMARY KEY,
+  "id" uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   "pocket_id" uuid NULL,
   "category_name" varchar(100) NOT NULL,
   "is_income" boolean NOT NULL DEFAULT false,

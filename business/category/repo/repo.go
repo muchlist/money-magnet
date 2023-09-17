@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/muchlist/moneymagnet/business/category/model"
+	"github.com/muchlist/moneymagnet/business/category/storer"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -19,11 +20,15 @@ const (
 	keyTable        = "categories"
 	keyID           = "id"
 	keyCategoryName = "category_name"
+	keyCategoryIcon = "category_icon"
 	keyPocketID     = "pocket_id"
 	keyIsIncome     = "is_income"
 	keyCreatedAt    = "created_at"
 	keyUpdatedAt    = "updated_at"
 )
+
+// make sure the implementation satisfies the interface
+var _ storer.CategoryStorer = (*Repo)(nil)
 
 // Repo manages the set of APIs for pocket access.
 type Repo struct {
@@ -56,6 +61,7 @@ func (r Repo) Insert(ctx context.Context, category *model.Category) error {
 		Columns(
 			keyID,
 			keyCategoryName,
+			keyCategoryIcon,
 			keyPocketID,
 			keyIsIncome,
 			keyUpdatedAt,
@@ -64,6 +70,7 @@ func (r Repo) Insert(ctx context.Context, category *model.Category) error {
 		Values(
 			category.ID,
 			category.CategoryName,
+			category.CategoryIcon,
 			category.PocketID,
 			category.IsIncome,
 			category.CreatedAt,
@@ -75,7 +82,55 @@ func (r Repo) Insert(ctx context.Context, category *model.Category) error {
 		return fmt.Errorf("build query insert category: %w", err)
 	}
 
-	err = r.db.QueryRow(ctx, sqlStatement, args...).Scan(&category.ID)
+	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&category.ID)
+	if err != nil {
+		r.log.InfoT(ctx, err.Error())
+		return db.ParseError(err)
+	}
+
+	return nil
+}
+
+// Insert Many...
+func (r Repo) InsertMany(ctx context.Context, categories []model.Category) error {
+	ctx, span := observ.GetTracer().Start(ctx, "category-repo-Insert")
+	defer span.End()
+
+	if len(categories) == 0 {
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 6*time.Second)
+	defer cancel()
+
+	sqBuilder := r.sb.Insert(keyTable).
+		Columns(
+			keyCategoryName,
+			keyCategoryIcon,
+			keyPocketID,
+			keyIsIncome,
+			keyUpdatedAt,
+			keyCreatedAt,
+		)
+
+	for _, category := range categories {
+		sqBuilder = sqBuilder.Values(
+			category.CategoryName,
+			category.CategoryIcon,
+			category.PocketID,
+			category.IsIncome,
+			category.CreatedAt,
+			category.UpdatedAt,
+		)
+	}
+
+	sqlStatement, args, err := sqBuilder.ToSql()
+
+	if err != nil {
+		return fmt.Errorf("build query insert many category: %w", err)
+	}
+
+	_, err = r.mod(ctx).Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -95,6 +150,7 @@ func (r Repo) Edit(ctx context.Context, category *model.Category) error {
 	sqlStatement, args, err := r.sb.Update(keyTable).
 		SetMap(sq.Eq{
 			keyCategoryName: category.CategoryName,
+			keyCategoryIcon: category.CategoryIcon,
 			keyUpdatedAt:    time.Now(),
 		}).
 		Where(sq.Eq{keyID: category.ID}).
@@ -104,7 +160,7 @@ func (r Repo) Edit(ctx context.Context, category *model.Category) error {
 		return fmt.Errorf("build query edit category: %w", err)
 	}
 
-	res, err := r.db.Exec(ctx, sqlStatement, args...)
+	res, err := r.mod(ctx).Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -130,7 +186,7 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("build query delete category: %w", err)
 	}
 
-	res, err := r.db.Exec(ctx, sqlStatement, args...)
+	res, err := r.mod(ctx).Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -157,6 +213,7 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Category, error)
 	sqlStatement, args, err := r.sb.Select(
 		keyID,
 		keyCategoryName,
+		keyCategoryIcon,
 		keyIsIncome,
 		keyPocketID,
 		keyCreatedAt,
@@ -168,10 +225,11 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Category, error)
 	}
 
 	var cat model.Category
-	err = r.db.QueryRow(ctx, sqlStatement, args...).
+	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).
 		Scan(
 			&cat.ID,
 			&cat.CategoryName,
+			&cat.CategoryIcon,
 			&cat.IsIncome,
 			&cat.PocketID,
 			&cat.CreatedAt,
@@ -203,6 +261,7 @@ func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters)
 		"count(*) OVER()",
 		keyID,
 		keyCategoryName,
+		keyCategoryIcon,
 		keyIsIncome,
 		keyPocketID,
 		keyCreatedAt,
@@ -219,7 +278,7 @@ func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters)
 		return nil, data.Metadata{}, fmt.Errorf("build query find category: %w", err)
 	}
 
-	rows, err := r.db.Query(ctx, sqlStatement, args...)
+	rows, err := r.mod(ctx).Query(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return nil, data.Metadata{}, db.ParseError(err)
@@ -234,6 +293,7 @@ func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters)
 			&totalRecords,
 			&cat.ID,
 			&cat.CategoryName,
+			&cat.CategoryIcon,
 			&cat.IsIncome,
 			&cat.PocketID,
 			&cat.CreatedAt,

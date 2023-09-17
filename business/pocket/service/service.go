@@ -28,9 +28,10 @@ var (
 
 // Core manages the set of APIs for user access.
 type Core struct {
-	log      mlogger.Logger
-	repo     storer.PocketStorer
-	userRepo storer.UserReader
+	log          mlogger.Logger
+	repo         storer.PocketStorer
+	userRepo     storer.UserReader
+	categoryRepo storer.CategorySaver
 }
 
 // NewCore constructs a core for user api access.
@@ -38,11 +39,13 @@ func NewCore(
 	log mlogger.Logger,
 	repo storer.PocketStorer,
 	userRepo storer.UserReader,
+	categoryRepo storer.CategorySaver,
 ) Core {
 	return Core{
-		log:      log,
-		repo:     repo,
-		userRepo: userRepo,
+		log:          log,
+		repo:         repo,
+		userRepo:     userRepo,
+		categoryRepo: categoryRepo,
 	}
 }
 
@@ -56,6 +59,11 @@ func (s Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req mod
 	}
 	if req.WatcherID == nil || len(req.WatcherID) == 0 {
 		req.WatcherID = []uuid.UUID{claims.GetUUID()}
+	}
+
+	// Sanitize currency
+	if req.Currency == "" {
+		req.Currency = "Rp"
 	}
 
 	// Validate editor and watcher uuids
@@ -110,6 +118,14 @@ func (s Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req mod
 			if err != nil {
 				return fmt.Errorf("loop insert pocket_user to db: %w", err)
 			}
+
+			// generate default category
+			categories := generateDefaultCategory(pocket.ID)
+			err = s.categoryRepo.InsertMany(ctx, categories)
+			if err != nil {
+				return fmt.Errorf("insert default category to db: %w", err)
+			}
+
 			return nil
 		},
 	)

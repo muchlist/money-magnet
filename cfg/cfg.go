@@ -25,7 +25,7 @@ func Load() *Config {
 		App: App{
 			Name:         env.Get("APP_NAME", "money-magnet"),
 			Port:         env.Get("APP_PORT", 8081),
-			DebugPort:    env.Get("APP_DEBUG_PORT", 4000),
+			DebugPort:    env.Get("APP_DEBUG_PORT", 0),
 			Env:          env.Get("APP_ENV", "dev"),
 			Secret:       env.Get("APP_SECRET", "xoxoxoxo"),
 			LoggerOutput: env.Get("APP_LOGGER_OUTPUT", "stdout"),

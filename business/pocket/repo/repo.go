@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/muchlist/moneymagnet/business/pocket/model"
+	"github.com/muchlist/moneymagnet/business/pocket/storer"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -31,6 +32,9 @@ const (
 	keyUpdatedAt  = "updated_at"
 	keyVersion    = "version"
 )
+
+// make sure the implementation satisfies the interface
+var _ storer.PocketStorer = (*Repo)(nil)
 
 // Repo manages the set of APIs for pocket access.
 type Repo struct {
