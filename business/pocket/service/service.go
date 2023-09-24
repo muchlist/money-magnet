@@ -92,6 +92,7 @@ func (s Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req mod
 		WatcherID:  req.WatcherID,
 		PocketName: req.PocketName,
 		Currency:   req.Currency,
+		Icon:       req.Icon,
 		Level:      1,
 		CreatedAt:  timeNow,
 		UpdatedAt:  timeNow,
