@@ -15,6 +15,7 @@ type CategoryStorer interface {
 
 type CategorySaver interface {
 	Insert(ctx context.Context, category *model.Category) error
+	InsertMany(ctx context.Context, categories []model.Category) error
 	Edit(ctx context.Context, category *model.Category) error
 	Delete(ctx context.Context, id uuid.UUID) error
 }

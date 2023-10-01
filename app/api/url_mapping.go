@@ -49,7 +49,7 @@ func (app *application) routes() http.Handler {
 	userService := urserv.NewCore(app.logger, userRepo, bcrypt, jwt)
 	userHandler := urhand.NewUserHandler(app.logger, app.validator, userService)
 
-	pocketService := ptserv.NewCore(app.logger, pocketRepo, userRepo)
+	pocketService := ptserv.NewCore(app.logger, pocketRepo, userRepo, categoryRepo)
 	pocketHandler := pthand.NewPocketHandler(app.logger, app.validator, cache, pocketService)
 
 	categoryService := cyserv.NewCore(app.logger, categoryRepo, pocketRepo)

@@ -28,9 +28,10 @@ var (
 
 // Core manages the set of APIs for user access.
 type Core struct {
-	log      mlogger.Logger
-	repo     storer.PocketStorer
-	userRepo storer.UserReader
+	log          mlogger.Logger
+	repo         storer.PocketStorer
+	userRepo     storer.UserReader
+	categoryRepo storer.CategorySaver
 }
 
 // NewCore constructs a core for user api access.
@@ -38,11 +39,13 @@ func NewCore(
 	log mlogger.Logger,
 	repo storer.PocketStorer,
 	userRepo storer.UserReader,
+	categoryRepo storer.CategorySaver,
 ) Core {
 	return Core{
-		log:      log,
-		repo:     repo,
-		userRepo: userRepo,
+		log:          log,
+		repo:         repo,
+		userRepo:     userRepo,
+		categoryRepo: categoryRepo,
 	}
 }
 
@@ -56,6 +59,11 @@ func (s Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req mod
 	}
 	if req.WatcherID == nil || len(req.WatcherID) == 0 {
 		req.WatcherID = []uuid.UUID{claims.GetUUID()}
+	}
+
+	// Sanitize currency
+	if req.Currency == "" {
+		req.Currency = "Rp"
 	}
 
 	// Validate editor and watcher uuids
@@ -84,6 +92,7 @@ func (s Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req mod
 		WatcherID:  req.WatcherID,
 		PocketName: req.PocketName,
 		Currency:   req.Currency,
+		Icon:       req.Icon,
 		Level:      1,
 		CreatedAt:  timeNow,
 		UpdatedAt:  timeNow,
@@ -110,6 +119,14 @@ func (s Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req mod
 			if err != nil {
 				return fmt.Errorf("loop insert pocket_user to db: %w", err)
 			}
+
+			// generate default category
+			categories := generateDefaultCategory(pocket.ID)
+			err = s.categoryRepo.InsertMany(ctx, categories)
+			if err != nil {
+				return fmt.Errorf("insert default category to db: %w", err)
+			}
+
 			return nil
 		},
 	)
@@ -268,6 +285,40 @@ func (s Core) GetDetail(ctx context.Context, claims mjwt.CustomClaim, pocketID u
 		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
 	}
 
+	// Get all users id
+	userUUIDsets := ds.NewUUIDSet()
+	userUUIDsets.AddAll(pocketDetail.EditorID) // todo : just for editor, ignoring watcher at this time
+
+	// Get all users
+	users, err := s.userRepo.GetByIDs(ctx, userUUIDsets.Reveal())
+	if err != nil {
+		return model.PocketResp{}, fmt.Errorf("find user: %w", err)
+	}
+
+	// Mappping user to response
+	usersMap := make(map[uuid.UUID]string)
+	for _, u := range users {
+		usersMap[u.ID] = u.Name
+	}
+
+	// todo : just for editor, ignoring watcher at this time
+	userEditors := make([]model.PocketUser, 0)
+	for _, e := range pocketDetail.EditorID {
+		role := "editor"
+		isOwner := e == pocketDetail.OwnerID
+		if isOwner {
+			role = "owner"
+		}
+
+		userEditors = append(userEditors, model.PocketUser{
+			ID:   e,
+			Role: role,
+			Name: usersMap[e],
+		})
+	}
+
+	pocketDetail.Users = userEditors
+
 	return pocketDetail.ToPocketResp(), nil
 }
 
@@ -280,6 +331,45 @@ func (s Core) FindAllPocket(ctx context.Context, claims mjwt.CustomClaim, filter
 	pockets, metadata, err := s.repo.FindUserPocketsByRelation(ctx, claims.GetUUID(), filter)
 	if err != nil {
 		return nil, data.Metadata{}, fmt.Errorf("find pocket user: %w", err)
+	}
+
+	// Get all users id
+	userUUIDsets := ds.NewUUIDSet()
+	for _, p := range pockets {
+		// todo : just for editor, ignoring watcher at this time
+		userUUIDsets.AddAll(p.EditorID)
+	}
+
+	// Get all users
+	users, err := s.userRepo.GetByIDs(ctx, userUUIDsets.Reveal())
+	if err != nil {
+		return nil, data.Metadata{}, fmt.Errorf("find user: %w", err)
+	}
+
+	// Mappping user to response
+	usersMap := make(map[uuid.UUID]string)
+	for _, u := range users {
+		usersMap[u.ID] = u.Name
+	}
+	for i, p := range pockets {
+
+		// todo : just for editor, ignoring watcher at this time
+		userEditors := make([]model.PocketUser, 0)
+		for _, e := range p.EditorID {
+			role := "editor"
+			isOwner := e == p.OwnerID
+			if isOwner {
+				role = "owner"
+			}
+
+			userEditors = append(userEditors, model.PocketUser{
+				ID:   e,
+				Role: role,
+				Name: usersMap[e],
+			})
+		}
+
+		pockets[i].Users = userEditors
 	}
 
 	pocketResult := make([]model.PocketResp, len(pockets))

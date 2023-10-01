@@ -69,7 +69,6 @@ func (s Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req mode
 		UserID:           claims.GetUUID(),
 		PocketID:         req.PocketID,
 		CategoryID:       req.CategoryID,
-		CategoryID2:      req.CategoryID2,
 		Name:             req.Name,
 		Price:            req.Price,
 		BalanceSnapshoot: 0,
@@ -124,9 +123,6 @@ func (s Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, r
 	// Modify data
 	if req.CategoryID.Valid {
 		spendExisting.CategoryID = req.CategoryID
-	}
-	if req.CategoryID2.Valid {
-		spendExisting.CategoryID2 = req.CategoryID2
 	}
 	if req.Name != nil {
 		spendExisting.Name = *req.Name

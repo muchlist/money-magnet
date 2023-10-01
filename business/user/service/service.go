@@ -78,11 +78,11 @@ func (s Core) Login(ctx context.Context, email, password string) (model.UserResp
 		Roles:    user.Roles,
 	}
 
-	expired = time.Now().Add(time.Minute * expiredJWTRefreshToken).Unix()
+	expiredRefresh := time.Now().Add(time.Minute * expiredJWTRefreshToken).Unix()
 	RefreshClaims := mjwt.CustomClaim{
 		Identity: user.ID.String(),
 		Name:     user.Name,
-		Exp:      expired,
+		Exp:      expiredRefresh,
 		Type:     mjwt.Refresh,
 		Fresh:    false,
 		Roles:    user.Roles,
@@ -98,15 +98,17 @@ func (s Core) Login(ctx context.Context, email, password string) (model.UserResp
 	}
 
 	response := model.UserResp{
-		ID:           user.ID,
-		Email:        user.Email,
-		Name:         user.Name,
-		Roles:        user.Roles,
-		CreatedAt:    user.CreatedAt,
-		UpdatedAt:    user.UpdatedAt,
-		Version:      user.Version,
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+		ID:                  user.ID,
+		Email:               user.Email,
+		Name:                user.Name,
+		Roles:               user.Roles,
+		CreatedAt:           user.CreatedAt,
+		UpdatedAt:           user.UpdatedAt,
+		Version:             user.Version,
+		AccessToken:         accessToken,
+		AccessTokenExpired:  expired,
+		RefreshToken:        refreshToken,
+		RefreshTokenExpired: expiredRefresh,
 	}
 
 	return response, nil

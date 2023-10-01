@@ -17,21 +17,20 @@ import (
 )
 
 const (
-	keyTable       = "spends"
-	keyID          = "id"
-	keyUserID      = "user_id"
-	keyPocketID    = "pocket_id"
-	keyCategoryID  = "category_id"
-	keyCategoryID2 = "category_id_2"
-	keyName        = "name"
-	keyPrice       = "price"
-	keyBalance     = "balance_snapshoot"
-	keyIsIncome    = "is_income"
-	keyType        = "type"
-	keyDate        = "date"
-	keyCreatedAt   = "created_at"
-	keyUpdatedAt   = "updated_at"
-	keyVersion     = "version"
+	keyTable      = "spends"
+	keyID         = "id"
+	keyUserID     = "user_id"
+	keyPocketID   = "pocket_id"
+	keyCategoryID = "category_id"
+	keyName       = "name"
+	keyPrice      = "price"
+	keyBalance    = "balance_snapshoot"
+	keyIsIncome   = "is_income"
+	keyType       = "type"
+	keyDate       = "date"
+	keyCreatedAt  = "created_at"
+	keyUpdatedAt  = "updated_at"
+	keyVersion    = "version"
 )
 
 // Repo manages the set of APIs for spend access.
@@ -67,7 +66,6 @@ func (r Repo) Insert(ctx context.Context, spend *model.Spend) error {
 			keyUserID,
 			keyPocketID,
 			keyCategoryID,
-			keyCategoryID2,
 			keyName,
 			keyPrice,
 			keyBalance,
@@ -83,7 +81,6 @@ func (r Repo) Insert(ctx context.Context, spend *model.Spend) error {
 			&spend.UserID,
 			&spend.PocketID,
 			&spend.CategoryID,
-			&spend.CategoryID2,
 			&spend.Name,
 			&spend.Price,
 			&spend.BalanceSnapshoot,
@@ -119,19 +116,18 @@ func (r Repo) Edit(ctx context.Context, spend *model.Spend) error {
 
 	sqlStatement, args, err := r.sb.Update(keyTable).
 		SetMap(sq.Eq{
-			keyUserID:      spend.UserID,
-			keyPocketID:    spend.PocketID,
-			keyCategoryID:  spend.CategoryID,
-			keyCategoryID2: spend.CategoryID2,
-			keyName:        spend.Name,
-			keyPrice:       spend.Price,
-			keyBalance:     spend.BalanceSnapshoot,
-			keyIsIncome:    spend.IsIncome,
-			keyType:        spend.SpendType,
-			keyDate:        spend.Date,
-			keyCreatedAt:   spend.CreatedAt,
-			keyUpdatedAt:   spend.UpdatedAt,
-			keyVersion:     spend.Version + 1,
+			keyUserID:     spend.UserID,
+			keyPocketID:   spend.PocketID,
+			keyCategoryID: spend.CategoryID,
+			keyName:       spend.Name,
+			keyPrice:      spend.Price,
+			keyBalance:    spend.BalanceSnapshoot,
+			keyIsIncome:   spend.IsIncome,
+			keyType:       spend.SpendType,
+			keyDate:       spend.Date,
+			keyCreatedAt:  spend.CreatedAt,
+			keyUpdatedAt:  spend.UpdatedAt,
+			keyVersion:    spend.Version + 1,
 		}).
 		Where(sq.Eq{keyID: spend.ID}).
 		Suffix(db.Returning(keyVersion)).
@@ -193,7 +189,6 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error) {
 		db.A(keyUserID),
 		db.A(keyPocketID),
 		db.A(keyCategoryID),
-		db.A(keyCategoryID2),
 		db.A(keyName),
 		db.A(keyPrice),
 		db.A(keyBalance),
@@ -206,13 +201,12 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error) {
 		db.B("name"),
 		db.C("pocket_name"),
 		db.CoalesceString(db.D("category_name"), ""),
-		db.CoalesceString(db.E("category_name"), ""),
+		db.CoalesceInt(db.D("category_icon"), 0),
 	).
 		From(keyTable + " A").
 		LeftJoin("users B ON A.user_id = B.id").
 		LeftJoin("pockets C ON A.pocket_id = C.id").
 		LeftJoin("categories D ON A.category_id = D.id").
-		LeftJoin("categories E ON A.category_id_2 = E.id").
 		Where(sq.Eq{"A.id": id}).ToSql()
 
 	if err != nil {
@@ -226,7 +220,6 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error) {
 			&spend.UserID,
 			&spend.PocketID,
 			&spend.CategoryID,
-			&spend.CategoryID2,
 			&spend.Name,
 			&spend.Price,
 			&spend.BalanceSnapshoot,
@@ -239,7 +232,7 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error) {
 			&spend.UserName,
 			&spend.PocketName,
 			&spend.CategoryName,
-			&spend.CategoryName2,
+			&spend.CategoryIcon,
 		)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
@@ -270,7 +263,6 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter da
 		db.A(keyUserID),
 		db.A(keyPocketID),
 		db.A(keyCategoryID),
-		db.A(keyCategoryID2),
 		db.A(keyName),
 		db.A(keyPrice),
 		db.A(keyBalance),
@@ -283,13 +275,12 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter da
 		db.B("name"),
 		db.C("pocket_name"),
 		db.CoalesceString(db.D("category_name"), ""),
-		db.CoalesceString(db.E("category_name"), ""),
+		db.CoalesceInt(db.D("category_icon"), 0),
 	).
 		From(keyTable + " A").
 		LeftJoin("users B ON A.user_id = B.id").
 		LeftJoin("pockets C ON A.pocket_id = C.id").
-		LeftJoin("categories D ON A.category_id = D.id").
-		LeftJoin("categories E ON A.category_id_2 = E.id")
+		LeftJoin("categories D ON A.category_id = D.id")
 
 	// WHERE builder
 	// mapping where filter
@@ -311,10 +302,7 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter da
 	query = query.Where(whereMap)
 	if spendFilter.Category.Valid {
 		query = query.Where(
-			sq.Or{
-				sq.Eq{db.A(keyCategoryID): spendFilter.Category.UUID},
-				sq.Eq{db.A(keyCategoryID2): spendFilter.Category.UUID},
-			},
+			sq.Eq{db.A(keyCategoryID): spendFilter.Category.UUID},
 		)
 	}
 	if spendFilter.DateStart != nil {
@@ -350,7 +338,6 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter da
 			&spend.UserID,
 			&spend.PocketID,
 			&spend.CategoryID,
-			&spend.CategoryID2,
 			&spend.Name,
 			&spend.Price,
 			&spend.BalanceSnapshoot,
@@ -363,7 +350,7 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter da
 			&spend.UserName,
 			&spend.PocketName,
 			&spend.CategoryName,
-			&spend.CategoryName2,
+			&spend.CategoryIcon,
 		)
 		if err != nil {
 			r.log.InfoT(ctx, err.Error())

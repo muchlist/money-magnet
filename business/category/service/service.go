@@ -57,6 +57,7 @@ func (s Core) CreateCategory(ctx context.Context, claims mjwt.CustomClaim, req m
 		ID:           uuid.New(),
 		PocketID:     req.PocketID,
 		CategoryName: req.CategoryName,
+		CategoryIcon: req.CategoryIcon,
 		IsIncome:     req.IsIncome,
 		CreatedAt:    timeNow,
 		UpdatedAt:    timeNow,
@@ -92,6 +93,7 @@ func (s Core) EditCategory(ctx context.Context, claims mjwt.CustomClaim, newData
 
 	// Modify data
 	categoryExisting.CategoryName = newData.CategoryName
+	categoryExisting.CategoryIcon = newData.CategoryIcon
 
 	// Edit
 	err = s.repo.Edit(ctx, &categoryExisting)

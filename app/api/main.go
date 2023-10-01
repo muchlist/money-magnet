@@ -115,12 +115,14 @@ func main() {
 	}
 
 	// start debug server
-	debugMux := debugMux(database)
-	go func(mux *http.ServeMux) {
-		if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", config.App.DebugPort), mux); err != nil {
-			log.Error("serve debug api", err)
-		}
-	}(debugMux)
+	if config.App.DebugPort != 0 {
+		debugMux := debugMux(database)
+		go func(mux *http.ServeMux) {
+			if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", config.App.DebugPort), mux); err != nil {
+				log.Error("serve debug api", err)
+			}
+		}(debugMux)
+	}
 
 	// create and start api server
 	webApi := web.New(app.logger, config.App.Port, config.App.Env, config.App.Name)
