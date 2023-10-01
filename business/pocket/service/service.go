@@ -285,6 +285,40 @@ func (s Core) GetDetail(ctx context.Context, claims mjwt.CustomClaim, pocketID u
 		return model.PocketResp{}, errr.New("not have access to this pocket", 400)
 	}
 
+	// Get all users id
+	userUUIDsets := ds.NewUUIDSet()
+	userUUIDsets.AddAll(pocketDetail.EditorID) // todo : just for editor, ignoring watcher at this time
+
+	// Get all users
+	users, err := s.userRepo.GetByIDs(ctx, userUUIDsets.Reveal())
+	if err != nil {
+		return model.PocketResp{}, fmt.Errorf("find user: %w", err)
+	}
+
+	// Mappping user to response
+	usersMap := make(map[uuid.UUID]string)
+	for _, u := range users {
+		usersMap[u.ID] = u.Name
+	}
+
+	// todo : just for editor, ignoring watcher at this time
+	userEditors := make([]model.PocketUser, 0)
+	for _, e := range pocketDetail.EditorID {
+		role := "editor"
+		isOwner := e == pocketDetail.OwnerID
+		if isOwner {
+			role = "owner"
+		}
+
+		userEditors = append(userEditors, model.PocketUser{
+			ID:   e,
+			Role: role,
+			Name: usersMap[e],
+		})
+	}
+
+	pocketDetail.Users = userEditors
+
 	return pocketDetail.ToPocketResp(), nil
 }
 
@@ -297,6 +331,45 @@ func (s Core) FindAllPocket(ctx context.Context, claims mjwt.CustomClaim, filter
 	pockets, metadata, err := s.repo.FindUserPocketsByRelation(ctx, claims.GetUUID(), filter)
 	if err != nil {
 		return nil, data.Metadata{}, fmt.Errorf("find pocket user: %w", err)
+	}
+
+	// Get all users id
+	userUUIDsets := ds.NewUUIDSet()
+	for _, p := range pockets {
+		// todo : just for editor, ignoring watcher at this time
+		userUUIDsets.AddAll(p.EditorID)
+	}
+
+	// Get all users
+	users, err := s.userRepo.GetByIDs(ctx, userUUIDsets.Reveal())
+	if err != nil {
+		return nil, data.Metadata{}, fmt.Errorf("find user: %w", err)
+	}
+
+	// Mappping user to response
+	usersMap := make(map[uuid.UUID]string)
+	for _, u := range users {
+		usersMap[u.ID] = u.Name
+	}
+	for i, p := range pockets {
+
+		// todo : just for editor, ignoring watcher at this time
+		userEditors := make([]model.PocketUser, 0)
+		for _, e := range p.EditorID {
+			role := "editor"
+			isOwner := e == p.OwnerID
+			if isOwner {
+				role = "owner"
+			}
+
+			userEditors = append(userEditors, model.PocketUser{
+				ID:   e,
+				Role: role,
+				Name: usersMap[e],
+			})
+		}
+
+		pockets[i].Users = userEditors
 	}
 
 	pocketResult := make([]model.PocketResp, len(pockets))

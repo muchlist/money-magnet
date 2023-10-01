@@ -78,7 +78,7 @@ func generateDefaultCategory(pocketID uuid.UUID) []model.Category {
 		},
 		{
 			PocketID:     pocketID,
-			CategoryName: "Car",
+			CategoryName: "Vehicle",
 			CategoryIcon: 9,
 			IsIncome:     false,
 			CreatedAt:    timeNow,
