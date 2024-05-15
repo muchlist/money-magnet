@@ -27,7 +27,7 @@ var (
 
 const (
 	expiredJWTToken        = 60 * 1       // 1 Hour
-	expiredJWTRefreshToken = 15 * 24 * 10 // 15 days
+	expiredJWTRefreshToken = 60 * 24 * 10 // 60 days
 )
 
 // Core manages the set of APIs for user access.
@@ -265,15 +265,16 @@ func (s Core) Refresh(ctx context.Context, refreshToken string) (model.UserResp,
 	}
 
 	response := model.UserResp{
-		ID:           user.ID,
-		Email:        user.Email,
-		Name:         user.Name,
-		Roles:        user.Roles,
-		CreatedAt:    user.CreatedAt,
-		UpdatedAt:    user.UpdatedAt,
-		Version:      user.Version,
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+		ID:                 user.ID,
+		Email:              user.Email,
+		Name:               user.Name,
+		Roles:              user.Roles,
+		CreatedAt:          user.CreatedAt,
+		UpdatedAt:          user.UpdatedAt,
+		Version:            user.Version,
+		AccessToken:        accessToken,
+		AccessTokenExpired: expired,
+		RefreshToken:       refreshToken,
 	}
 
 	return response, nil
