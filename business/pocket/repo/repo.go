@@ -95,7 +95,9 @@ func (r Repo) Insert(ctx context.Context, pocket *model.Pocket) error {
 		return fmt.Errorf("build query insert pocket: %w", err)
 	}
 
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&pocket.ID)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).Scan(&pocket.ID)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -134,7 +136,9 @@ func (r Repo) Edit(ctx context.Context, pocket *model.Pocket) error {
 		return fmt.Errorf("build query edit pocket: %w", err)
 	}
 
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&pocket.Version)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).Scan(&pocket.Version)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -168,8 +172,10 @@ func (r Repo) UpdateBalance(ctx context.Context, pocketID uuid.UUID, balance int
 		return 0, fmt.Errorf("build query update pocket balance: %w", err)
 	}
 
+	dbtx := db.ExtractTx(ctx, r.db)
+
 	var newBalance int64
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&newBalance)
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).Scan(&newBalance)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return 0, db.ParseError(err)
@@ -192,7 +198,9 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("build query delete pocket: %w", err)
 	}
 
-	res, err := r.mod(ctx).Exec(ctx, sqlStatement, args...)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	res, err := dbtx.Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -235,8 +243,10 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Pocket, error) {
 		return model.Pocket{}, fmt.Errorf("build query get pocket by id: %w", err)
 	}
 
+	dbtx := db.ExtractTx(ctx, r.db)
+
 	var pocket model.Pocket
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).
 		Scan(
 			&pocket.ID,
 			&pocket.OwnerID,
@@ -298,7 +308,9 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 		return nil, data.Metadata{}, fmt.Errorf("build query find pocket: %w", err)
 	}
 
-	rows, err := r.mod(ctx).Query(ctx, sqlStatement, args...)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	rows, err := dbtx.Query(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return nil, data.Metadata{}, db.ParseError(err)
@@ -382,7 +394,7 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 // 		return nil, data.Metadata{}, fmt.Errorf("build query find user pocket: %w", err)
 // 	}
 
-// 	rows, err := r.mod(ctx).Query(ctx, sqlStatement, args...)
+// 	rows, err := dbtx.Query(ctx, sqlStatement, args...)
 // 	if err != nil {
 // 		r.log.InfoT(ctx, err.Error())
 // 		return nil, data.Metadata{}, db.ParseError(err)
@@ -469,7 +481,9 @@ func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner uuid.UUID, fi
 		return nil, data.Metadata{}, fmt.Errorf("build query find user pocket: %w", err)
 	}
 
-	rows, err := r.mod(ctx).Query(ctx, sqlStatement, args...)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	rows, err := dbtx.Query(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return nil, data.Metadata{}, db.ParseError(err)

@@ -20,6 +20,7 @@ type Core struct {
 	log        mlogger.Logger
 	repo       storer.RequestStorer
 	pocketRepo storer.PocketStorer
+	txManager  storer.Transactor
 }
 
 // NewCore constructs a core for request api access.
@@ -27,11 +28,13 @@ func NewCore(
 	log mlogger.Logger,
 	repo storer.RequestStorer,
 	pocketRepo storer.PocketStorer,
+	txManager storer.Transactor,
 ) Core {
 	return Core{
 		log:        log,
 		repo:       repo,
 		pocketRepo: pocketRepo,
+		txManager:  txManager,
 	}
 }
 
@@ -113,7 +116,7 @@ func (s Core) ApproveRequest(ctx context.Context, claims mjwt.CustomClaim, IsApp
 	pocketExisting.EditorID = append(pocketExisting.EditorID, req.RequesterID)
 
 	// TRANSACTION
-	err = s.repo.WithinTransaction(ctx, func(ctx context.Context) error {
+	err = s.txManager.WithAtomic(ctx, func(ctx context.Context) error {
 		// Edit
 		err = s.pocketRepo.Edit(ctx, &pocketExisting)
 		if err != nil {

@@ -10,7 +10,6 @@ import (
 type RequestStorer interface {
 	RequestSaver
 	RequestReader
-	Transactor
 }
 
 type RequestSaver interface {
@@ -24,5 +23,5 @@ type RequestReader interface {
 }
 
 type Transactor interface {
-	WithinTransaction(ctx context.Context, tFunc func(ctx context.Context) error) error
+	WithAtomic(ctx context.Context, tFunc func(ctx context.Context) error) error
 }

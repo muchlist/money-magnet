@@ -12,11 +12,6 @@ import (
 type UserStorer interface {
 	UserSaver
 	UserReader
-	Transactor
-}
-
-type Transactor interface {
-	WithinTransaction(ctx context.Context, tFunc func(ctx context.Context) error) error
 }
 
 type UserSaver interface {

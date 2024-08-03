@@ -97,7 +97,9 @@ func (r Repo) Insert(ctx context.Context, spend *model.Spend) error {
 		return fmt.Errorf("build query insert spend: %w,", err)
 	}
 
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&spend.ID)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).Scan(&spend.ID)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -137,7 +139,9 @@ func (r Repo) Edit(ctx context.Context, spend *model.Spend) error {
 		return fmt.Errorf("build query edit spend: %w", err)
 	}
 
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&spend.Version)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).Scan(&spend.Version)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -160,7 +164,9 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("build query delete spend: %w", err)
 	}
 
-	res, err := r.mod(ctx).Exec(ctx, sqlStatement, args...)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	res, err := dbtx.Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -213,8 +219,10 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error) {
 		return model.Spend{}, fmt.Errorf("build query get spend by id: %w", err)
 	}
 
+	dbtx := db.ExtractTx(ctx, r.db)
+
 	var spend model.Spend
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).
 		Scan(
 			&spend.ID,
 			&spend.UserID,
@@ -322,7 +330,9 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter da
 		return nil, data.Metadata{}, fmt.Errorf("build query find spend: %w", err)
 	}
 
-	rows, err := r.mod(ctx).Query(ctx, sqlStatement, args...)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	rows, err := dbtx.Query(ctx, sqlStatement, args...)
 	if err != nil {
 		return nil, data.Metadata{}, db.ParseError(err)
 	}
@@ -385,8 +395,10 @@ func (r Repo) CountAllPrice(ctx context.Context, pocketID uuid.UUID) (int64, err
 		return 0, fmt.Errorf("build query find spend: %w", err)
 	}
 
+	dbtx := db.ExtractTx(ctx, r.db)
+
 	var balance int64
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&balance)
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).Scan(&balance)
 	if err != nil {
 		return 0, db.ParseError(err)
 	}

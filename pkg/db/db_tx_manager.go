@@ -1,21 +1,35 @@
-package repo
+package db
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/muchlist/moneymagnet/pkg/db"
-	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/muchlist/moneymagnet/pkg/mlogger"
 )
+
+type TxManager interface {
+	WithAtomic(ctx context.Context, tFunc func(ctx context.Context) error) error
+}
+
+type txManager struct {
+	db  *pgxpool.Pool
+	log mlogger.Logger
+}
+
+func NewTxManager(sqlDB *pgxpool.Pool, log mlogger.Logger) TxManager {
+	return txManager{
+		db:  sqlDB,
+		log: log,
+	}
+}
 
 // =========================================================================
 // TRANSACTION
 
-// WithinTransaction runs function within transaction
+// WithAtomic runs function within transaction
 // The transaction commits when function were finished without error
-func (r Repo) WithinTransaction(ctx context.Context, tFunc func(ctx context.Context) error) error {
-	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-WithinTransaction")
-	defer span.End()
+func (r txManager) WithAtomic(ctx context.Context, tFunc func(ctx context.Context) error) error {
 
 	// begin transaction
 	tx, err := r.db.Begin(ctx)
@@ -24,7 +38,7 @@ func (r Repo) WithinTransaction(ctx context.Context, tFunc func(ctx context.Cont
 	}
 
 	// run callback
-	err = tFunc(db.InjectTx(ctx, tx))
+	err = tFunc(injectTx(ctx, tx))
 	if err != nil {
 		// if error, rollback
 		if errRollback := tx.Rollback(ctx); errRollback != nil {
@@ -37,13 +51,4 @@ func (r Repo) WithinTransaction(ctx context.Context, tFunc func(ctx context.Cont
 		r.log.Error("commit transaction", errCommit)
 	}
 	return nil
-}
-
-// mod returns query model with context with or without transaction extracted from context
-func (r Repo) mod(ctx context.Context) db.DBTX {
-	tx := db.ExtractTx(ctx)
-	if tx != nil {
-		return db.NewPGStore(nil, tx)
-	}
-	return db.NewPGStore(r.db, nil)
 }

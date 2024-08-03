@@ -16,7 +16,6 @@ mockgen -source=business/pocket/storer/pocket_storer.go -destination=business/po
 type PocketStorer interface {
 	PocketSaver
 	PocketReader
-	Transactor
 }
 
 type PocketSaver interface {
@@ -37,5 +36,5 @@ type PocketReader interface {
 }
 
 type Transactor interface {
-	WithinTransaction(ctx context.Context, tFunc func(ctx context.Context) error) error
+	WithAtomic(ctx context.Context, tFunc func(ctx context.Context) error) error
 }

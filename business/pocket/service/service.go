@@ -32,6 +32,7 @@ type Core struct {
 	repo         storer.PocketStorer
 	userRepo     storer.UserReader
 	categoryRepo storer.CategorySaver
+	txManager    storer.Transactor
 }
 
 // NewCore constructs a core for user api access.
@@ -40,12 +41,14 @@ func NewCore(
 	repo storer.PocketStorer,
 	userRepo storer.UserReader,
 	categoryRepo storer.CategorySaver,
+	txManager storer.Transactor,
 ) Core {
 	return Core{
 		log:          log,
 		repo:         repo,
 		userRepo:     userRepo,
 		categoryRepo: categoryRepo,
+		txManager:    txManager,
 	}
 }
 
@@ -100,7 +103,7 @@ func (s Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req mod
 	}
 
 	// Run IN Transaction
-	transErr := s.repo.WithinTransaction(
+	transErr := s.txManager.WithAtomic(
 		ctx, func(ctx context.Context) error {
 
 			// insert pocket
@@ -206,7 +209,7 @@ func (s Core) AddPerson(ctx context.Context, claims mjwt.CustomClaim, data AddPe
 	}
 
 	// Run IN Transaction
-	transErr := s.repo.WithinTransaction(ctx, func(ctx context.Context) error {
+	transErr := s.txManager.WithAtomic(ctx, func(ctx context.Context) error {
 		// Edit
 		err = s.repo.Edit(ctx, &pocketExisting)
 		if err != nil {
@@ -248,7 +251,7 @@ func (s Core) RemovePerson(ctx context.Context, claims mjwt.CustomClaim, data Re
 	pocketExisting.WatcherID = slicer.RemoveFrom(data.Person, pocketExisting.WatcherID)
 
 	// Run IN Transaction
-	transErr := s.repo.WithinTransaction(ctx, func(ctx context.Context) error {
+	transErr := s.txManager.WithAtomic(ctx, func(ctx context.Context) error {
 		// Edit
 		err = s.repo.Edit(ctx, &pocketExisting)
 		if err != nil {
