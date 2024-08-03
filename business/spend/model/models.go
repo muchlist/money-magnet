@@ -79,6 +79,13 @@ type NewSpend struct {
 	Date       time.Time     `json:"date" example:"2022-09-10T17:03:15.091267+08:00"`
 }
 
+type TransferSpend struct {
+	PocketIDFrom uuid.UUID `json:"pocket_id_from" example:"f9339be2-6b05-4acb-a269-5309c39bae91"`
+	PocketIDTo   uuid.UUID `json:"pocket_id_to" example:"f9339be2-6b05-4acb-a269-5309c39bae92"`
+	Price        int64     `json:"price" example:"50000"`
+	Date         time.Time `json:"date" example:"2022-09-10T17:03:15.091267+08:00"`
+}
+
 type UpdateSpend struct {
 	ID         uuid.UUID     `json:"-"`
 	CategoryID uuid.NullUUID `json:"category_id" example:"f9339be2-6b05-4acb-a269-5309c39bae92"`

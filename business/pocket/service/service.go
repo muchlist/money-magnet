@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/muchlist/moneymagnet/business/pocket/model"
-	"github.com/muchlist/moneymagnet/business/pocket/storer"
+	"github.com/muchlist/moneymagnet/business/pocket/port"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/errr"
@@ -29,19 +29,19 @@ var (
 // Core manages the set of APIs for user access.
 type Core struct {
 	log          mlogger.Logger
-	repo         storer.PocketStorer
-	userRepo     storer.UserReader
-	categoryRepo storer.CategorySaver
-	txManager    storer.Transactor
+	repo         port.PocketStorer
+	userRepo     port.UserReader
+	categoryRepo port.CategorySaver
+	txManager    port.Transactor
 }
 
 // NewCore constructs a core for user api access.
 func NewCore(
 	log mlogger.Logger,
-	repo storer.PocketStorer,
-	userRepo storer.UserReader,
-	categoryRepo storer.CategorySaver,
-	txManager storer.Transactor,
+	repo port.PocketStorer,
+	userRepo port.UserReader,
+	categoryRepo port.CategorySaver,
+	txManager port.Transactor,
 ) Core {
 	return Core{
 		log:          log,

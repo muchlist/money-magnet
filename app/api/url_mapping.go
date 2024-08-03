@@ -60,7 +60,7 @@ func (app *application) routes() http.Handler {
 	requestService := reqserv.NewCore(app.logger, requestRepo, pocketRepo, txManager)
 	requestHandler := reqhand.NewRequestHandler(app.logger, app.validator, requestService)
 
-	spendService := spnserv.NewCore(app.logger, spendRepo, pocketRepo)
+	spendService := spnserv.NewCore(app.logger, spendRepo, pocketRepo, txManager)
 	spendHandler := spnhand.NewSpendHandler(app.logger, app.validator, cache, spendService)
 
 	// swagger endpoint
@@ -121,6 +121,7 @@ func (app *application) routes() http.Handler {
 
 			i := r.With(idempo.IdempotentCheck)
 			i.Post("/", spendHandler.CreateSpend)
+			i.Post("/transfer", spendHandler.TransferSpend)
 			i.Patch("/{id}", spendHandler.EditSpend)
 		})
 

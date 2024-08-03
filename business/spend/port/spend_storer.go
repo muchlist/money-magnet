@@ -1,4 +1,4 @@
-package storer
+package port
 
 import (
 	"context"
@@ -23,4 +23,8 @@ type SpendReader interface {
 	GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error)
 	Find(ctx context.Context, spendFilter model.SpendFilter, filter data.Filters) ([]model.Spend, data.Metadata, error)
 	CountAllPrice(ctx context.Context, pocketID uuid.UUID) (int64, error)
+}
+
+type Transactor interface {
+	WithAtomic(ctx context.Context, tFunc func(ctx context.Context) error) error
 }

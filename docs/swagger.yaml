@@ -1,6 +1,311 @@
 basePath: /
 definitions:
-  data.Metadata:
+  github_com_muchlist_moneymagnet_business_category_model.CategoryResp:
+    properties:
+      category_icon:
+        example: 0
+        type: integer
+      category_name:
+        example: gaji
+        type: string
+      created_at:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      id:
+        example: bead2cb0-692e-41d2-a623-c44d1e19f2a0
+        type: string
+      is_income:
+        example: true
+        type: boolean
+      pocket_id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae91
+        type: string
+      update_at:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+    type: object
+  github_com_muchlist_moneymagnet_business_category_model.NewCategory:
+    properties:
+      category_icon:
+        example: 0
+        type: integer
+      category_name:
+        example: gaji
+        type: string
+      is_income:
+        example: true
+        type: boolean
+      pocket_id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae91
+        type: string
+    required:
+    - category_name
+    - pocket_id
+    type: object
+  github_com_muchlist_moneymagnet_business_category_model.UpdateCategory:
+    properties:
+      category_icon:
+        example: 0
+        type: integer
+      category_name:
+        example: gaji_2
+        type: string
+    required:
+    - category_name
+    type: object
+  github_com_muchlist_moneymagnet_business_pocket_model.NewPocket:
+    properties:
+      currency:
+        example: RP.
+        type: string
+      editor_id:
+        example:
+        - ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        items:
+          type: string
+        type: array
+      icon:
+        example: 1
+        type: integer
+      pocket_name:
+        example: dompet utama
+        type: string
+      watcher_id:
+        example:
+        - ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        items:
+          type: string
+        type: array
+    required:
+    - pocket_name
+    type: object
+  github_com_muchlist_moneymagnet_business_pocket_model.PocketResp:
+    properties:
+      balance:
+        example: 50000
+        type: integer
+      created_at:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      currency:
+        example: RP.
+        type: string
+      editor_id:
+        example:
+        - ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        items:
+          type: string
+        type: array
+      icon:
+        example: 1
+        type: integer
+      id:
+        example: 968d4dfe-041a-4721-bd8a-4e60c507c671
+        type: string
+      level:
+        example: 1
+        type: integer
+      owner_id:
+        example: ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        type: string
+      pocket_name:
+        example: dompet utama
+        type: string
+      updated_at:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      users:
+        items:
+          $ref: '#/definitions/github_com_muchlist_moneymagnet_business_pocket_model.PocketUser'
+        type: array
+      version:
+        example: 2
+        type: integer
+      watcher_id:
+        example:
+        - ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        items:
+          type: string
+        type: array
+    type: object
+  github_com_muchlist_moneymagnet_business_pocket_model.PocketUpdate:
+    properties:
+      currency:
+        example: RP.
+        type: string
+      icon:
+        example: 1
+        type: integer
+      pocket_name:
+        example: dompet utama
+        type: string
+    type: object
+  github_com_muchlist_moneymagnet_business_pocket_model.PocketUser:
+    properties:
+      id:
+        example: ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        type: string
+      name:
+        example: muchlis
+        type: string
+      role:
+        example: owner
+        type: string
+    type: object
+  github_com_muchlist_moneymagnet_business_request_model.NewRequestPocket:
+    properties:
+      pocket_id:
+        example: 968d4dfe-041a-4721-bd8a-4e60c507c671
+        type: string
+    type: object
+  github_com_muchlist_moneymagnet_business_request_model.RequestPocket:
+    properties:
+      approver_id:
+        example: ba22d3c6-2cdd-40b4-a2aa-d68da8c88501
+        type: string
+      created_at:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      id:
+        example: 2001
+        type: integer
+      is_approved:
+        example: false
+        type: boolean
+      is_rejected:
+        example: false
+        type: boolean
+      pocket_id:
+        example: 968d4dfe-041a-4721-bd8a-4e60c507c671
+        type: string
+      pocket_name:
+        example: main pocket
+        type: string
+      requester_id:
+        example: ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        type: string
+      updated_at:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+    type: object
+  github_com_muchlist_moneymagnet_business_spend_model.NewSpend:
+    properties:
+      category_id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae92
+        type: string
+      date:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae90
+        type: string
+      is_income:
+        example: false
+        type: boolean
+      name:
+        example: Makan siang
+        type: string
+      pocket_id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae91
+        type: string
+      price:
+        example: 50000
+        type: integer
+      type:
+        example: 2
+        type: integer
+    type: object
+  github_com_muchlist_moneymagnet_business_spend_model.SpendResp:
+    properties:
+      balance_snapshoot:
+        example: 0
+        type: integer
+      category_icon:
+        example: 1
+        type: integer
+      category_id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae92
+        type: string
+      category_name:
+        example: food
+        type: string
+      created_at:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      date:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae90
+        type: string
+      is_income:
+        example: false
+        type: boolean
+      name:
+        example: Makan siang
+        type: string
+      pocket_id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae91
+        type: string
+      pocket_name:
+        example: main pocket
+        type: string
+      price:
+        example: 50000
+        type: integer
+      type:
+        example: 2
+        type: integer
+      updated_at:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      user_id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae89
+        type: string
+      user_name:
+        example: Muchlis
+        type: string
+      version:
+        example: 1
+        type: integer
+    type: object
+  github_com_muchlist_moneymagnet_business_spend_model.TransferSpend:
+    properties:
+      date:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      pocket_id_from:
+        example: f9339be2-6b05-4acb-a269-5309c39bae91
+        type: string
+      pocket_id_to:
+        example: f9339be2-6b05-4acb-a269-5309c39bae92
+        type: string
+      price:
+        example: 50000
+        type: integer
+    type: object
+  github_com_muchlist_moneymagnet_business_spend_model.UpdateSpend:
+    properties:
+      category_id:
+        example: f9339be2-6b05-4acb-a269-5309c39bae92
+        type: string
+      date:
+        example: "2022-09-10T17:03:15.091267+08:00"
+        type: string
+      is_income:
+        example: false
+        type: boolean
+      name:
+        example: Makan siang
+        type: string
+      price:
+        example: 50000
+        type: integer
+      type:
+        example: 2
+        type: integer
+    type: object
+  github_com_muchlist_moneymagnet_pkg_data.Metadata:
     properties:
       current_page:
         example: 1
@@ -52,281 +357,7 @@ definitions:
         items: {}
         type: array
       meta_data:
-        $ref: '#/definitions/data.Metadata'
-    type: object
-  model.CategoryResp:
-    properties:
-      category_name:
-        example: gaji
-        type: string
-      created_at:
-        example: "2022-09-10T17:03:15.091267+08:00"
-        type: string
-      id:
-        example: bead2cb0-692e-41d2-a623-c44d1e19f2a0
-        type: string
-      is_income:
-        example: true
-        type: boolean
-      pocket_id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae91
-        type: string
-      update_at:
-        example: "2022-09-10T17:03:15.091267+08:00"
-        type: string
-    type: object
-  model.NewCategory:
-    properties:
-      category_name:
-        example: gaji
-        type: string
-      is_income:
-        example: true
-        type: boolean
-      pocket_id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae91
-        type: string
-    required:
-    - category_name
-    - pocket_id
-    type: object
-  model.NewPocket:
-    properties:
-      currency:
-        example: RP.
-        type: string
-      editor_id:
-        example:
-        - ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
-        items:
-          type: string
-        type: array
-      icon:
-        example: 1
-        type: integer
-      pocket_name:
-        example: dompet utama
-        type: string
-      watcher_id:
-        example:
-        - ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
-        items:
-          type: string
-        type: array
-    required:
-    - pocket_name
-    type: object
-  model.NewRequestPocket:
-    properties:
-      pocket_id:
-        example: 968d4dfe-041a-4721-bd8a-4e60c507c671
-        type: string
-    type: object
-  model.NewSpend:
-    properties:
-      category_id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae92
-        type: string
-      category_id_2:
-        example: f9339be2-6b05-4acb-a269-5309c39bae93
-        type: string
-      date:
-        example: "2022-09-10T17:03:15.091267+08:00"
-        type: string
-      id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae90
-        type: string
-      is_income:
-        example: false
-        type: boolean
-      name:
-        example: Makan siang
-        type: string
-      pocket_id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae91
-        type: string
-      price:
-        example: 50000
-        type: integer
-      type:
-        example: 2
-        type: integer
-    type: object
-  model.PocketResp:
-    properties:
-      balance:
-        example: 50000
-        type: integer
-      created_at:
-        example: "2022-09-10T17:03:15.091267+08:00"
-        type: string
-      currency:
-        example: RP.
-        type: string
-      editor_id:
-        example:
-        - ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
-        items:
-          type: string
-        type: array
-      icon:
-        example: 1
-        type: integer
-      id:
-        example: 968d4dfe-041a-4721-bd8a-4e60c507c671
-        type: string
-      level:
-        example: 1
-        type: integer
-      owner_id:
-        example: ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
-        type: string
-      pocket_name:
-        example: dompet utama
-        type: string
-      updated_at:
-        example: "2022-09-10T17:03:15.091267+08:00"
-        type: string
-      version:
-        example: 2
-        type: integer
-      watcher_id:
-        example:
-        - ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
-        items:
-          type: string
-        type: array
-    type: object
-  model.PocketUpdate:
-    properties:
-      currency:
-        example: RP.
-        type: string
-      icon:
-        example: 1
-        type: integer
-      pocket_name:
-        example: dompet utama
-        type: string
-    type: object
-  model.RequestPocket:
-    properties:
-      approver_id:
-        example: ba22d3c6-2cdd-40b4-a2aa-d68da8c88501
-        type: string
-      created_at:
-        example: "2022-09-10T17:03:15.091267+08:00"
-        type: string
-      id:
-        example: 2001
-        type: integer
-      is_approved:
-        example: false
-        type: boolean
-      is_rejected:
-        example: false
-        type: boolean
-      pocket_id:
-        example: 968d4dfe-041a-4721-bd8a-4e60c507c671
-        type: string
-      pocket_name:
-        example: main pocket
-        type: string
-      requester_id:
-        example: ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
-        type: string
-      updated_at:
-        example: "2022-09-10T17:03:15.091267+08:00"
-        type: string
-    type: object
-  model.SpendResp:
-    properties:
-      balance_snapshoot:
-        example: 0
-        type: integer
-      category_id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae92
-        type: string
-      category_id_2:
-        example: f9339be2-6b05-4acb-a269-5309c39bae93
-        type: string
-      category_name:
-        example: food
-        type: string
-      category_name_2:
-        example: b and f
-        type: string
-      created_at:
-        example: "2022-09-10T17:03:15.091267+08:00"
-        type: string
-      date:
-        example: "2022-09-10T17:03:15.091267+08:00"
-        type: string
-      id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae90
-        type: string
-      is_income:
-        example: false
-        type: boolean
-      name:
-        example: Makan siang
-        type: string
-      pocket_id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae91
-        type: string
-      pocket_name:
-        example: main pocket
-        type: string
-      price:
-        example: 50000
-        type: integer
-      type:
-        example: 2
-        type: integer
-      updated_at:
-        example: "2022-09-10T17:03:15.091267+08:00"
-        type: string
-      user_id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae89
-        type: string
-      user_name:
-        example: Muchlis
-        type: string
-      version:
-        example: 1
-        type: integer
-    type: object
-  model.UpdateCategory:
-    properties:
-      category_name:
-        example: gaji_2
-        type: string
-    required:
-    - category_name
-    type: object
-  model.UpdateSpend:
-    properties:
-      category_id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae92
-        type: string
-      category_id_2:
-        example: f9339be2-6b05-4acb-a269-5309c39bae93
-        type: string
-      date:
-        example: "2022-09-10T17:03:15.091267+08:00"
-        type: string
-      is_income:
-        example: false
-        type: boolean
-      name:
-        example: Makan siang
-        type: string
-      price:
-        example: 50000
-        type: integer
-      type:
-        example: 2
-        type: integer
+        $ref: '#/definitions/github_com_muchlist_moneymagnet_pkg_data.Metadata'
     type: object
 host: localhost
 info:
@@ -353,7 +384,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/model.NewCategory'
+          $ref: '#/definitions/github_com_muchlist_moneymagnet_business_category_model.NewCategory'
       produces:
       - application/json
       responses:
@@ -364,7 +395,7 @@ paths:
             - $ref: '#/definitions/misc.ResponseSuccess'
             - properties:
                 data:
-                  $ref: '#/definitions/model.CategoryResp'
+                  $ref: '#/definitions/github_com_muchlist_moneymagnet_business_category_model.CategoryResp'
               type: object
         "400":
           description: Bad Request
@@ -421,7 +452,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/model.UpdateCategory'
+          $ref: '#/definitions/github_com_muchlist_moneymagnet_business_category_model.UpdateCategory'
       produces:
       - application/json
       responses:
@@ -432,7 +463,7 @@ paths:
             - $ref: '#/definitions/misc.ResponseSuccess'
             - properties:
                 data:
-                  $ref: '#/definitions/model.CategoryResp'
+                  $ref: '#/definitions/github_com_muchlist_moneymagnet_business_category_model.CategoryResp'
               type: object
         "400":
           description: Bad Request
@@ -467,7 +498,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/model.CategoryResp'
+                    $ref: '#/definitions/github_com_muchlist_moneymagnet_business_category_model.CategoryResp'
                   type: array
               type: object
         "400":
@@ -533,7 +564,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/model.PocketResp'
+                    $ref: '#/definitions/github_com_muchlist_moneymagnet_business_pocket_model.PocketResp'
                   type: array
               type: object
         "400":
@@ -557,7 +588,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/model.NewPocket'
+          $ref: '#/definitions/github_com_muchlist_moneymagnet_business_pocket_model.NewPocket'
       produces:
       - application/json
       responses:
@@ -568,7 +599,7 @@ paths:
             - $ref: '#/definitions/misc.ResponseSuccess'
             - properties:
                 data:
-                  $ref: '#/definitions/model.PocketResp'
+                  $ref: '#/definitions/github_com_muchlist_moneymagnet_business_pocket_model.PocketResp'
               type: object
         "400":
           description: Bad Request
@@ -602,7 +633,7 @@ paths:
             - $ref: '#/definitions/misc.ResponseSuccessList'
             - properties:
                 data:
-                  $ref: '#/definitions/model.PocketResp'
+                  $ref: '#/definitions/github_com_muchlist_moneymagnet_business_pocket_model.PocketResp'
               type: object
         "400":
           description: Bad Request
@@ -630,7 +661,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/model.PocketUpdate'
+          $ref: '#/definitions/github_com_muchlist_moneymagnet_business_pocket_model.PocketUpdate'
       produces:
       - application/json
       responses:
@@ -641,7 +672,7 @@ paths:
             - $ref: '#/definitions/misc.ResponseSuccess'
             - properties:
                 data:
-                  $ref: '#/definitions/model.PocketResp'
+                  $ref: '#/definitions/github_com_muchlist_moneymagnet_business_pocket_model.PocketResp'
               type: object
         "400":
           description: Bad Request
@@ -665,7 +696,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/model.NewRequestPocket'
+          $ref: '#/definitions/github_com_muchlist_moneymagnet_business_request_model.NewRequestPocket'
       produces:
       - application/json
       responses:
@@ -676,7 +707,7 @@ paths:
             - $ref: '#/definitions/misc.ResponseSuccess'
             - properties:
                 data:
-                  $ref: '#/definitions/model.RequestPocket'
+                  $ref: '#/definitions/github_com_muchlist_moneymagnet_business_request_model.RequestPocket'
               type: object
         "400":
           description: Bad Request
@@ -738,7 +769,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/model.RequestPocket'
+                    $ref: '#/definitions/github_com_muchlist_moneymagnet_business_request_model.RequestPocket'
                   type: array
               type: object
         "400":
@@ -768,7 +799,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/model.RequestPocket'
+                    $ref: '#/definitions/github_com_muchlist_moneymagnet_business_request_model.RequestPocket'
                   type: array
               type: object
         "400":
@@ -835,7 +866,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/model.SpendResp'
+                    $ref: '#/definitions/github_com_muchlist_moneymagnet_business_spend_model.SpendResp'
                   type: array
               type: object
         "400":
@@ -859,7 +890,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/model.NewSpend'
+          $ref: '#/definitions/github_com_muchlist_moneymagnet_business_spend_model.NewSpend'
       produces:
       - application/json
       responses:
@@ -870,7 +901,7 @@ paths:
             - $ref: '#/definitions/misc.ResponseSuccess'
             - properties:
                 data:
-                  $ref: '#/definitions/model.SpendResp'
+                  $ref: '#/definitions/github_com_muchlist_moneymagnet_business_spend_model.SpendResp'
               type: object
         "400":
           description: Bad Request
@@ -904,7 +935,7 @@ paths:
             - $ref: '#/definitions/misc.ResponseSuccessList'
             - properties:
                 data:
-                  $ref: '#/definitions/model.SpendResp'
+                  $ref: '#/definitions/github_com_muchlist_moneymagnet_business_spend_model.SpendResp'
               type: object
         "400":
           description: Bad Request
@@ -932,7 +963,7 @@ paths:
         name: Body
         required: true
         schema:
-          $ref: '#/definitions/model.UpdateSpend'
+          $ref: '#/definitions/github_com_muchlist_moneymagnet_business_spend_model.UpdateSpend'
       produces:
       - application/json
       responses:
@@ -943,7 +974,7 @@ paths:
             - $ref: '#/definitions/misc.ResponseSuccess'
             - properties:
                 data:
-                  $ref: '#/definitions/model.SpendResp'
+                  $ref: '#/definitions/github_com_muchlist_moneymagnet_business_spend_model.SpendResp'
               type: object
         "400":
           description: Bad Request
@@ -983,6 +1014,36 @@ paths:
           schema:
             $ref: '#/definitions/misc.Response500Err'
       summary: Sync Spend Balance
+      tags:
+      - Spend
+  /spends/transfer:
+    post:
+      consumes:
+      - application/json
+      description: Tramsfer
+      parameters:
+      - description: Request Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_muchlist_moneymagnet_business_spend_model.TransferSpend'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/misc.ResponseMessage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/misc.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/misc.Response500Err'
+      summary: Transfer
       tags:
       - Spend
 swagger: "2.0"

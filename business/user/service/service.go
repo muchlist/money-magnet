@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/muchlist/moneymagnet/business/user/model"
-	"github.com/muchlist/moneymagnet/business/user/storer"
+	"github.com/muchlist/moneymagnet/business/user/port"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
@@ -33,7 +33,7 @@ const (
 // Core manages the set of APIs for user access.
 type Core struct {
 	log    mlogger.Logger
-	repo   storer.UserStorer
+	repo   port.UserStorer
 	crypto mcrypto.Crypter
 	jwt    mjwt.TokenHandler
 }
@@ -41,7 +41,7 @@ type Core struct {
 // NewCore constructs a core for user api access.
 func NewCore(
 	log mlogger.Logger,
-	repo storer.UserStorer,
+	repo port.UserStorer,
 	crypto mcrypto.Crypter,
 	jwt mjwt.TokenHandler,
 ) Core {

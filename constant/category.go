@@ -1,0 +1,7 @@
+package constant
+
+// global category used by system
+const (
+	CAT_TRANSFER_IN_ID  = "00000000-0000-0000-0000-000000000000"
+	CAT_TRANSFER_OUT_ID = "00000000-0000-0000-0000-000000000001"
+)

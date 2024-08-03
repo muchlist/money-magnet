@@ -90,6 +90,59 @@ func (pt spendHandler) CreateSpend(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// @Summary      Transfer
+// @Description  Tramsfer
+// @Tags         Spend
+// @Accept       json
+// @Produce      json
+// @Param		 Body body model.TransferSpend true "Request Body"
+// @Success      200  {object}  misc.ResponseMessage
+// @Failure      400  {object}  misc.ResponseErr
+// @Failure      500  {object}  misc.Response500Err
+// @Router       /spends/transfer [post]
+func (pt spendHandler) TransferSpend(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-TransferSpend")
+	defer span.End()
+
+	claims, err := mid.GetClaims(ctx)
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	var req model.TransferSpend
+	err = web.ReadJSON(w, r, &req)
+	if err != nil {
+		pt.log.WarnT(ctx, "bad json", err)
+		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	errMap, err := pt.validator.Struct(req)
+	if err != nil {
+		pt.log.WarnT(ctx, "request not valid", err)
+		web.ErrorPayloadResponse(w, err.Error(), errMap)
+		return
+	}
+
+	err = pt.service.TransferToPocketAsSpend(ctx, claims, req)
+	if err != nil {
+		pt.log.ErrorT(ctx, "error transfer", err)
+		statusCode, msg := zhelper.ParseError(err)
+		web.ErrorResponse(w, statusCode, msg)
+		return
+	}
+	env := web.Envelope{
+		"data": "transfer has been successful",
+	}
+
+	err = web.WriteJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+}
+
 // @Summary      Update Spend
 // @Description  Update spend
 // @Tags         Spend

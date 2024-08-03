@@ -1,4 +1,4 @@
-package storer
+package port
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
+//go:generate mockgen -source user_storer.go -destination mockport/mock_user_storer.go -package mockport
 type UserReader interface {
 	GetByID(ctx context.Context, uuids uuid.UUID) (model.User, error)
 	GetByIDs(ctx context.Context, uuids []uuid.UUID) ([]model.User, error)

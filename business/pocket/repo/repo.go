@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/muchlist/moneymagnet/business/pocket/model"
-	"github.com/muchlist/moneymagnet/business/pocket/storer"
+	"github.com/muchlist/moneymagnet/business/pocket/port"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -34,7 +34,7 @@ const (
 )
 
 // make sure the implementation satisfies the interface
-var _ storer.PocketStorer = (*Repo)(nil)
+var _ port.PocketStorer = (*Repo)(nil)
 
 // Repo manages the set of APIs for pocket access.
 type Repo struct {
@@ -351,90 +351,6 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 	return pockets, metadata, nil
 }
 
-// FindUserPockets get all pocket user has uuid in it
-// DEPRECATED
-// func (r Repo) FindUserPockets(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
-
-// 	// Validation filter
-// 	filter.SortSafelist = []string{"pocket_name", "-pocket_name", "updated_at", "-updated_at"}
-// 	if err := filter.Validate(); err != nil {
-// 		return nil, data.Metadata{}, db.ErrDBSortFilter
-// 	}
-
-// 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-// 	defer cancel()
-
-// 	// SELECT count(*) OVER(), id, owner, editor, watcher, pocket_name, icon, level, created_at, updated_at, version
-// 	// FROM pockets
-// 	// WHERE 'a502f2bf-f813-40e2-b39a-bec07374076f'=ANY(watcher)
-// 	// ORDER BY pocket_name ASC LIMIT 50 OFFSET 0
-// 	sqlStatement, args, err := r.sb.Select(
-// 		"count(*) OVER()",
-// 		keyID,
-// 		keyOwnerID,
-// 		keyEditorID,
-// 		keyWatcherID,
-// 		keyPocketName,
-// 		keyBalance,
-// 		keyCurrency,
-// 		keyIcon,
-// 		keyLevel,
-// 		keyCreatedAt,
-// 		keyUpdatedAt,
-// 		keyVersion,
-// 	).
-// 		From(keyTable).
-// 		Where(fmt.Sprintf("'%s' = ANY(%s)", owner.String(), keyWatcherID)).
-// 		OrderBy(filter.SortColumnDirection()).
-// 		Limit(uint64(filter.Limit())).
-// 		Offset(uint64(filter.Offset())).
-// 		ToSql()
-
-// 	if err != nil {
-// 		return nil, data.Metadata{}, fmt.Errorf("build query find user pocket: %w", err)
-// 	}
-
-// 	rows, err := dbtx.Query(ctx, sqlStatement, args...)
-// 	if err != nil {
-// 		r.log.InfoT(ctx, err.Error())
-// 		return nil, data.Metadata{}, db.ParseError(err)
-// 	}
-// 	defer rows.Close()
-
-// 	totalRecords := 0
-// 	pockets := make([]model.Pocket, 0)
-// 	for rows.Next() {
-// 		var pocket model.Pocket
-// 		err := rows.Scan(
-// 			&totalRecords,
-// 			&pocket.ID,
-// 			&pocket.OwnerID,
-// 			&pocket.EditorID,
-// 			&pocket.WatcherID,
-// 			&pocket.PocketName,
-// 			&pocket.Balance,
-// 			&pocket.Currency,
-// 			&pocket.Icon,
-// 			&pocket.Level,
-// 			&pocket.CreatedAt,
-// 			&pocket.UpdatedAt,
-// 			&pocket.Version)
-// 		if err != nil {
-// 			r.log.InfoT(ctx, err.Error())
-// 			return nil, data.Metadata{}, db.ParseError(err)
-// 		}
-// 		pockets = append(pockets, pocket)
-// 	}
-
-// 	if err := rows.Err(); err != nil {
-// 		return nil, data.Metadata{}, err
-// 	}
-
-// 	metadata := data.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
-
-// 	return pockets, metadata, nil
-// }
-
 // FindUserPockets get all pocket user has uuid in it by relation constrain
 func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-FindUserPocketsByRelation")
@@ -449,10 +365,6 @@ func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner uuid.UUID, fi
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	// SELECT count(*) OVER(), id, owner, editor, watcher, pocket_name, icon, level, created_at, updated_at, version
-	// FROM pockets
-	// WHERE 'a502f2bf-f813-40e2-b39a-bec07374076f'=ANY(watcher)
-	// ORDER BY pocket_name ASC LIMIT 50 OFFSET 0
 	sqlStatement, args, err := r.sb.Select(
 		"count(*) OVER()",
 		db.A(keyID),

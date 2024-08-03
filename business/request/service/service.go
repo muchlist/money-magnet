@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/business/request/model"
-	"github.com/muchlist/moneymagnet/business/request/storer"
+	"github.com/muchlist/moneymagnet/business/request/port"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
@@ -18,17 +18,17 @@ import (
 // Core manages the set of APIs for request access.
 type Core struct {
 	log        mlogger.Logger
-	repo       storer.RequestStorer
-	pocketRepo storer.PocketStorer
-	txManager  storer.Transactor
+	repo       port.RequestStorer
+	pocketRepo port.PocketStorer
+	txManager  port.Transactor
 }
 
 // NewCore constructs a core for request api access.
 func NewCore(
 	log mlogger.Logger,
-	repo storer.RequestStorer,
-	pocketRepo storer.PocketStorer,
-	txManager storer.Transactor,
+	repo port.RequestStorer,
+	pocketRepo port.PocketStorer,
+	txManager port.Transactor,
 ) Core {
 	return Core{
 		log:        log,

@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/business/category/model"
-	"github.com/muchlist/moneymagnet/business/category/storer"
-	pocketStore "github.com/muchlist/moneymagnet/business/pocket/storer"
+	"github.com/muchlist/moneymagnet/business/category/port"
+	pocketPort "github.com/muchlist/moneymagnet/business/pocket/port"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
@@ -20,15 +20,15 @@ import (
 // Core manages the set of APIs for category access.
 type Core struct {
 	log          mlogger.Logger
-	repo         storer.CategoryStorer
-	pockerReader pocketStore.PocketReader
+	repo         port.CategoryStorer
+	pockerReader pocketPort.PocketReader
 }
 
 // NewCore constructs a core for category api access.
 func NewCore(
 	log mlogger.Logger,
-	repo storer.CategoryStorer,
-	pockerReader pocketStore.PocketReader,
+	repo port.CategoryStorer,
+	pockerReader pocketPort.PocketReader,
 ) Core {
 	return Core{
 		log:          log,

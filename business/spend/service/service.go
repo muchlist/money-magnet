@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/muchlist/moneymagnet/business/spend/model"
-	"github.com/muchlist/moneymagnet/business/spend/storer"
+	"github.com/muchlist/moneymagnet/business/spend/port"
+	"github.com/muchlist/moneymagnet/constant"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
@@ -27,20 +29,23 @@ var (
 // Core manages the set of APIs for user access.
 type Core struct {
 	log        mlogger.Logger
-	repo       storer.SpendStorer
-	pocketRepo storer.PocketStorer
+	repo       port.SpendStorer
+	pocketRepo port.PocketStorer
+	txManager  port.Transactor
 }
 
 // NewCore constructs a core for user api access.
 func NewCore(
 	log mlogger.Logger,
-	repo storer.SpendStorer,
-	pocketRepo storer.PocketStorer,
+	repo port.SpendStorer,
+	pocketRepo port.PocketStorer,
+	txManager port.Transactor,
 ) Core {
 	return Core{
 		log:        log,
 		repo:       repo,
 		pocketRepo: pocketRepo,
+		txManager:  txManager,
 	}
 }
 
@@ -80,18 +85,134 @@ func (s Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req mode
 		Version:          1,
 	}
 
-	err = s.repo.Insert(ctx, &spend)
-	if err != nil {
-		return model.SpendResp{}, fmt.Errorf("insert spend to db: %w", err)
-	}
+	transErr := s.txManager.WithAtomic(ctx, func(ctx context.Context) error {
+		err = s.repo.Insert(ctx, &spend)
+		if err != nil {
+			return fmt.Errorf("insert spend to db: %w", err)
+		}
 
-	newBalance, err := s.pocketRepo.UpdateBalance(ctx, spend.PocketID, spend.Price, false)
-	if err != nil {
-		return model.SpendResp{}, fmt.Errorf("fail to change balance: %w", err)
+		newBalance, err := s.pocketRepo.UpdateBalance(ctx, spend.PocketID, spend.Price, false)
+		if err != nil {
+			return fmt.Errorf("fail to change balance: %w", err)
+		}
+		spend.BalanceSnapshoot = newBalance
+
+		return nil
+	})
+
+	if transErr != nil {
+		return model.SpendResp{}, transErr
 	}
-	spend.BalanceSnapshoot = newBalance
 
 	return spend.ToResp(), nil
+}
+
+func (s Core) TransferToPocketAsSpend(ctx context.Context, claims mjwt.CustomClaim, req model.TransferSpend) error {
+	ctx, span := observ.GetTracer().Start(ctx, "service-TransferToPocketAsSpend")
+	defer span.End()
+
+	// Get existing Pocket (from)
+	fromPocket, err := s.pocketRepo.GetByID(ctx, req.PocketIDFrom)
+	if err != nil {
+		return fmt.Errorf("get pocket by id: %w", err)
+	}
+
+	// Validate Pocket Roles Editor
+	if !slicer.In(uuid.MustParse(claims.Identity), fromPocket.EditorID) {
+		return errr.New("not have access to this pocket", 400)
+	}
+
+	// Get existing Pocket (to)
+	toPocket, err := s.pocketRepo.GetByID(ctx, req.PocketIDTo)
+	if err != nil {
+		return fmt.Errorf("get pocket by id: %w", err)
+	}
+
+	// Validate Pocket Roles Editor
+	if !slicer.In(uuid.MustParse(claims.Identity), toPocket.EditorID) {
+		return errr.New("not have access to this pocket", 400)
+	}
+
+	// check balance and price value
+	if req.Price <= 0 {
+		return errr.New("the transfer value must be more than zero", 400)
+	}
+	if fromPocket.Balance < req.Price {
+		return errr.New("balance must be more than the transfer value", 400)
+	}
+
+	transErr := s.txManager.WithAtomic(ctx, func(ctx context.Context) error {
+
+		timeNow := time.Now()
+
+		// spend for pocket-from
+		spendID := uuid.New()
+		spend := model.Spend{
+			ID:       spendID,
+			UserID:   claims.GetUUID(),
+			PocketID: req.PocketIDFrom,
+			CategoryID: uuid.NullUUID{
+				UUID:  uuid.MustParse(constant.CAT_TRANSFER_OUT_ID),
+				Valid: true,
+			},
+			Name:      fmt.Sprintf("Transfer To %s", toPocket.PocketName),
+			Price:     -req.Price,
+			IsIncome:  false,
+			SpendType: 0,
+			Date:      req.Date,
+			CreatedAt: timeNow,
+			UpdatedAt: timeNow,
+			Version:   1,
+		}
+
+		// spend for pocket-to
+		spendIDTo := uuid.New()
+		spendTo := model.Spend{
+			ID:       spendIDTo,
+			UserID:   claims.GetUUID(),
+			PocketID: req.PocketIDTo,
+			CategoryID: uuid.NullUUID{
+				UUID:  uuid.MustParse(constant.CAT_TRANSFER_IN_ID),
+				Valid: true,
+			},
+			Name:      fmt.Sprintf("Transfer From %s", fromPocket.PocketName),
+			Price:     req.Price,
+			IsIncome:  true,
+			SpendType: 0,
+			Date:      req.Date,
+			CreatedAt: timeNow,
+			UpdatedAt: timeNow,
+			Version:   1,
+		}
+
+		// prevent deadlock we must order execution based on consistency value
+		// in this case order by uuid
+		spends := []model.Spend{spend, spendTo}
+		// Sort spends by UUID
+		sort.Slice(spends, func(i, j int) bool {
+			return spends[i].ID.String() < spends[j].ID.String()
+		})
+
+		for _, ss := range spends {
+			err = s.repo.Insert(ctx, &ss)
+			if err != nil {
+				return fmt.Errorf("insert spend to db - %s: %w", ss.PocketName, err)
+			}
+
+			_, err := s.pocketRepo.UpdateBalance(ctx, ss.PocketID, ss.Price, false)
+			if err != nil {
+				return fmt.Errorf("fail to change balance - %s: %w", ss.PocketName, err)
+			}
+		}
+
+		return nil
+	})
+
+	if transErr != nil {
+		return transErr
+	}
+
+	return nil
 }
 
 func (s Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, req model.UpdateSpend) (model.SpendResp, error) {

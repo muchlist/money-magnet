@@ -1,4 +1,4 @@
-package storer
+package port
 
 import (
 	"context"
@@ -9,10 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-/*
-mockgen -source=business/pocket/storer/pocket_storer.go -destination=business/pocket/mock_storer/pocket_storer.go
-*/
-
+//go:generate mockgen -source pocket_storer.go -destination mockport/mock_pocket_storer.go -package mockport
 type PocketStorer interface {
 	PocketSaver
 	PocketReader

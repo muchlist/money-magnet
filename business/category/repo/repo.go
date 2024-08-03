@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/muchlist/moneymagnet/business/category/model"
-	"github.com/muchlist/moneymagnet/business/category/storer"
+	"github.com/muchlist/moneymagnet/business/category/port"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -28,7 +28,7 @@ const (
 )
 
 // make sure the implementation satisfies the interface
-var _ storer.CategoryStorer = (*Repo)(nil)
+var _ port.CategoryStorer = (*Repo)(nil)
 
 // Repo manages the set of APIs for pocket access.
 type Repo struct {
