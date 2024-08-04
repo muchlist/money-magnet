@@ -3,12 +3,12 @@ package port
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/business/pocket/model"
+	"github.com/muchlist/moneymagnet/pkg/xulid"
 )
 
 type PocketStorer interface {
-	GetByID(ctx context.Context, id uuid.UUID) (model.Pocket, error)
+	GetByID(ctx context.Context, id xulid.ULID) (model.Pocket, error)
 	Edit(ctx context.Context, Pocket *model.Pocket) error
-	InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketID uuid.UUID) error
+	InsertPocketUser(ctx context.Context, userIDs []string, pocketid xulid.ULID) error
 }

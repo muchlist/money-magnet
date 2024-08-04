@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/business/category/model"
 	"github.com/muchlist/moneymagnet/business/category/port"
 	pocketPort "github.com/muchlist/moneymagnet/business/pocket/port"
@@ -14,7 +13,8 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/observ"
-	"github.com/muchlist/moneymagnet/pkg/utils/slicer"
+	"github.com/muchlist/moneymagnet/pkg/slicer"
+	"github.com/muchlist/moneymagnet/pkg/xulid"
 )
 
 // Core manages the set of APIs for category access.
@@ -48,13 +48,13 @@ func (s Core) CreateCategory(ctx context.Context, claims mjwt.CustomClaim, req m
 	}
 
 	// Validate Pocket Roles Editor
-	if !slicer.In(uuid.MustParse(claims.Identity), pocketExisting.EditorID) {
+	if !slicer.In(xulid.MustParse(claims.Identity).String(), pocketExisting.EditorID) {
 		return model.CategoryResp{}, errr.New("not have access to this pocket", 400)
 	}
 
 	timeNow := time.Now()
 	cat := model.Category{
-		ID:           uuid.New(),
+		ID:           xulid.Instance().NewULID(),
 		PocketID:     req.PocketID,
 		CategoryName: req.CategoryName,
 		CategoryIcon: req.CategoryIcon,
@@ -75,7 +75,7 @@ func (s Core) EditCategory(ctx context.Context, claims mjwt.CustomClaim, newData
 	defer span.End()
 
 	// Get existing Category
-	categoryExisting, err := s.repo.GetByID(ctx, newData.ID)
+	categoryExisting, err := s.repo.GetByID(ctx, newData.ID.String())
 	if err != nil {
 		return model.CategoryResp{}, fmt.Errorf("get category by id: %w", err)
 	}
@@ -87,7 +87,7 @@ func (s Core) EditCategory(ctx context.Context, claims mjwt.CustomClaim, newData
 	}
 
 	// Validate Pocket Roles Editor
-	if !slicer.In(uuid.MustParse(claims.Identity), pocketExisting.EditorID) {
+	if !slicer.In(xulid.MustParse(claims.Identity).String(), pocketExisting.EditorID) {
 		return model.CategoryResp{}, errr.New("not have access to this pocket", 400)
 	}
 
@@ -105,12 +105,12 @@ func (s Core) EditCategory(ctx context.Context, claims mjwt.CustomClaim, newData
 }
 
 // FindAllCategory ...
-func (s Core) FindAllCategory(ctx context.Context, pocketID uuid.UUID, filter data.Filters) ([]model.CategoryResp, data.Metadata, error) {
+func (s Core) FindAllCategory(ctx context.Context, pocketID xulid.ULID, filter data.Filters) ([]model.CategoryResp, data.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "category-service-FindAllCategory")
 	defer span.End()
 
 	// Get category
-	cats, metadata, err := s.repo.Find(ctx, pocketID, filter)
+	cats, metadata, err := s.repo.Find(ctx, pocketID.String(), filter)
 	if err != nil {
 		return nil, data.Metadata{}, fmt.Errorf("find category: %w", err)
 	}
@@ -124,11 +124,11 @@ func (s Core) FindAllCategory(ctx context.Context, pocketID uuid.UUID, filter da
 }
 
 // DeleteCategory ...
-func (s Core) DeleteCategory(ctx context.Context, categoryID uuid.UUID) error {
+func (s Core) DeleteCategory(ctx context.Context, categoryID xulid.ULID) error {
 	ctx, span := observ.GetTracer().Start(ctx, "category-service-DeleteCategory")
 	defer span.End()
 
-	err := s.repo.Delete(ctx, categoryID)
+	err := s.repo.Delete(ctx, categoryID.String())
 	if err != nil {
 		return fmt.Errorf("delete category: %w", err)
 	}

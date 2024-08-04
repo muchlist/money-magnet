@@ -12,8 +12,8 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/xulid"
 
-	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/pkg/mcrypto"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 )
@@ -130,7 +130,7 @@ func (s Core) InsertUser(ctx context.Context, req model.UserRegisterReq) (model.
 
 	timeNow := time.Now()
 	user := model.User{
-		ID:        uuid.New(),
+		ID:        xulid.Instance().NewULID(),
 		Email:     req.Email,
 		Name:      req.Name,
 		Password:  hashPassword,
@@ -200,7 +200,7 @@ func (s Core) UpdateFCM(ctx context.Context, id string, fcm string) error {
 	ctx, span := observ.GetTracer().Start(ctx, "service-UpdateFCM")
 	defer span.End()
 
-	userID, err := uuid.Parse(id)
+	userID, err := xulid.Parse(id)
 	if err != nil {
 		return ErrInvalidID
 	}
@@ -211,7 +211,7 @@ func (s Core) UpdateFCM(ctx context.Context, id string, fcm string) error {
 }
 
 // Delete ...
-func (s Core) Delete(ctx context.Context, userIDToDelete uuid.UUID, userIDExecutor uuid.UUID) error {
+func (s Core) Delete(ctx context.Context, userIDToDelete xulid.ULID, userIDExecutor xulid.ULID) error {
 	ctx, span := observ.GetTracer().Start(ctx, "service-Delete")
 	defer span.End()
 
@@ -242,7 +242,7 @@ func (s Core) Refresh(ctx context.Context, refreshToken string) (model.UserResp,
 		return model.UserResp{}, mjwt.ErrInvalidToken
 	}
 
-	userID, _ := uuid.Parse(claims.Identity)
+	userID, _ := xulid.Parse(claims.Identity)
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
 		return model.UserResp{}, fmt.Errorf("%v: %w", err, ErrInvalidEmailOrPass)
@@ -285,7 +285,7 @@ func (s Core) GetProfile(ctx context.Context, id string) (model.UserResp, error)
 	ctx, span := observ.GetTracer().Start(ctx, "service-GetProfile")
 	defer span.End()
 
-	userID, err := uuid.Parse(id)
+	userID, err := xulid.Parse(id)
 	if err != nil {
 		return model.UserResp{}, ErrInvalidID
 	}

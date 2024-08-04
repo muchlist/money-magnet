@@ -6,7 +6,7 @@ import (
 	"math"
 	"strings"
 
-	"github.com/muchlist/moneymagnet/pkg/utils/slicer"
+	"github.com/muchlist/moneymagnet/pkg/slicer"
 )
 
 // ========================================================== Filter Pagination

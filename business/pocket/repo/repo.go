@@ -11,9 +11,9 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/xulid"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -148,7 +148,7 @@ func (r Repo) Edit(ctx context.Context, pocket *model.Pocket) error {
 }
 
 // UpdateBalance ...
-func (r Repo) UpdateBalance(ctx context.Context, pocketID uuid.UUID, balance int64, isSetOperaton bool) (int64, error) {
+func (r Repo) UpdateBalance(ctx context.Context, pocketID xulid.ULID, balance int64, isSetOperaton bool) (int64, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-UpdateBalance")
 	defer span.End()
 
@@ -185,7 +185,7 @@ func (r Repo) UpdateBalance(ctx context.Context, pocketID uuid.UUID, balance int
 }
 
 // Delete ...
-func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
+func (r Repo) Delete(ctx context.Context, id xulid.ULID) error {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-Delete")
 	defer span.End()
 
@@ -217,7 +217,7 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 // GETTER
 
 // GetByID get one pocket by id
-func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Pocket, error) {
+func (r Repo) GetByID(ctx context.Context, id xulid.ULID) (model.Pocket, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-GetByID")
 	defer span.End()
 
@@ -269,7 +269,7 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Pocket, error) {
 }
 
 // Find get all pocket
-func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
+func (r Repo) Find(ctx context.Context, owner xulid.ULID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-Find")
 	defer span.End()
 
@@ -352,7 +352,7 @@ func (r Repo) Find(ctx context.Context, owner uuid.UUID, filter data.Filters) ([
 }
 
 // FindUserPockets get all pocket user has uuid in it by relation constrain
-func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner uuid.UUID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
+func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner xulid.ULID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-FindUserPocketsByRelation")
 	defer span.End()
 

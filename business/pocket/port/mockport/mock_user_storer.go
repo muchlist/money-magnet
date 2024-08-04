@@ -9,8 +9,8 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	uuid "github.com/google/uuid"
 	model "github.com/muchlist/moneymagnet/business/user/model"
+	xulid "github.com/muchlist/moneymagnet/pkg/xulid"
 )
 
 // MockUserReader is a mock of UserReader interface.
@@ -37,31 +37,31 @@ func (m *MockUserReader) EXPECT() *MockUserReaderMockRecorder {
 }
 
 // GetByID mocks base method.
-func (m *MockUserReader) GetByID(ctx context.Context, uuids uuid.UUID) (model.User, error) {
+func (m *MockUserReader) GetByID(ctx context.Context, ulid xulid.ULID) (model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByID", ctx, uuids)
+	ret := m.ctrl.Call(m, "GetByID", ctx, ulid)
 	ret0, _ := ret[0].(model.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetByID indicates an expected call of GetByID.
-func (mr *MockUserReaderMockRecorder) GetByID(ctx, uuids interface{}) *gomock.Call {
+func (mr *MockUserReaderMockRecorder) GetByID(ctx, ulid interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockUserReader)(nil).GetByID), ctx, uuids)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockUserReader)(nil).GetByID), ctx, ulid)
 }
 
 // GetByIDs mocks base method.
-func (m *MockUserReader) GetByIDs(ctx context.Context, uuids []uuid.UUID) ([]model.User, error) {
+func (m *MockUserReader) GetByIDs(ctx context.Context, ulids []xulid.ULID) ([]model.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByIDs", ctx, uuids)
+	ret := m.ctrl.Call(m, "GetByIDs", ctx, ulids)
 	ret0, _ := ret[0].([]model.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetByIDs indicates an expected call of GetByIDs.
-func (mr *MockUserReaderMockRecorder) GetByIDs(ctx, uuids interface{}) *gomock.Call {
+func (mr *MockUserReaderMockRecorder) GetByIDs(ctx, ulids interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByIDs", reflect.TypeOf((*MockUserReader)(nil).GetByIDs), ctx, uuids)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByIDs", reflect.TypeOf((*MockUserReader)(nil).GetByIDs), ctx, ulids)
 }

@@ -10,9 +10,9 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/xulid"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -151,7 +151,7 @@ func (r Repo) Edit(ctx context.Context, spend *model.Spend) error {
 }
 
 // Delete ...
-func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
+func (r Repo) Delete(ctx context.Context, id xulid.ULID) error {
 	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-Delete")
 	defer span.End()
 
@@ -183,7 +183,7 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 // GETTER
 
 // GetByID get one spend by email
-func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error) {
+func (r Repo) GetByID(ctx context.Context, id xulid.ULID) (model.Spend, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-GetByID")
 	defer span.End()
 
@@ -292,9 +292,9 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter da
 
 	// WHERE builder
 	// mapping where filter
-	whereMap := sq.Eq{db.A(keyPocketID): spendFilter.PocketID.UUID}
+	whereMap := sq.Eq{db.A(keyPocketID): spendFilter.PocketID.ULID}
 	if spendFilter.User.Valid {
-		whereMap[db.A(keyUserID)] = spendFilter.User.UUID
+		whereMap[db.A(keyUserID)] = spendFilter.User.ULID
 	}
 	// if spendFilter.Category.Valid {
 	// 	whereMap[db.A(keyCategoryID)] = spendFilter.Category.UUID
@@ -310,7 +310,7 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter da
 	query = query.Where(whereMap)
 	if spendFilter.Category.Valid {
 		query = query.Where(
-			sq.Eq{db.A(keyCategoryID): spendFilter.Category.UUID},
+			sq.Eq{db.A(keyCategoryID): spendFilter.Category.ULID},
 		)
 	}
 	if spendFilter.DateStart != nil {
@@ -379,7 +379,7 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter da
 }
 
 // Count All Price
-func (r Repo) CountAllPrice(ctx context.Context, pocketID uuid.UUID) (int64, error) {
+func (r Repo) CountAllPrice(ctx context.Context, pocketID xulid.ULID) (int64, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-CountAllPrice")
 	defer span.End()
 

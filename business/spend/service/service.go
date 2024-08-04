@@ -14,9 +14,9 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/observ"
-	"github.com/muchlist/moneymagnet/pkg/utils/slicer"
+	"github.com/muchlist/moneymagnet/pkg/slicer"
+	"github.com/muchlist/moneymagnet/pkg/xulid"
 
-	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 )
 
@@ -60,18 +60,18 @@ func (s Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req mode
 	}
 
 	// Validate Pocket Roles Editor
-	if !slicer.In(uuid.MustParse(claims.Identity), pocketExisting.EditorID) {
+	if !slicer.In(xulid.MustParse(claims.Identity).String(), pocketExisting.EditorID) {
 		return model.SpendResp{}, errr.New("not have access to this pocket", 400)
 	}
 
 	timeNow := time.Now()
-	spendID := uuid.New()
+	spendID := xulid.Instance().NewULID()
 	if req.ID.Valid {
-		spendID = req.ID.UUID
+		spendID = req.ID.ULID
 	}
 	spend := model.Spend{
 		ID:               spendID,
-		UserID:           claims.GetUUID(),
+		UserID:           claims.GetULID(),
 		PocketID:         req.PocketID,
 		CategoryID:       req.CategoryID,
 		Name:             req.Name,
@@ -118,7 +118,7 @@ func (s Core) TransferToPocketAsSpend(ctx context.Context, claims mjwt.CustomCla
 	}
 
 	// Validate Pocket Roles Editor
-	if !slicer.In(uuid.MustParse(claims.Identity), fromPocket.EditorID) {
+	if !slicer.In(xulid.MustParse(claims.Identity).String(), fromPocket.EditorID) {
 		return errr.New("not have access to this pocket", 400)
 	}
 
@@ -129,7 +129,7 @@ func (s Core) TransferToPocketAsSpend(ctx context.Context, claims mjwt.CustomCla
 	}
 
 	// Validate Pocket Roles Editor
-	if !slicer.In(uuid.MustParse(claims.Identity), toPocket.EditorID) {
+	if !slicer.In(xulid.MustParse(claims.Identity).String(), toPocket.EditorID) {
 		return errr.New("not have access to this pocket", 400)
 	}
 
@@ -146,13 +146,13 @@ func (s Core) TransferToPocketAsSpend(ctx context.Context, claims mjwt.CustomCla
 		timeNow := time.Now()
 
 		// spend for pocket-from
-		spendID := uuid.New()
+		spendID := xulid.Instance().NewULID()
 		spend := model.Spend{
 			ID:       spendID,
-			UserID:   claims.GetUUID(),
+			UserID:   claims.GetULID(),
 			PocketID: req.PocketIDFrom,
-			CategoryID: uuid.NullUUID{
-				UUID:  uuid.MustParse(constant.CAT_TRANSFER_OUT_ID),
+			CategoryID: xulid.NullULID{
+				ULID:  xulid.MustParse(constant.CAT_TRANSFER_OUT_ID),
 				Valid: true,
 			},
 			Name:      fmt.Sprintf("Transfer To %s", toPocket.PocketName),
@@ -166,13 +166,13 @@ func (s Core) TransferToPocketAsSpend(ctx context.Context, claims mjwt.CustomCla
 		}
 
 		// spend for pocket-to
-		spendIDTo := uuid.New()
+		spendIDTo := xulid.Instance().NewULID()
 		spendTo := model.Spend{
 			ID:       spendIDTo,
-			UserID:   claims.GetUUID(),
+			UserID:   claims.GetULID(),
 			PocketID: req.PocketIDTo,
-			CategoryID: uuid.NullUUID{
-				UUID:  uuid.MustParse(constant.CAT_TRANSFER_IN_ID),
+			CategoryID: xulid.NullULID{
+				ULID:  xulid.MustParse(constant.CAT_TRANSFER_IN_ID),
 				Valid: true,
 			},
 			Name:      fmt.Sprintf("Transfer From %s", fromPocket.PocketName),
@@ -226,7 +226,7 @@ func (s Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, r
 	}
 
 	// validate id creator
-	if spendExisting.UserID != claims.GetUUID() {
+	if spendExisting.UserID != claims.GetULID() {
 		return model.SpendResp{}, errr.New("user cannot edit this transaction", 400)
 	}
 
@@ -237,7 +237,7 @@ func (s Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, r
 	}
 
 	// Validate Pocket Roles Editor
-	if !slicer.In(uuid.MustParse(claims.Identity), pocketExisting.EditorID) {
+	if !slicer.In(xulid.MustParse(claims.Identity).String(), pocketExisting.EditorID) {
 		return model.SpendResp{}, errr.New("not have access to this pocket", 400)
 	}
 
@@ -283,7 +283,7 @@ func (s Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, r
 }
 
 // GetDetail ...
-func (s Core) GetDetail(ctx context.Context, spendID uuid.UUID) (model.SpendResp, error) {
+func (s Core) GetDetail(ctx context.Context, spendID xulid.ULID) (model.SpendResp, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-GetDetail")
 	defer span.End()
 
@@ -302,14 +302,14 @@ func (s Core) FindAllSpend(ctx context.Context, claims mjwt.CustomClaim, spendFi
 	defer span.End()
 
 	// Get existing Pocket
-	pocketExisting, err := s.pocketRepo.GetByID(ctx, spendFilter.PocketID.UUID)
+	pocketExisting, err := s.pocketRepo.GetByID(ctx, spendFilter.PocketID.ULID)
 	if err != nil {
 		return nil, data.Metadata{}, fmt.Errorf("get pocket by id: %w", err)
 	}
 
 	// Validate Pocket Roles Editor
-	if !slicer.In(uuid.MustParse(claims.Identity), pocketExisting.EditorID) &&
-		!slicer.In(uuid.MustParse(claims.Identity), pocketExisting.WatcherID) {
+	if !slicer.In(xulid.MustParse(claims.Identity).String(), pocketExisting.EditorID) &&
+		!slicer.In(xulid.MustParse(claims.Identity).String(), pocketExisting.WatcherID) {
 		return nil, data.Metadata{}, errr.New("not have access to this pocket", 400)
 	}
 
@@ -327,7 +327,7 @@ func (s Core) FindAllSpend(ctx context.Context, claims mjwt.CustomClaim, spendFi
 }
 
 // SyncBalance ...
-func (s Core) SyncBalance(ctx context.Context, claims mjwt.CustomClaim, pocketID uuid.UUID) (int64, error) {
+func (s Core) SyncBalance(ctx context.Context, claims mjwt.CustomClaim, pocketID xulid.ULID) (int64, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-SyncBalance")
 	defer span.End()
 
@@ -338,8 +338,8 @@ func (s Core) SyncBalance(ctx context.Context, claims mjwt.CustomClaim, pocketID
 	}
 
 	// Validate Pocket Roles Editor
-	if !slicer.In(uuid.MustParse(claims.Identity), pocketExisting.EditorID) &&
-		!slicer.In(uuid.MustParse(claims.Identity), pocketExisting.WatcherID) {
+	if !slicer.In(xulid.MustParse(claims.Identity).String(), pocketExisting.EditorID) &&
+		!slicer.In(xulid.MustParse(claims.Identity).String(), pocketExisting.WatcherID) {
 		return 0, errr.New("not have access to this pocket", 400)
 	}
 

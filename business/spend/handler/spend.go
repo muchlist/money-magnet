@@ -165,7 +165,7 @@ func (pt spendHandler) EditSpend(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// extract url path
-	spendID, err := web.ReadUUIDParam(r)
+	spendID, err := web.ReadULIDParam(r)
 	if err != nil {
 		pt.log.WarnT(ctx, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -228,7 +228,7 @@ func (pt spendHandler) SyncBalance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// extract url path
-	pocketID, err := web.ReadUUIDParam(r)
+	pocketID, err := web.ReadULIDParam(r)
 	if err != nil {
 		pt.log.WarnT(ctx, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -267,7 +267,7 @@ func (pt spendHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	defer span.End()
 
 	// extract url path
-	spendID, err := web.ReadUUIDParam(r)
+	spendID, err := web.ReadULIDParam(r)
 	if err != nil {
 		pt.log.WarnT(ctx, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -331,7 +331,7 @@ func (pt spendHandler) FindSpend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pocketID, err := web.ReadUUIDParam(r)
+	pocketID, err := web.ReadULIDParam(r)
 	if err != nil {
 		pt.log.WarnT(ctx, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -344,7 +344,7 @@ func (pt spendHandler) FindSpend(w http.ResponseWriter, r *http.Request) {
 	pageSize := web.ReadInt(r.URL.Query(), "page_size", 0)
 
 	filter := extractSpendFIlter(r.URL.Query())
-	filter.PocketID.UUID = pocketID
+	filter.PocketID.ULID = pocketID
 
 	result, metadata, err := pt.service.FindAllSpend(ctx, claims, filter, data.Filters{
 		Page:     page,

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/muchlist/moneymagnet/business/category/model"
 	"github.com/muchlist/moneymagnet/business/category/port"
@@ -179,7 +178,7 @@ func (r Repo) Edit(ctx context.Context, category *model.Category) error {
 }
 
 // Delete ...
-func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
+func (r Repo) Delete(ctx context.Context, id string) error {
 	ctx, span := observ.GetTracer().Start(ctx, "category-repo-Delete")
 	defer span.End()
 
@@ -211,7 +210,7 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 // GETTER
 
 // GetByID get one category by email
-func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Category, error) {
+func (r Repo) GetByID(ctx context.Context, id string) (model.Category, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "category-repo-GetByID")
 	defer span.End()
 
@@ -254,7 +253,7 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Category, error)
 }
 
 // Find get all category within user
-func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters) ([]model.Category, data.Metadata, error) {
+func (r Repo) Find(ctx context.Context, pocketID string, filter data.Filters) ([]model.Category, data.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "category-repo-Find")
 	defer span.End()
 

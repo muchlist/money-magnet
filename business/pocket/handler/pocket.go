@@ -110,7 +110,7 @@ func (pt pocketHandler) UpdatePocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// extract url path
-	pocketID, err := web.ReadUUIDParam(r)
+	pocketID, err := web.ReadULIDParam(r)
 	if err != nil {
 		pt.log.WarnT(ctx, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -172,7 +172,7 @@ func (pt pocketHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// extract url path
-	pocketID, err := web.ReadUUIDParam(r)
+	pocketID, err := web.ReadULIDParam(r)
 	if err != nil {
 		pt.log.WarnT(ctx, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())

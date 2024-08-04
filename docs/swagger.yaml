@@ -12,13 +12,13 @@ definitions:
         example: "2022-09-10T17:03:15.091267+08:00"
         type: string
       id:
-        example: bead2cb0-692e-41d2-a623-c44d1e19f2a0
+        example: 01ARZ3NDEKTSV4RRFFQ69G5FZZ
         type: string
       is_income:
         example: true
         type: boolean
       pocket_id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae91
+        example: 01ARZ3NDEKTSV4RRFFQ69G5FAV
         type: string
       update_at:
         example: "2022-09-10T17:03:15.091267+08:00"
@@ -36,7 +36,7 @@ definitions:
         example: true
         type: boolean
       pocket_id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae91
+        example: 01ARZ3NDEKTSV4RRFFQ69G5FAV
         type: string
     required:
     - category_name
@@ -60,7 +60,7 @@ definitions:
         type: string
       editor_id:
         example:
-        - ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        - 01J4EXF94QDMR5XT9KN527XEP6
         items:
           type: string
         type: array
@@ -72,7 +72,7 @@ definitions:
         type: string
       watcher_id:
         example:
-        - ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        - 01J4EXF94QDMR5XT9KN527XEP6
         items:
           type: string
         type: array
@@ -92,7 +92,7 @@ definitions:
         type: string
       editor_id:
         example:
-        - ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        - 01J4EXF94QDMR5XT9KN527XEP6
         items:
           type: string
         type: array
@@ -100,13 +100,13 @@ definitions:
         example: 1
         type: integer
       id:
-        example: 968d4dfe-041a-4721-bd8a-4e60c507c671
+        example: 01J4EXF94QDMR5XT9KN527XEP8
         type: string
       level:
         example: 1
         type: integer
       owner_id:
-        example: ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        example: 01J4EXF94QDMR5XT9KN527XEP6
         type: string
       pocket_name:
         example: dompet utama
@@ -123,7 +123,7 @@ definitions:
         type: integer
       watcher_id:
         example:
-        - ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        - 01J4EXF94QDMR5XT9KN527XEP6
         items:
           type: string
         type: array
@@ -143,7 +143,7 @@ definitions:
   github_com_muchlist_moneymagnet_business_pocket_model.PocketUser:
     properties:
       id:
-        example: ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        example: 01J4EXF94QDMR5XT9KN527XEP6
         type: string
       name:
         example: muchlis
@@ -155,13 +155,13 @@ definitions:
   github_com_muchlist_moneymagnet_business_request_model.NewRequestPocket:
     properties:
       pocket_id:
-        example: 968d4dfe-041a-4721-bd8a-4e60c507c671
+        example: 01J4EXF94QDMR5XT9KN527XEP8
         type: string
     type: object
   github_com_muchlist_moneymagnet_business_request_model.RequestPocket:
     properties:
       approver_id:
-        example: ba22d3c6-2cdd-40b4-a2aa-d68da8c88501
+        example: 01ARZ3NDEKTSV4RRFFQ69G5FXX
         type: string
       created_at:
         example: "2022-09-10T17:03:15.091267+08:00"
@@ -176,13 +176,13 @@ definitions:
         example: false
         type: boolean
       pocket_id:
-        example: 968d4dfe-041a-4721-bd8a-4e60c507c671
+        example: 01J4EXF94QDMR5XT9KN527XEP8
         type: string
       pocket_name:
         example: main pocket
         type: string
       requester_id:
-        example: ba22d3c6-2cdd-40b4-a2aa-d68da8c88502
+        example: 01J4EXF94QDMR5XT9KN527XEP6
         type: string
       updated_at:
         example: "2022-09-10T17:03:15.091267+08:00"
@@ -191,13 +191,13 @@ definitions:
   github_com_muchlist_moneymagnet_business_spend_model.NewSpend:
     properties:
       category_id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae92
+        example: 01ARZ3NDEKTSV4RRFFQ69G5FXX
         type: string
       date:
         example: "2022-09-10T17:03:15.091267+08:00"
         type: string
       id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae90
+        example: 01ARZ3NDEKTSV4RRFFQ69G5FZZ
         type: string
       is_income:
         example: false
@@ -206,7 +206,7 @@ definitions:
         example: Makan siang
         type: string
       pocket_id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae91
+        example: 01ARZ3NDEKTSV4RRFFQ69G5FYY
         type: string
       price:
         example: 50000
@@ -224,7 +224,7 @@ definitions:
         example: 1
         type: integer
       category_id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae92
+        example: 01ARZ3NDEKTSV4RRFFQ69G5FXX
         type: string
       category_name:
         example: food
@@ -236,7 +236,7 @@ definitions:
         example: "2022-09-10T17:03:15.091267+08:00"
         type: string
       id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae90
+        example: 01ARZ3NDEKTSV4RRFFQ69G5FZZ
         type: string
       is_income:
         example: false
@@ -245,7 +245,7 @@ definitions:
         example: Makan siang
         type: string
       pocket_id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae91
+        example: 01ARZ3NDEKTSV4RRFFQ69G5FYY
         type: string
       pocket_name:
         example: main pocket
@@ -260,7 +260,7 @@ definitions:
         example: "2022-09-10T17:03:15.091267+08:00"
         type: string
       user_id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae89
+        example: 01ARZ3NDEKTSV4RRFFQ69G5FNN
         type: string
       user_name:
         example: Muchlis
@@ -275,10 +275,10 @@ definitions:
         example: "2022-09-10T17:03:15.091267+08:00"
         type: string
       pocket_id_from:
-        example: f9339be2-6b05-4acb-a269-5309c39bae91
+        example: 01ARZ3NDEKTSV4RRFFQ69G5FYY
         type: string
       pocket_id_to:
-        example: f9339be2-6b05-4acb-a269-5309c39bae92
+        example: 01ARZ3NDEKTSV4RRFFQ69G5FXX
         type: string
       price:
         example: 50000
@@ -287,7 +287,7 @@ definitions:
   github_com_muchlist_moneymagnet_business_spend_model.UpdateSpend:
     properties:
       category_id:
-        example: f9339be2-6b05-4acb-a269-5309c39bae92
+        example: 01ARZ3NDEKTSV4RRFFQ69G5FXX
         type: string
       date:
         example: "2022-09-10T17:03:15.091267+08:00"

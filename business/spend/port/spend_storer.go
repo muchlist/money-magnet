@@ -3,9 +3,9 @@ package port
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/business/spend/model"
 	"github.com/muchlist/moneymagnet/pkg/data"
+	"github.com/muchlist/moneymagnet/pkg/xulid"
 )
 
 type SpendStorer interface {
@@ -16,13 +16,13 @@ type SpendStorer interface {
 type SpendSaver interface {
 	Insert(ctx context.Context, spend *model.Spend) error
 	Edit(ctx context.Context, spend *model.Spend) error
-	Delete(ctx context.Context, id uuid.UUID) error
+	Delete(ctx context.Context, id xulid.ULID) error
 }
 
 type SpendReader interface {
-	GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error)
+	GetByID(ctx context.Context, id xulid.ULID) (model.Spend, error)
 	Find(ctx context.Context, spendFilter model.SpendFilter, filter data.Filters) ([]model.Spend, data.Metadata, error)
-	CountAllPrice(ctx context.Context, pocketID uuid.UUID) (int64, error)
+	CountAllPrice(ctx context.Context, pocketid xulid.ULID) (int64, error)
 }
 
 type Transactor interface {

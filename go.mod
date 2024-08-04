@@ -18,6 +18,7 @@ require (
 	github.com/jackc/pgx/v4 v4.17.2
 	github.com/joho/godotenv v1.4.0
 	github.com/lithammer/shortuuid/v4 v4.0.0
+	github.com/oklog/ulid/v2 v2.1.0
 	github.com/riandyrn/otelchi v0.5.0
 	github.com/signalfx/splunk-otel-go/instrumentation/github.com/jackc/pgx/splunkpgx v1.1.0
 	github.com/stretchr/testify v1.8.0

@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS "requests" (
   "id" BIGSERIAL PRIMARY KEY,
-  "requester_id" uuid,
-  "approver_id" uuid DEFAULT NULL,
-  "pocket_id" uuid,
+  "requester_id" ulid,
+  "approver_id" ulid DEFAULT NULL,
+  "pocket_id" ulid,
   "pocket_name" varchar(100) NOT NULL,
   "is_approved" boolean DEFAULT false,
   "is_rejected" boolean DEFAULT false,
