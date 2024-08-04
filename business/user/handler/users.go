@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/business/user/model"
 	"github.com/muchlist/moneymagnet/business/user/service"
 	"github.com/muchlist/moneymagnet/business/zhelper"
@@ -12,6 +11,7 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/observ"
 	"github.com/muchlist/moneymagnet/pkg/observ/mmetric"
 	"github.com/muchlist/moneymagnet/pkg/validate"
+	"github.com/muchlist/moneymagnet/pkg/xulid"
 
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/web"
@@ -130,9 +130,9 @@ func (usr userHandler) EditSelfUser(w http.ResponseWriter, r *http.Request) {
 	req.Roles = nil
 
 	// Not have validate, because no field required
-	req.ID, err = uuid.Parse(claims.Identity)
+	req.ID, err = xulid.Parse(claims.Identity)
 	if err != nil {
-		usr.log.ErrorT(ctx, "uuid from claims must be uuid", err)
+		usr.log.ErrorT(ctx, "ulid from claims must be valid ulid", err)
 		web.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -166,7 +166,7 @@ func (usr userHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get data from url path
-	id, err := web.ReadUUIDParam(r)
+	id, err := web.ReadULIDParam(r)
 	if err != nil {
 		usr.log.WarnT(ctx, "error edit user", err, mlogger.String("identity", claims.Identity))
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -247,14 +247,14 @@ func (usr userHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get data from url path
-	userIDToDelete, err := web.ReadUUIDParam(r)
+	userIDToDelete, err := web.ReadULIDParam(r)
 	if err != nil {
 		usr.log.WarnT(ctx, err.Error(), err, mlogger.String("identity", claims.Identity))
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	claimsUUID, err := uuid.Parse(claims.Identity)
+	claimsUUID, err := xulid.Parse(claims.Identity)
 	if err != nil {
 		usr.log.ErrorT(ctx, "uuid from claims must be uuid", err)
 		web.ErrorResponse(w, http.StatusInternalServerError, err.Error())

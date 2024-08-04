@@ -7,9 +7,9 @@ import (
 
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/xulid"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/google/uuid"
 )
 
 const (
@@ -20,7 +20,7 @@ const (
 )
 
 // InsertPocketUser ...
-func (r Repo) InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketID uuid.UUID) error {
+func (r Repo) InsertPocketUser(ctx context.Context, userIDs []string, pocketID xulid.ULID) error {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-CreatePocket")
 	defer span.End()
 
@@ -45,7 +45,9 @@ func (r Repo) InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketI
 		return fmt.Errorf("build query insert pocket user relation: %w", err)
 	}
 
-	_, err = r.mod(ctx).Exec(ctx, sqlStatement, args...)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	_, err = dbtx.Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		return db.ParseError(err)
 	}
@@ -54,7 +56,7 @@ func (r Repo) InsertPocketUser(ctx context.Context, userIDs []uuid.UUID, pocketI
 }
 
 // DeletePocketUser ...
-func (r Repo) DeletePocketUser(ctx context.Context, userID uuid.UUID, pocketID uuid.UUID) error {
+func (r Repo) DeletePocketUser(ctx context.Context, userID xulid.ULID, pocketID xulid.ULID) error {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-DeletePocketUser")
 	defer span.End()
 
@@ -71,7 +73,9 @@ func (r Repo) DeletePocketUser(ctx context.Context, userID uuid.UUID, pocketID u
 		return fmt.Errorf("build query delete pocket user relation: %w", err)
 	}
 
-	res, err := r.mod(ctx).Exec(ctx, sqlStatement, args...)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	res, err := dbtx.Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		return db.ParseError(err)
 	}

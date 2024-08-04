@@ -10,9 +10,9 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/xulid"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -67,7 +67,7 @@ func (r Repo) Insert(ctx context.Context, user *model.User) error {
 			keyCreatedAt,
 			keyUpdatedAt).
 		Values(
-			user.ID,
+			user.ID.String(),
 			user.Name,
 			user.Email,
 			user.Password,
@@ -81,7 +81,9 @@ func (r Repo) Insert(ctx context.Context, user *model.User) error {
 		return fmt.Errorf("build query insert user: %w", err)
 	}
 
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&user.ID)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).Scan(&user.ID)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -115,7 +117,9 @@ func (r Repo) Edit(ctx context.Context, user *model.User) error {
 		return fmt.Errorf("build query edit user: %w", err)
 	}
 
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&user.Version)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).Scan(&user.Version)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -124,7 +128,7 @@ func (r Repo) Edit(ctx context.Context, user *model.User) error {
 	return nil
 }
 
-func (r Repo) EditFCM(ctx context.Context, id uuid.UUID, fcm string) error {
+func (r Repo) EditFCM(ctx context.Context, id xulid.ULID, fcm string) error {
 	ctx, span := observ.GetTracer().Start(ctx, "user-repo-EditFCM")
 	defer span.End()
 
@@ -143,7 +147,9 @@ func (r Repo) EditFCM(ctx context.Context, id uuid.UUID, fcm string) error {
 		return fmt.Errorf("build query update fcm user: %w", err)
 	}
 
-	_, err = r.mod(ctx).Exec(ctx, sqlStatement, args...)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	_, err = dbtx.Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -153,7 +159,7 @@ func (r Repo) EditFCM(ctx context.Context, id uuid.UUID, fcm string) error {
 }
 
 // Delete ...
-func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
+func (r Repo) Delete(ctx context.Context, id xulid.ULID) error {
 	ctx, span := observ.GetTracer().Start(ctx, "user-repo-Delete")
 	defer span.End()
 
@@ -168,7 +174,9 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("build query delete user: %w", err)
 	}
 
-	res, err := r.mod(ctx).Exec(ctx, sqlStatement, args...)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	res, err := dbtx.Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -203,7 +211,9 @@ func (r Repo) ChangePassword(ctx context.Context, user *model.User) error {
 		return fmt.Errorf("build query change password user: %w", err)
 	}
 
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&user.Version)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).Scan(&user.Version)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -215,8 +225,8 @@ func (r Repo) ChangePassword(ctx context.Context, user *model.User) error {
 // =========================================================================
 // GETTER
 
-// GetByID get one user by uuid
-func (r Repo) GetByID(ctx context.Context, uuid uuid.UUID) (model.User, error) {
+// GetByID get one user by ulid
+func (r Repo) GetByID(ctx context.Context, ulid xulid.ULID) (model.User, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "user-repo-GetByID")
 	defer span.End()
 
@@ -233,14 +243,16 @@ func (r Repo) GetByID(ctx context.Context, uuid uuid.UUID) (model.User, error) {
 		keyCreatedAt,
 		keyUpdatedAt,
 		keyVersion,
-	).From(keyTable).Where(sq.Eq{keyID: uuid}).ToSql()
+	).From(keyTable).Where(sq.Eq{keyID: ulid}).ToSql()
 
 	if err != nil {
 		return model.User{}, fmt.Errorf("build query get user by id: %w", err)
 	}
 
+	dbtx := db.ExtractTx(ctx, r.db)
+
 	var user model.User
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).
 		Scan(
 			&user.ID,
 			&user.Name,
@@ -260,7 +272,7 @@ func (r Repo) GetByID(ctx context.Context, uuid uuid.UUID) (model.User, error) {
 }
 
 // GetByIDs get many user by []uuid
-func (r Repo) GetByIDs(ctx context.Context, uuids []uuid.UUID) ([]model.User, error) {
+func (r Repo) GetByIDs(ctx context.Context, ulids []string) ([]model.User, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "user-repo-GetByIDs")
 	defer span.End()
 
@@ -276,13 +288,15 @@ func (r Repo) GetByIDs(ctx context.Context, uuids []uuid.UUID) ([]model.User, er
 		keyCreatedAt,
 		keyUpdatedAt,
 		keyVersion,
-	).From(keyTable).Where(sq.Eq{keyID: uuids}).ToSql()
+	).From(keyTable).Where(sq.Eq{keyID: ulids}).ToSql()
 
 	if err != nil {
 		return nil, fmt.Errorf("build query get user by ids: %w", err)
 	}
 
-	rows, err := r.mod(ctx).Query(ctx, sqlStatement, args...)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	rows, err := dbtx.Query(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return nil, db.ParseError(err)
@@ -339,8 +353,10 @@ func (r Repo) GetByEmail(ctx context.Context, email string) (model.User, error) 
 		return model.User{}, fmt.Errorf("build query get user by email: %w", err)
 	}
 
+	dbtx := db.ExtractTx(ctx, r.db)
+
 	var user model.User
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).
 		Scan(
 			&user.ID,
 			&user.Name,
@@ -399,7 +415,9 @@ func (r Repo) Find(ctx context.Context, name string, filter data.Filters) ([]mod
 		return nil, data.Metadata{}, fmt.Errorf("build query find user: %w", err)
 	}
 
-	rows, err := r.mod(ctx).Query(ctx, sqlStatement, args...)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	rows, err := dbtx.Query(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return nil, data.Metadata{}, db.ParseError(err)

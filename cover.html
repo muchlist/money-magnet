@@ -332,7 +332,7 @@ func (s Core) RemovePerson(ctx context.Context, claims mjwt.CustomClaim, data Re
 }
 
 // GetDetail ...
-func (s Core) GetDetail(ctx context.Context, claims mjwt.CustomClaim, pocketID uuid.UUID) (model.PocketResp, error) <span class="cov0" title="0">{
+func (s Core) GetDetail(ctx context.Context, claims mjwt.CustomClaim, pocketid xulid.ULID) (model.PocketResp, error) <span class="cov0" title="0">{
         ctx, span := observ.GetTracer().Start(ctx, "service-GetDetail")
         defer span.End()
 

@@ -12,12 +12,13 @@ I experimented a lot with this repository.
 - [x] Profiling
 - [x] expvar
 - [ ] Circuit breaker
+- [x] Using ULID
 
 Something different :
 - Handler separated with business folder (because I think handler is non-reusable code)  
 
 Todo :
-- [ ] Minimize duplicate codes for transaction helpers
+- [x] Minimize duplicate codes for transaction helpers
 - [ ] Use golang/pkg/error instead fmt.Errorf for better error trace on logger
 
 # How to Run

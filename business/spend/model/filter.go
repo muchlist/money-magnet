@@ -3,15 +3,15 @@ package model
 import (
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/muchlist/moneymagnet/pkg/utils/convert"
-	"github.com/muchlist/moneymagnet/pkg/utils/slicer"
+	"github.com/muchlist/moneymagnet/pkg/convert"
+	"github.com/muchlist/moneymagnet/pkg/slicer"
+	"github.com/muchlist/moneymagnet/pkg/xulid"
 )
 
 type SpendFilter struct {
-	PocketID  uuid.NullUUID
-	User      uuid.NullUUID
-	Category  uuid.NullUUID
+	PocketID  xulid.NullULID
+	User      xulid.NullULID
+	Category  xulid.NullULID
 	IsIncome  *bool
 	Type      []int
 	DateStart *time.Time
@@ -32,18 +32,18 @@ func (p SpendFilterRaw) ToModel() SpendFilter {
 
 	// user must be uuid format
 	if p.User != "" {
-		userUUID, err := uuid.Parse(p.User)
+		userULID, err := xulid.Parse(p.User)
 		if err == nil {
-			result.User.UUID = userUUID
+			result.User.ULID = userULID
 			result.User.Valid = true
 		}
 	}
 
 	// category must be uuid format
 	if p.Category != "" {
-		categoryUUID, err := uuid.Parse(p.Category)
+		categoryULID, err := xulid.Parse(p.Category)
 		if err == nil {
-			result.Category.UUID = categoryUUID
+			result.Category.ULID = categoryULID
 			result.Category.Valid = true
 		}
 	}

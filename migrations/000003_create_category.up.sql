@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS "categories" (
-  "id" uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  "pocket_id" uuid NULL,
+  "id" ulid DEFAULT gen_ulid() PRIMARY KEY,
+  "pocket_id" ulid NULL,
   "category_name" varchar(100) NOT NULL,
   "is_income" boolean NOT NULL DEFAULT false,
   "created_at" timestamp NOT NULL DEFAULT (now()),

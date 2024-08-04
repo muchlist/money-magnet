@@ -6,10 +6,9 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/muchlist/moneymagnet/business/category/model"
-	"github.com/muchlist/moneymagnet/business/category/storer"
+	"github.com/muchlist/moneymagnet/business/category/port"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -28,7 +27,7 @@ const (
 )
 
 // make sure the implementation satisfies the interface
-var _ storer.CategoryStorer = (*Repo)(nil)
+var _ port.CategoryStorer = (*Repo)(nil)
 
 // Repo manages the set of APIs for pocket access.
 type Repo struct {
@@ -82,7 +81,9 @@ func (r Repo) Insert(ctx context.Context, category *model.Category) error {
 		return fmt.Errorf("build query insert category: %w", err)
 	}
 
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&category.ID)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).Scan(&category.ID)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -130,7 +131,9 @@ func (r Repo) InsertMany(ctx context.Context, categories []model.Category) error
 		return fmt.Errorf("build query insert many category: %w", err)
 	}
 
-	_, err = r.mod(ctx).Exec(ctx, sqlStatement, args...)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	_, err = dbtx.Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -160,7 +163,9 @@ func (r Repo) Edit(ctx context.Context, category *model.Category) error {
 		return fmt.Errorf("build query edit category: %w", err)
 	}
 
-	res, err := r.mod(ctx).Exec(ctx, sqlStatement, args...)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	res, err := dbtx.Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -173,7 +178,7 @@ func (r Repo) Edit(ctx context.Context, category *model.Category) error {
 }
 
 // Delete ...
-func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
+func (r Repo) Delete(ctx context.Context, id string) error {
 	ctx, span := observ.GetTracer().Start(ctx, "category-repo-Delete")
 	defer span.End()
 
@@ -186,7 +191,9 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("build query delete category: %w", err)
 	}
 
-	res, err := r.mod(ctx).Exec(ctx, sqlStatement, args...)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	res, err := dbtx.Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -203,7 +210,7 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 // GETTER
 
 // GetByID get one category by email
-func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Category, error) {
+func (r Repo) GetByID(ctx context.Context, id string) (model.Category, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "category-repo-GetByID")
 	defer span.End()
 
@@ -224,8 +231,10 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Category, error)
 		return model.Category{}, fmt.Errorf("build query get category by id: %w", err)
 	}
 
+	dbtx := db.ExtractTx(ctx, r.db)
+
 	var cat model.Category
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).
 		Scan(
 			&cat.ID,
 			&cat.CategoryName,
@@ -244,7 +253,7 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Category, error)
 }
 
 // Find get all category within user
-func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters) ([]model.Category, data.Metadata, error) {
+func (r Repo) Find(ctx context.Context, pocketID string, filter data.Filters) ([]model.Category, data.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "category-repo-Find")
 	defer span.End()
 
@@ -278,7 +287,9 @@ func (r Repo) Find(ctx context.Context, pocketID uuid.UUID, filter data.Filters)
 		return nil, data.Metadata{}, fmt.Errorf("build query find category: %w", err)
 	}
 
-	rows, err := r.mod(ctx).Query(ctx, sqlStatement, args...)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	rows, err := dbtx.Query(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return nil, data.Metadata{}, db.ParseError(err)

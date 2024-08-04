@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/pkg/global"
+	"github.com/muchlist/moneymagnet/pkg/xulid"
 )
 
 type Envelope map[string]interface{}
@@ -42,6 +43,15 @@ func ReadUUIDParam(r *http.Request) (uuid.UUID, error) {
 		return uuid.New(), errors.New("invalid uuid parameter")
 	}
 	return uuidFormatID, nil
+}
+
+func ReadULIDParam(r *http.Request) (xulid.ULID, error) {
+	idParam := chi.URLParam(r, "id")
+	ulidFormatID, err := xulid.Parse(idParam)
+	if err != nil {
+		return xulid.ULID{}, errors.New("invalid ulid parameter")
+	}
+	return ulidFormatID, nil
 }
 
 // WriteJSON untuk keperluan mengirimkan response JSON seperti marshaling body JSON,

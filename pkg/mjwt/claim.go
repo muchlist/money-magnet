@@ -1,6 +1,8 @@
 package mjwt
 
-import "github.com/google/uuid"
+import (
+	"github.com/muchlist/moneymagnet/pkg/xulid"
+)
 
 type TokenType string
 
@@ -18,8 +20,8 @@ type CustomClaim struct {
 	Roles    []string
 }
 
-func (c CustomClaim) GetUUID() uuid.UUID {
-	// Because we 100% sure Identity is uuid, and if not
+func (c CustomClaim) GetULID() xulid.ULID {
+	// Because we 100% sure Identity is ulid, and if not
 	// maybe secret key got hacked. it's okay server panic
-	return uuid.MustParse(c.Identity)
+	return xulid.MustParse(c.Identity)
 }

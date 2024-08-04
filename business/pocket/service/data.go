@@ -1,16 +1,16 @@
 package service
 
-import "github.com/google/uuid"
+import "github.com/muchlist/moneymagnet/pkg/xulid"
 
 type AddPersonData struct {
-	Owner      uuid.UUID
-	Person     uuid.UUID
-	PocketID   uuid.UUID
+	Owner      xulid.ULID
+	Person     xulid.ULID
+	PocketID   xulid.ULID
 	IsReadOnly bool
 }
 
 type RemovePersonData struct {
-	Owner    uuid.UUID
-	Person   uuid.UUID
-	PocketID uuid.UUID
+	Owner    xulid.ULID
+	Person   xulid.ULID
+	PocketID xulid.ULID
 }

@@ -3,11 +3,11 @@ package service
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/business/category/model"
+	"github.com/muchlist/moneymagnet/pkg/xulid"
 )
 
-func generateDefaultCategory(pocketID uuid.UUID) []model.Category {
+func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 	timeNow := time.Now()
 	categories := []model.Category{
 		/*INCOME CATEGORY*/
