@@ -3,7 +3,7 @@ package slicer_test
 import (
 	"testing"
 
-	"github.com/muchlist/moneymagnet/pkg/utils/slicer"
+	"github.com/muchlist/moneymagnet/pkg/slicer"
 	"github.com/stretchr/testify/assert"
 )
 
