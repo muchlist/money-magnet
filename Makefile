@@ -56,7 +56,9 @@ db/migrations/up: confirm
 swagger:
 	swag init -g app/api/main.go --parseDependency --overridesFile .swaggo
 
-
+## generate: run all code generator. ex : mocking interface
+generate:
+	go generate ./...
 
 # ==================================================================================== #
 # QUALITY CONTROL

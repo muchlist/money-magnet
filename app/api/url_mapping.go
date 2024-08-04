@@ -18,6 +18,7 @@ import (
 	urhand "github.com/muchlist/moneymagnet/business/user/handler"
 	urrepo "github.com/muchlist/moneymagnet/business/user/repo"
 	urserv "github.com/muchlist/moneymagnet/business/user/service"
+	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/lrucache"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
@@ -45,20 +46,21 @@ func (app *application) routes() http.Handler {
 	categoryRepo := cyrepo.NewRepo(app.db, app.logger)
 	requestRepo := reqrepo.NewRepo(app.db, app.logger)
 	spendRepo := spnrepo.NewRepo(app.db, app.logger)
+	txManager := db.NewTxManager(app.db, app.logger)
 
 	userService := urserv.NewCore(app.logger, userRepo, bcrypt, jwt)
 	userHandler := urhand.NewUserHandler(app.logger, app.validator, userService)
 
-	pocketService := ptserv.NewCore(app.logger, pocketRepo, userRepo, categoryRepo)
+	pocketService := ptserv.NewCore(app.logger, pocketRepo, userRepo, categoryRepo, txManager)
 	pocketHandler := pthand.NewPocketHandler(app.logger, app.validator, cache, pocketService)
 
 	categoryService := cyserv.NewCore(app.logger, categoryRepo, pocketRepo)
 	categoryHandler := cyhand.NewCatHandler(app.logger, app.validator, categoryService)
 
-	requestService := reqserv.NewCore(app.logger, requestRepo, pocketRepo)
+	requestService := reqserv.NewCore(app.logger, requestRepo, pocketRepo, txManager)
 	requestHandler := reqhand.NewRequestHandler(app.logger, app.validator, requestService)
 
-	spendService := spnserv.NewCore(app.logger, spendRepo, pocketRepo)
+	spendService := spnserv.NewCore(app.logger, spendRepo, pocketRepo, txManager)
 	spendHandler := spnhand.NewSpendHandler(app.logger, app.validator, cache, spendService)
 
 	// swagger endpoint
@@ -119,6 +121,7 @@ func (app *application) routes() http.Handler {
 
 			i := r.With(idempo.IdempotentCheck)
 			i.Post("/", spendHandler.CreateSpend)
+			i.Post("/transfer", spendHandler.TransferSpend)
 			i.Patch("/{id}", spendHandler.EditSpend)
 		})
 

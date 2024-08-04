@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  postgres:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pgdb-ulid
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres-ulid-data:/var/lib/postgresql/data/
+
+volumes:
+  postgres-ulid-data:

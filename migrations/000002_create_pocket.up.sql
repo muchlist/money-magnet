@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS "pockets" (
-  "id" uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  "owner_id" uuid NULL,
-  "editor_id" uuid[],
-  "watcher_id" uuid[],
+  "id" ulid DEFAULT gen_ulid() PRIMARY KEY,
+  "owner_id" ulid NULL,
+  "editor_id" text[],
+  "watcher_id" text[],
   "pocket_name" varchar(100) NOT NULL,
   "balance" bigint NOT NULL DEFAULT 0,
   "currency" varchar(10) NOT NULL DEFAULT '',

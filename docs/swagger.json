@@ -38,7 +38,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.NewCategory"
+                            "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_category_model.NewCategory"
                         }
                     }
                 ],
@@ -54,7 +54,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.CategoryResp"
+                                            "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_category_model.CategoryResp"
                                         }
                                     }
                                 }
@@ -112,7 +112,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/model.CategoryResp"
+                                                "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_category_model.CategoryResp"
                                             }
                                         }
                                     }
@@ -162,7 +162,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.UpdateCategory"
+                            "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_category_model.UpdateCategory"
                         }
                     }
                 ],
@@ -178,7 +178,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.CategoryResp"
+                                            "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_category_model.CategoryResp"
                                         }
                                     }
                                 }
@@ -324,7 +324,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/model.PocketResp"
+                                                "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_pocket_model.PocketResp"
                                             }
                                         }
                                     }
@@ -365,7 +365,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.NewPocket"
+                            "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_pocket_model.NewPocket"
                         }
                     }
                 ],
@@ -381,7 +381,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.PocketResp"
+                                            "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_pocket_model.PocketResp"
                                         }
                                     }
                                 }
@@ -437,7 +437,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.PocketResp"
+                                            "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_pocket_model.PocketResp"
                                         }
                                     }
                                 }
@@ -484,7 +484,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.PocketUpdate"
+                            "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_pocket_model.PocketUpdate"
                         }
                     }
                 ],
@@ -500,7 +500,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.PocketResp"
+                                            "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_pocket_model.PocketResp"
                                         }
                                     }
                                 }
@@ -542,7 +542,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.NewRequestPocket"
+                            "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_request_model.NewRequestPocket"
                         }
                     }
                 ],
@@ -558,7 +558,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.RequestPocket"
+                                            "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_request_model.RequestPocket"
                                         }
                                     }
                                 }
@@ -607,7 +607,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/model.RequestPocket"
+                                                "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_request_model.RequestPocket"
                                             }
                                         }
                                     }
@@ -657,7 +657,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/model.RequestPocket"
+                                                "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_request_model.RequestPocket"
                                             }
                                         }
                                     }
@@ -813,7 +813,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/model.SpendResp"
+                                                "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_spend_model.SpendResp"
                                             }
                                         }
                                     }
@@ -854,7 +854,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.NewSpend"
+                            "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_spend_model.NewSpend"
                         }
                     }
                 ],
@@ -870,7 +870,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.SpendResp"
+                                            "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_spend_model.SpendResp"
                                         }
                                     }
                                 }
@@ -936,6 +936,52 @@
                 }
             }
         },
+        "/spends/transfer": {
+            "post": {
+                "description": "Tramsfer",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Spend"
+                ],
+                "summary": "Transfer",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "Body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_spend_model.TransferSpend"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseMessage"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            }
+        },
         "/spends/{spend_id}": {
             "get": {
                 "description": "Get spend detail by ID",
@@ -970,7 +1016,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.SpendResp"
+                                            "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_spend_model.SpendResp"
                                         }
                                     }
                                 }
@@ -1017,7 +1063,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.UpdateSpend"
+                            "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_spend_model.UpdateSpend"
                         }
                     }
                 ],
@@ -1033,7 +1079,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.SpendResp"
+                                            "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_spend_model.SpendResp"
                                         }
                                     }
                                 }
@@ -1057,7 +1103,432 @@
         }
     },
     "definitions": {
-        "data.Metadata": {
+        "github_com_muchlist_moneymagnet_business_category_model.CategoryResp": {
+            "type": "object",
+            "properties": {
+                "category_icon": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "category_name": {
+                    "type": "string",
+                    "example": "gaji"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "01ARZ3NDEKTSV4RRFFQ69G5FZZ"
+                },
+                "is_income": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "pocket_id": {
+                    "type": "string",
+                    "example": "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+                },
+                "update_at": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                }
+            }
+        },
+        "github_com_muchlist_moneymagnet_business_category_model.NewCategory": {
+            "type": "object",
+            "required": [
+                "category_name",
+                "pocket_id"
+            ],
+            "properties": {
+                "category_icon": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "category_name": {
+                    "type": "string",
+                    "example": "gaji"
+                },
+                "is_income": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "pocket_id": {
+                    "type": "string",
+                    "example": "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+                }
+            }
+        },
+        "github_com_muchlist_moneymagnet_business_category_model.UpdateCategory": {
+            "type": "object",
+            "required": [
+                "category_name"
+            ],
+            "properties": {
+                "category_icon": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "category_name": {
+                    "type": "string",
+                    "example": "gaji_2"
+                }
+            }
+        },
+        "github_com_muchlist_moneymagnet_business_pocket_model.NewPocket": {
+            "type": "object",
+            "required": [
+                "pocket_name"
+            ],
+            "properties": {
+                "currency": {
+                    "type": "string",
+                    "example": "RP."
+                },
+                "editor_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "01J4EXF94QDMR5XT9KN527XEP6"
+                    ]
+                },
+                "icon": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "pocket_name": {
+                    "type": "string",
+                    "example": "dompet utama"
+                },
+                "watcher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "01J4EXF94QDMR5XT9KN527XEP6"
+                    ]
+                }
+            }
+        },
+        "github_com_muchlist_moneymagnet_business_pocket_model.PocketResp": {
+            "type": "object",
+            "properties": {
+                "balance": {
+                    "type": "integer",
+                    "example": 50000
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "RP."
+                },
+                "editor_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "01J4EXF94QDMR5XT9KN527XEP6"
+                    ]
+                },
+                "icon": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "id": {
+                    "type": "string",
+                    "example": "01J4EXF94QDMR5XT9KN527XEP8"
+                },
+                "level": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "owner_id": {
+                    "type": "string",
+                    "example": "01J4EXF94QDMR5XT9KN527XEP6"
+                },
+                "pocket_name": {
+                    "type": "string",
+                    "example": "dompet utama"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_pocket_model.PocketUser"
+                    }
+                },
+                "version": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "watcher_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "01J4EXF94QDMR5XT9KN527XEP6"
+                    ]
+                }
+            }
+        },
+        "github_com_muchlist_moneymagnet_business_pocket_model.PocketUpdate": {
+            "type": "object",
+            "properties": {
+                "currency": {
+                    "type": "string",
+                    "example": "RP."
+                },
+                "icon": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "pocket_name": {
+                    "type": "string",
+                    "example": "dompet utama"
+                }
+            }
+        },
+        "github_com_muchlist_moneymagnet_business_pocket_model.PocketUser": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "01J4EXF94QDMR5XT9KN527XEP6"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "muchlis"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "owner"
+                }
+            }
+        },
+        "github_com_muchlist_moneymagnet_business_request_model.NewRequestPocket": {
+            "type": "object",
+            "properties": {
+                "pocket_id": {
+                    "type": "string",
+                    "example": "01J4EXF94QDMR5XT9KN527XEP8"
+                }
+            }
+        },
+        "github_com_muchlist_moneymagnet_business_request_model.RequestPocket": {
+            "type": "object",
+            "properties": {
+                "approver_id": {
+                    "type": "string",
+                    "example": "01ARZ3NDEKTSV4RRFFQ69G5FXX"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 2001
+                },
+                "is_approved": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "is_rejected": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "pocket_id": {
+                    "type": "string",
+                    "example": "01J4EXF94QDMR5XT9KN527XEP8"
+                },
+                "pocket_name": {
+                    "type": "string",
+                    "example": "main pocket"
+                },
+                "requester_id": {
+                    "type": "string",
+                    "example": "01J4EXF94QDMR5XT9KN527XEP6"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                }
+            }
+        },
+        "github_com_muchlist_moneymagnet_business_spend_model.NewSpend": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "string",
+                    "example": "01ARZ3NDEKTSV4RRFFQ69G5FXX"
+                },
+                "date": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "01ARZ3NDEKTSV4RRFFQ69G5FZZ"
+                },
+                "is_income": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Makan siang"
+                },
+                "pocket_id": {
+                    "type": "string",
+                    "example": "01ARZ3NDEKTSV4RRFFQ69G5FYY"
+                },
+                "price": {
+                    "type": "integer",
+                    "example": 50000
+                },
+                "type": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
+        "github_com_muchlist_moneymagnet_business_spend_model.SpendResp": {
+            "type": "object",
+            "properties": {
+                "balance_snapshoot": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "category_icon": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "category_id": {
+                    "type": "string",
+                    "example": "01ARZ3NDEKTSV4RRFFQ69G5FXX"
+                },
+                "category_name": {
+                    "type": "string",
+                    "example": "food"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "date": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "01ARZ3NDEKTSV4RRFFQ69G5FZZ"
+                },
+                "is_income": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Makan siang"
+                },
+                "pocket_id": {
+                    "type": "string",
+                    "example": "01ARZ3NDEKTSV4RRFFQ69G5FYY"
+                },
+                "pocket_name": {
+                    "type": "string",
+                    "example": "main pocket"
+                },
+                "price": {
+                    "type": "integer",
+                    "example": 50000
+                },
+                "type": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "user_id": {
+                    "type": "string",
+                    "example": "01ARZ3NDEKTSV4RRFFQ69G5FNN"
+                },
+                "user_name": {
+                    "type": "string",
+                    "example": "Muchlis"
+                },
+                "version": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "github_com_muchlist_moneymagnet_business_spend_model.TransferSpend": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "pocket_id_from": {
+                    "type": "string",
+                    "example": "01ARZ3NDEKTSV4RRFFQ69G5FYY"
+                },
+                "pocket_id_to": {
+                    "type": "string",
+                    "example": "01ARZ3NDEKTSV4RRFFQ69G5FXX"
+                },
+                "price": {
+                    "type": "integer",
+                    "example": 50000
+                }
+            }
+        },
+        "github_com_muchlist_moneymagnet_business_spend_model.UpdateSpend": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "string",
+                    "example": "01ARZ3NDEKTSV4RRFFQ69G5FXX"
+                },
+                "date": {
+                    "type": "string",
+                    "example": "2022-09-10T17:03:15.091267+08:00"
+                },
+                "is_income": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Makan siang"
+                },
+                "price": {
+                    "type": "integer",
+                    "example": 50000
+                },
+                "type": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
+        "github_com_muchlist_moneymagnet_pkg_data.Metadata": {
             "type": "object",
             "properties": {
                 "current_page": {
@@ -1132,388 +1603,7 @@
                     "items": {}
                 },
                 "meta_data": {
-                    "$ref": "#/definitions/data.Metadata"
-                }
-            }
-        },
-        "model.CategoryResp": {
-            "type": "object",
-            "properties": {
-                "category_name": {
-                    "type": "string",
-                    "example": "gaji"
-                },
-                "created_at": {
-                    "type": "string",
-                    "example": "2022-09-10T17:03:15.091267+08:00"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "bead2cb0-692e-41d2-a623-c44d1e19f2a0"
-                },
-                "is_income": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "pocket_id": {
-                    "type": "string",
-                    "example": "f9339be2-6b05-4acb-a269-5309c39bae91"
-                },
-                "update_at": {
-                    "type": "string",
-                    "example": "2022-09-10T17:03:15.091267+08:00"
-                }
-            }
-        },
-        "model.NewCategory": {
-            "type": "object",
-            "required": [
-                "category_name",
-                "pocket_id"
-            ],
-            "properties": {
-                "category_name": {
-                    "type": "string",
-                    "example": "gaji"
-                },
-                "is_income": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "pocket_id": {
-                    "type": "string",
-                    "example": "f9339be2-6b05-4acb-a269-5309c39bae91"
-                }
-            }
-        },
-        "model.NewPocket": {
-            "type": "object",
-            "required": [
-                "pocket_name"
-            ],
-            "properties": {
-                "currency": {
-                    "type": "string",
-                    "example": "RP."
-                },
-                "editor_id": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "ba22d3c6-2cdd-40b4-a2aa-d68da8c88502"
-                    ]
-                },
-                "icon": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "pocket_name": {
-                    "type": "string",
-                    "example": "dompet utama"
-                },
-                "watcher_id": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "ba22d3c6-2cdd-40b4-a2aa-d68da8c88502"
-                    ]
-                }
-            }
-        },
-        "model.NewRequestPocket": {
-            "type": "object",
-            "properties": {
-                "pocket_id": {
-                    "type": "string",
-                    "example": "968d4dfe-041a-4721-bd8a-4e60c507c671"
-                }
-            }
-        },
-        "model.NewSpend": {
-            "type": "object",
-            "properties": {
-                "category_id": {
-                    "type": "string",
-                    "example": "f9339be2-6b05-4acb-a269-5309c39bae92"
-                },
-                "category_id_2": {
-                    "type": "string",
-                    "example": "f9339be2-6b05-4acb-a269-5309c39bae93"
-                },
-                "date": {
-                    "type": "string",
-                    "example": "2022-09-10T17:03:15.091267+08:00"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "f9339be2-6b05-4acb-a269-5309c39bae90"
-                },
-                "is_income": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Makan siang"
-                },
-                "pocket_id": {
-                    "type": "string",
-                    "example": "f9339be2-6b05-4acb-a269-5309c39bae91"
-                },
-                "price": {
-                    "type": "integer",
-                    "example": 50000
-                },
-                "type": {
-                    "type": "integer",
-                    "example": 2
-                }
-            }
-        },
-        "model.PocketResp": {
-            "type": "object",
-            "properties": {
-                "balance": {
-                    "type": "integer",
-                    "example": 50000
-                },
-                "created_at": {
-                    "type": "string",
-                    "example": "2022-09-10T17:03:15.091267+08:00"
-                },
-                "currency": {
-                    "type": "string",
-                    "example": "RP."
-                },
-                "editor_id": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "ba22d3c6-2cdd-40b4-a2aa-d68da8c88502"
-                    ]
-                },
-                "icon": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "id": {
-                    "type": "string",
-                    "example": "968d4dfe-041a-4721-bd8a-4e60c507c671"
-                },
-                "level": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "owner_id": {
-                    "type": "string",
-                    "example": "ba22d3c6-2cdd-40b4-a2aa-d68da8c88502"
-                },
-                "pocket_name": {
-                    "type": "string",
-                    "example": "dompet utama"
-                },
-                "updated_at": {
-                    "type": "string",
-                    "example": "2022-09-10T17:03:15.091267+08:00"
-                },
-                "version": {
-                    "type": "integer",
-                    "example": 2
-                },
-                "watcher_id": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "ba22d3c6-2cdd-40b4-a2aa-d68da8c88502"
-                    ]
-                }
-            }
-        },
-        "model.PocketUpdate": {
-            "type": "object",
-            "properties": {
-                "currency": {
-                    "type": "string",
-                    "example": "RP."
-                },
-                "icon": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "pocket_name": {
-                    "type": "string",
-                    "example": "dompet utama"
-                }
-            }
-        },
-        "model.RequestPocket": {
-            "type": "object",
-            "properties": {
-                "approver_id": {
-                    "type": "string",
-                    "example": "ba22d3c6-2cdd-40b4-a2aa-d68da8c88501"
-                },
-                "created_at": {
-                    "type": "string",
-                    "example": "2022-09-10T17:03:15.091267+08:00"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 2001
-                },
-                "is_approved": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "is_rejected": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "pocket_id": {
-                    "type": "string",
-                    "example": "968d4dfe-041a-4721-bd8a-4e60c507c671"
-                },
-                "pocket_name": {
-                    "type": "string",
-                    "example": "main pocket"
-                },
-                "requester_id": {
-                    "type": "string",
-                    "example": "ba22d3c6-2cdd-40b4-a2aa-d68da8c88502"
-                },
-                "updated_at": {
-                    "type": "string",
-                    "example": "2022-09-10T17:03:15.091267+08:00"
-                }
-            }
-        },
-        "model.SpendResp": {
-            "type": "object",
-            "properties": {
-                "balance_snapshoot": {
-                    "type": "integer",
-                    "example": 0
-                },
-                "category_id": {
-                    "type": "string",
-                    "example": "f9339be2-6b05-4acb-a269-5309c39bae92"
-                },
-                "category_id_2": {
-                    "type": "string",
-                    "example": "f9339be2-6b05-4acb-a269-5309c39bae93"
-                },
-                "category_name": {
-                    "type": "string",
-                    "example": "food"
-                },
-                "category_name_2": {
-                    "type": "string",
-                    "example": "b and f"
-                },
-                "created_at": {
-                    "type": "string",
-                    "example": "2022-09-10T17:03:15.091267+08:00"
-                },
-                "date": {
-                    "type": "string",
-                    "example": "2022-09-10T17:03:15.091267+08:00"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "f9339be2-6b05-4acb-a269-5309c39bae90"
-                },
-                "is_income": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Makan siang"
-                },
-                "pocket_id": {
-                    "type": "string",
-                    "example": "f9339be2-6b05-4acb-a269-5309c39bae91"
-                },
-                "pocket_name": {
-                    "type": "string",
-                    "example": "main pocket"
-                },
-                "price": {
-                    "type": "integer",
-                    "example": 50000
-                },
-                "type": {
-                    "type": "integer",
-                    "example": 2
-                },
-                "updated_at": {
-                    "type": "string",
-                    "example": "2022-09-10T17:03:15.091267+08:00"
-                },
-                "user_id": {
-                    "type": "string",
-                    "example": "f9339be2-6b05-4acb-a269-5309c39bae89"
-                },
-                "user_name": {
-                    "type": "string",
-                    "example": "Muchlis"
-                },
-                "version": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "model.UpdateCategory": {
-            "type": "object",
-            "required": [
-                "category_name"
-            ],
-            "properties": {
-                "category_name": {
-                    "type": "string",
-                    "example": "gaji_2"
-                }
-            }
-        },
-        "model.UpdateSpend": {
-            "type": "object",
-            "properties": {
-                "category_id": {
-                    "type": "string",
-                    "example": "f9339be2-6b05-4acb-a269-5309c39bae92"
-                },
-                "category_id_2": {
-                    "type": "string",
-                    "example": "f9339be2-6b05-4acb-a269-5309c39bae93"
-                },
-                "date": {
-                    "type": "string",
-                    "example": "2022-09-10T17:03:15.091267+08:00"
-                },
-                "is_income": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Makan siang"
-                },
-                "price": {
-                    "type": "integer",
-                    "example": 50000
-                },
-                "type": {
-                    "type": "integer",
-                    "example": 2
+                    "$ref": "#/definitions/github_com_muchlist_moneymagnet_pkg_data.Metadata"
                 }
             }
         }

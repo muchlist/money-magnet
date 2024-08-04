@@ -1,2 +1,6 @@
 // Replace all uuid.NullUUID with string
 replace github.com/google/uuid.NullUUID string
+
+// Replace all xulid.NullUUID with string
+replace xulid.NullULID string
+replace xulid.ULID string

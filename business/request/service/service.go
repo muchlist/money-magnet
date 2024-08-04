@@ -5,37 +5,40 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/muchlist/moneymagnet/business/request/model"
-	"github.com/muchlist/moneymagnet/business/request/storer"
+	"github.com/muchlist/moneymagnet/business/request/port"
 	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/xulid"
 )
 
 // Core manages the set of APIs for request access.
 type Core struct {
 	log        mlogger.Logger
-	repo       storer.RequestStorer
-	pocketRepo storer.PocketStorer
+	repo       port.RequestStorer
+	pocketRepo port.PocketStorer
+	txManager  port.Transactor
 }
 
 // NewCore constructs a core for request api access.
 func NewCore(
 	log mlogger.Logger,
-	repo storer.RequestStorer,
-	pocketRepo storer.PocketStorer,
+	repo port.RequestStorer,
+	pocketRepo port.PocketStorer,
+	txManager port.Transactor,
 ) Core {
 	return Core{
 		log:        log,
 		repo:       repo,
 		pocketRepo: pocketRepo,
+		txManager:  txManager,
 	}
 }
 
-func (s Core) CreateRequest(ctx context.Context, claims mjwt.CustomClaim, pocketID uuid.UUID) (model.RequestPocket, error) {
+func (s Core) CreateRequest(ctx context.Context, claims mjwt.CustomClaim, pocketID xulid.ULID) (model.RequestPocket, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-CreateRequest")
 	defer span.End()
 
@@ -48,7 +51,7 @@ func (s Core) CreateRequest(ctx context.Context, claims mjwt.CustomClaim, pocket
 	}
 
 	req := model.RequestPocket{
-		RequesterID: claims.GetUUID(),
+		RequesterID: claims.GetULID(),
 		PocketID:    pocketID,
 		PocketName:  pocket.PocketName,
 		ApproverID:  &pocket.OwnerID,
@@ -74,7 +77,7 @@ func (s Core) ApproveRequest(ctx context.Context, claims mjwt.CustomClaim, IsApp
 		return fmt.Errorf("get request by id: %w", err)
 	}
 
-	if *req.ApproverID != claims.GetUUID() {
+	if *req.ApproverID != claims.GetULID() {
 		return errr.New("the user does not have access rights to approve this request", 400)
 	}
 
@@ -108,19 +111,19 @@ func (s Core) ApproveRequest(ctx context.Context, claims mjwt.CustomClaim, IsApp
 	}
 
 	// add to wathcer
-	pocketExisting.WatcherID = append(pocketExisting.WatcherID, req.RequesterID)
+	pocketExisting.WatcherID = append(pocketExisting.WatcherID, req.RequesterID.String())
 	// add to editor
-	pocketExisting.EditorID = append(pocketExisting.EditorID, req.RequesterID)
+	pocketExisting.EditorID = append(pocketExisting.EditorID, req.RequesterID.String())
 
 	// TRANSACTION
-	err = s.repo.WithinTransaction(ctx, func(ctx context.Context) error {
+	err = s.txManager.WithAtomic(ctx, func(ctx context.Context) error {
 		// Edit
 		err = s.pocketRepo.Edit(ctx, &pocketExisting)
 		if err != nil {
 			return fmt.Errorf("edit pocket: %w", err)
 		}
 		// insert to related table
-		err = s.pocketRepo.InsertPocketUser(ctx, []uuid.UUID{req.RequesterID}, pocketExisting.ID)
+		err = s.pocketRepo.InsertPocketUser(ctx, []string{req.RequesterID.String()}, pocketExisting.ID)
 		if err != nil {
 			return fmt.Errorf("insert pocket_user to db: %w", err)
 		}

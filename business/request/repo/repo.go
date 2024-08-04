@@ -88,7 +88,9 @@ func (r Repo) Insert(ctx context.Context, request *model.RequestPocket) error {
 		return fmt.Errorf("build query insert request: %w", err)
 	}
 
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&request.ID)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).Scan(&request.ID)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -126,7 +128,9 @@ func (r Repo) UpdateStatus(ctx context.Context, request *model.RequestPocket) er
 		return fmt.Errorf("build query update request: %w", err)
 	}
 
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).Scan(
 		&request.ID,
 		&request.RequesterID,
 		&request.ApproverID,
@@ -171,8 +175,10 @@ func (r Repo) GetByID(ctx context.Context, id uint64) (model.RequestPocket, erro
 		return model.RequestPocket{}, fmt.Errorf("build query get request by id: %w", err)
 	}
 
+	dbtx := db.ExtractTx(ctx, r.db)
+
 	var request model.RequestPocket
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).
 		Scan(
 			&request.ID,
 			&request.RequesterID,
@@ -249,7 +255,9 @@ func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter data.Filters
 		return nil, data.Metadata{}, fmt.Errorf("build query find request: %w", err)
 	}
 
-	rows, err := r.mod(ctx).Query(ctx, sqlStatement, args...)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	rows, err := dbtx.Query(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return nil, data.Metadata{}, db.ParseError(err)

@@ -97,7 +97,7 @@ func (ch catHandler) EditCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	categoryID, err := web.ReadUUIDParam(r)
+	categoryID, err := web.ReadULIDParam(r)
 	if err != nil {
 		ch.log.WarnT(r.Context(), err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -149,7 +149,7 @@ func (ch catHandler) EditCategory(w http.ResponseWriter, r *http.Request) {
 // @Router       /categories/from-pocket/{pocket_id} [get]
 func (ch catHandler) FindPocketCategory(w http.ResponseWriter, r *http.Request) {
 	// extract url query
-	pocketID, err := web.ReadUUIDParam(r)
+	pocketID, err := web.ReadULIDParam(r)
 	if err != nil {
 		ch.log.WarnT(r.Context(), err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -196,7 +196,7 @@ func (ch catHandler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
 	defer span.End()
 
 	// extract url query
-	categoryID, err := web.ReadUUIDParam(r)
+	categoryID, err := web.ReadULIDParam(r)
 	if err != nil {
 		ch.log.WarnT(ctx, err.Error(), err)
 		web.ErrorResponse(w, http.StatusBadRequest, err.Error())

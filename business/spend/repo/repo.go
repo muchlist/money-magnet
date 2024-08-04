@@ -10,9 +10,9 @@ import (
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/xulid"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -97,7 +97,9 @@ func (r Repo) Insert(ctx context.Context, spend *model.Spend) error {
 		return fmt.Errorf("build query insert spend: %w,", err)
 	}
 
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&spend.ID)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).Scan(&spend.ID)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -137,7 +139,9 @@ func (r Repo) Edit(ctx context.Context, spend *model.Spend) error {
 		return fmt.Errorf("build query edit spend: %w", err)
 	}
 
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&spend.Version)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).Scan(&spend.Version)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -147,7 +151,7 @@ func (r Repo) Edit(ctx context.Context, spend *model.Spend) error {
 }
 
 // Delete ...
-func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
+func (r Repo) Delete(ctx context.Context, id xulid.ULID) error {
 	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-Delete")
 	defer span.End()
 
@@ -160,7 +164,9 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("build query delete spend: %w", err)
 	}
 
-	res, err := r.mod(ctx).Exec(ctx, sqlStatement, args...)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	res, err := dbtx.Exec(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
 		return db.ParseError(err)
@@ -177,7 +183,7 @@ func (r Repo) Delete(ctx context.Context, id uuid.UUID) error {
 // GETTER
 
 // GetByID get one spend by email
-func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error) {
+func (r Repo) GetByID(ctx context.Context, id xulid.ULID) (model.Spend, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-GetByID")
 	defer span.End()
 
@@ -213,8 +219,10 @@ func (r Repo) GetByID(ctx context.Context, id uuid.UUID) (model.Spend, error) {
 		return model.Spend{}, fmt.Errorf("build query get spend by id: %w", err)
 	}
 
+	dbtx := db.ExtractTx(ctx, r.db)
+
 	var spend model.Spend
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).
 		Scan(
 			&spend.ID,
 			&spend.UserID,
@@ -284,9 +292,9 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter da
 
 	// WHERE builder
 	// mapping where filter
-	whereMap := sq.Eq{db.A(keyPocketID): spendFilter.PocketID.UUID}
+	whereMap := sq.Eq{db.A(keyPocketID): spendFilter.PocketID.ULID}
 	if spendFilter.User.Valid {
-		whereMap[db.A(keyUserID)] = spendFilter.User.UUID
+		whereMap[db.A(keyUserID)] = spendFilter.User.ULID
 	}
 	// if spendFilter.Category.Valid {
 	// 	whereMap[db.A(keyCategoryID)] = spendFilter.Category.UUID
@@ -302,7 +310,7 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter da
 	query = query.Where(whereMap)
 	if spendFilter.Category.Valid {
 		query = query.Where(
-			sq.Eq{db.A(keyCategoryID): spendFilter.Category.UUID},
+			sq.Eq{db.A(keyCategoryID): spendFilter.Category.ULID},
 		)
 	}
 	if spendFilter.DateStart != nil {
@@ -322,7 +330,9 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter da
 		return nil, data.Metadata{}, fmt.Errorf("build query find spend: %w", err)
 	}
 
-	rows, err := r.mod(ctx).Query(ctx, sqlStatement, args...)
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	rows, err := dbtx.Query(ctx, sqlStatement, args...)
 	if err != nil {
 		return nil, data.Metadata{}, db.ParseError(err)
 	}
@@ -369,7 +379,7 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter da
 }
 
 // Count All Price
-func (r Repo) CountAllPrice(ctx context.Context, pocketID uuid.UUID) (int64, error) {
+func (r Repo) CountAllPrice(ctx context.Context, pocketID xulid.ULID) (int64, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-CountAllPrice")
 	defer span.End()
 
@@ -385,8 +395,10 @@ func (r Repo) CountAllPrice(ctx context.Context, pocketID uuid.UUID) (int64, err
 		return 0, fmt.Errorf("build query find spend: %w", err)
 	}
 
+	dbtx := db.ExtractTx(ctx, r.db)
+
 	var balance int64
-	err = r.mod(ctx).QueryRow(ctx, sqlStatement, args...).Scan(&balance)
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).Scan(&balance)
 	if err != nil {
 		return 0, db.ParseError(err)
 	}
