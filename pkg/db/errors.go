@@ -9,12 +9,13 @@ import (
 )
 
 var (
-	ErrDBNotFound         = errors.New("not found")
-	ErrDBDuplicatedEntry  = errors.New("duplicated entry")
-	ErrDBRelationNotFound = errors.New("invalid relation")
-	ErrDBInvalidInput     = errors.New("invalid input syntax")
-	ErrDBBuildQuery       = errors.New("query not valid")
-	ErrDBSortFilter       = errors.New("invalid filter or sort value")
+	ErrDBNotFound          = errors.New("not found")
+	ErrDBDuplicatedEntry   = errors.New("duplicated entry")
+	ErrDBRelationNotFound  = errors.New("invalid relation")
+	ErrDBInvalidInput      = errors.New("invalid input syntax")
+	ErrDBBuildQuery        = errors.New("query not valid")
+	ErrDBSortFilter        = errors.New("invalid filter or sort value")
+	ErrDBInvalidCursorType = errors.New("invalid cursor type")
 )
 
 func ParseError(err error) error {

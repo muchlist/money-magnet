@@ -8,11 +8,11 @@ import (
 	"github.com/muchlist/moneymagnet/business/category/model"
 	"github.com/muchlist/moneymagnet/business/category/port"
 	pocketPort "github.com/muchlist/moneymagnet/business/pocket/port"
-	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 	"github.com/muchlist/moneymagnet/pkg/slicer"
 	"github.com/muchlist/moneymagnet/pkg/xulid"
 )
@@ -105,14 +105,14 @@ func (s Core) EditCategory(ctx context.Context, claims mjwt.CustomClaim, newData
 }
 
 // FindAllCategory ...
-func (s Core) FindAllCategory(ctx context.Context, pocketID xulid.ULID, filter data.Filters) ([]model.CategoryResp, data.Metadata, error) {
+func (s Core) FindAllCategory(ctx context.Context, pocketID xulid.ULID, filter paging.Filters) ([]model.CategoryResp, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "category-service-FindAllCategory")
 	defer span.End()
 
 	// Get category
 	cats, metadata, err := s.repo.Find(ctx, pocketID.String(), filter)
 	if err != nil {
-		return nil, data.Metadata{}, fmt.Errorf("find category: %w", err)
+		return nil, paging.Metadata{}, fmt.Errorf("find category: %w", err)
 	}
 
 	catResults := make([]model.CategoryResp, len(cats))

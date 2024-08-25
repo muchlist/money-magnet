@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/muchlist/moneymagnet/business/pocket/model"
-	"github.com/muchlist/moneymagnet/pkg/data"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 	"github.com/muchlist/moneymagnet/pkg/xulid"
 )
 
@@ -27,8 +27,8 @@ type PocketSaver interface {
 
 type PocketReader interface {
 	GetByID(ctx context.Context, id xulid.ULID) (model.Pocket, error)
-	Find(ctx context.Context, owner xulid.ULID, filter data.Filters) ([]model.Pocket, data.Metadata, error)
-	FindUserPocketsByRelation(ctx context.Context, owner xulid.ULID, filter data.Filters) ([]model.Pocket, data.Metadata, error)
+	Find(ctx context.Context, owner xulid.ULID, filter paging.Filters) ([]model.Pocket, paging.Metadata, error)
+	FindUserPocketsByRelation(ctx context.Context, owner xulid.ULID, filter paging.Filters) ([]model.Pocket, paging.Metadata, error)
 }
 
 type Transactor interface {

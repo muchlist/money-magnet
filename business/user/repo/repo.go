@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/muchlist/moneymagnet/business/user/model"
-	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 	"github.com/muchlist/moneymagnet/pkg/xulid"
 
 	sq "github.com/Masterminds/squirrel"
@@ -376,14 +376,14 @@ func (r Repo) GetByEmail(ctx context.Context, email string) (model.User, error) 
 }
 
 // Find get all user
-func (r Repo) Find(ctx context.Context, name string, filter data.Filters) ([]model.User, data.Metadata, error) {
+func (r Repo) Find(ctx context.Context, name string, filter paging.Filters) ([]model.User, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "user-repo-Find")
 	defer span.End()
 
 	// Validation filter
 	filter.SortSafelist = []string{"name", "-name", "updated_at", "-updated_at"}
 	if err := filter.Validate(); err != nil {
-		return nil, data.Metadata{}, db.ErrDBSortFilter
+		return nil, paging.Metadata{}, db.ErrDBSortFilter
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -412,7 +412,7 @@ func (r Repo) Find(ctx context.Context, name string, filter data.Filters) ([]mod
 		ToSql()
 
 	if err != nil {
-		return nil, data.Metadata{}, fmt.Errorf("build query find user: %w", err)
+		return nil, paging.Metadata{}, fmt.Errorf("build query find user: %w", err)
 	}
 
 	dbtx := db.ExtractTx(ctx, r.db)
@@ -420,7 +420,7 @@ func (r Repo) Find(ctx context.Context, name string, filter data.Filters) ([]mod
 	rows, err := dbtx.Query(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
-		return nil, data.Metadata{}, db.ParseError(err)
+		return nil, paging.Metadata{}, db.ParseError(err)
 	}
 	defer rows.Close()
 
@@ -441,16 +441,16 @@ func (r Repo) Find(ctx context.Context, name string, filter data.Filters) ([]mod
 			&user.Version)
 		if err != nil {
 			r.log.InfoT(ctx, err.Error())
-			return nil, data.Metadata{}, db.ParseError(err)
+			return nil, paging.Metadata{}, db.ParseError(err)
 		}
 		users = append(users, user)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, data.Metadata{}, err
+		return nil, paging.Metadata{}, err
 	}
 
-	metadata := data.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
+	metadata := paging.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
 
 	return users, metadata, nil
 }

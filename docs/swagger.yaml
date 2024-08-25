@@ -305,7 +305,31 @@ definitions:
         example: 2
         type: integer
     type: object
-  github_com_muchlist_moneymagnet_pkg_data.Metadata:
+  github_com_muchlist_moneymagnet_pkg_paging.CursorMetadata:
+    properties:
+      current_cursor:
+        example: 01ARZ3NDEKTSV4RRFFQ69G5FAW
+        type: string
+      cursor_type:
+        example: id
+        type: string
+      next_cursor:
+        example: 01ARZ3NDEKTSV5RRFFQ69G5AAA
+        type: string
+      next_page:
+        example: /users?limit=50&cursor=01ARZ3NDEKTSV5RRFFQ69G5AAA&cursor_type=id
+        type: string
+      page_size:
+        example: 50
+        type: integer
+      reverse_cursor:
+        example: 01ARZ3NDEKTSV5RRFFQ69G5AAA
+        type: string
+      reverse_page:
+        example: /users?limit=50&cursor=01ARZ3NDEKTSV5RRFFQ69G5AAA&cursor_type=-id
+        type: string
+    type: object
+  github_com_muchlist_moneymagnet_pkg_paging.Metadata:
     properties:
       current_page:
         example: 1
@@ -357,7 +381,15 @@ definitions:
         items: {}
         type: array
       meta_data:
-        $ref: '#/definitions/github_com_muchlist_moneymagnet_pkg_data.Metadata'
+        $ref: '#/definitions/github_com_muchlist_moneymagnet_pkg_paging.Metadata'
+    type: object
+  misc.ResponseSuccessListCursor:
+    properties:
+      data:
+        items: {}
+        type: array
+      meta_data:
+        $ref: '#/definitions/github_com_muchlist_moneymagnet_pkg_paging.CursorMetadata'
     type: object
 host: localhost
 info:
@@ -814,6 +846,41 @@ paths:
       tags:
       - Join
   /spends:
+    post:
+      consumes:
+      - application/json
+      description: Create spend
+      parameters:
+      - description: Request Body
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_muchlist_moneymagnet_business_spend_model.NewSpend'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/misc.ResponseSuccess'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_muchlist_moneymagnet_business_spend_model.SpendResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/misc.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/misc.Response500Err'
+      summary: Create Spend
+      tags:
+      - Spend
+  /spends/{id}:
     get:
       consumes:
       - application/json
@@ -880,17 +947,48 @@ paths:
       summary: Find Spend
       tags:
       - Spend
-    post:
+  /spends/{id}/with-cursor:
+    get:
       consumes:
       - application/json
-      description: Create spend
+      description: Find spend By Cursor
       parameters:
-      - description: Request Body
-        in: body
-        name: Body
-        required: true
-        schema:
-          $ref: '#/definitions/github_com_muchlist_moneymagnet_business_spend_model.NewSpend'
+      - description: cursor
+        in: query
+        name: cursor
+        type: string
+      - description: cursor_type
+        in: query
+        name: cursor_type
+        type: string
+      - description: page-size
+        in: query
+        name: page_size
+        type: integer
+      - description: user
+        in: query
+        name: user
+        type: string
+      - description: category
+        in: query
+        name: category
+        type: string
+      - description: is_income
+        in: query
+        name: is_income
+        type: boolean
+      - description: type
+        in: query
+        name: type
+        type: string
+      - description: date_start
+        in: query
+        name: date_start
+        type: integer
+      - description: date_end
+        in: query
+        name: date_end
+        type: integer
       produces:
       - application/json
       responses:
@@ -898,10 +996,12 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/misc.ResponseSuccess'
+            - $ref: '#/definitions/misc.ResponseSuccessListCursor'
             - properties:
                 data:
-                  $ref: '#/definitions/github_com_muchlist_moneymagnet_business_spend_model.SpendResp'
+                  items:
+                    $ref: '#/definitions/github_com_muchlist_moneymagnet_business_spend_model.SpendResp'
+                  type: array
               type: object
         "400":
           description: Bad Request
@@ -911,7 +1011,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/misc.Response500Err'
-      summary: Create Spend
+      summary: Find Spend By Cursor
       tags:
       - Spend
   /spends/{spend_id}:

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/muchlist/moneymagnet/business/user/model"
-	"github.com/muchlist/moneymagnet/pkg/data"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 	"github.com/muchlist/moneymagnet/pkg/xulid"
 )
 
@@ -25,5 +25,5 @@ type UserReader interface {
 	GetByID(ctx context.Context, ulid xulid.ULID) (model.User, error)
 	GetByIDs(ctx context.Context, ulids []string) ([]model.User, error)
 	GetByEmail(ctx context.Context, email string) (model.User, error)
-	Find(ctx context.Context, name string, filter data.Filters) ([]model.User, data.Metadata, error)
+	Find(ctx context.Context, name string, filter paging.Filters) ([]model.User, paging.Metadata, error)
 }

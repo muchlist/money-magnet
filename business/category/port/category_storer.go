@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/muchlist/moneymagnet/business/category/model"
-	"github.com/muchlist/moneymagnet/pkg/data"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 )
 
 type CategoryStorer interface {
@@ -21,5 +21,5 @@ type CategorySaver interface {
 
 type CategoryReader interface {
 	GetByID(ctx context.Context, id string) (model.Category, error)
-	Find(ctx context.Context, pocketID string, filter data.Filters) ([]model.Category, data.Metadata, error)
+	Find(ctx context.Context, pocketID string, filter paging.Filters) ([]model.Category, paging.Metadata, error)
 }

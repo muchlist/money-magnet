@@ -8,10 +8,10 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/muchlist/moneymagnet/business/request/model"
-	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 )
 
 /*
@@ -199,14 +199,14 @@ func (r Repo) GetByID(ctx context.Context, id uint64) (model.RequestPocket, erro
 }
 
 // Find get all request by FIND model
-func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter data.Filters) ([]model.RequestPocket, data.Metadata, error) {
+func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter paging.Filters) ([]model.RequestPocket, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "req-repo-Find")
 	defer span.End()
 
 	// Validation filter
 	filter.SortSafelist = []string{"updated_at", "-updated_at"}
 	if err := filter.Validate(); err != nil {
-		return nil, data.Metadata{}, db.ErrDBSortFilter
+		return nil, paging.Metadata{}, db.ErrDBSortFilter
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -229,7 +229,7 @@ func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter data.Filters
 	}
 
 	if inputCount == 0 {
-		return []model.RequestPocket{}, data.Metadata{}, nil
+		return []model.RequestPocket{}, paging.Metadata{}, nil
 	}
 
 	sqlStatement, args, err := r.sb.Select(
@@ -252,7 +252,7 @@ func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter data.Filters
 		ToSql()
 
 	if err != nil {
-		return nil, data.Metadata{}, fmt.Errorf("build query find request: %w", err)
+		return nil, paging.Metadata{}, fmt.Errorf("build query find request: %w", err)
 	}
 
 	dbtx := db.ExtractTx(ctx, r.db)
@@ -260,7 +260,7 @@ func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter data.Filters
 	rows, err := dbtx.Query(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
-		return nil, data.Metadata{}, db.ParseError(err)
+		return nil, paging.Metadata{}, db.ParseError(err)
 	}
 	defer rows.Close()
 
@@ -282,16 +282,16 @@ func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter data.Filters
 		)
 		if err != nil {
 			r.log.InfoT(ctx, err.Error())
-			return nil, data.Metadata{}, db.ParseError(err)
+			return nil, paging.Metadata{}, db.ParseError(err)
 		}
 		requests = append(requests, request)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, data.Metadata{}, err
+		return nil, paging.Metadata{}, err
 	}
 
-	metadata := data.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
+	metadata := paging.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
 
 	return requests, metadata, nil
 }

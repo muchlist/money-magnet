@@ -10,7 +10,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	model "github.com/muchlist/moneymagnet/business/pocket/model"
-	data "github.com/muchlist/moneymagnet/pkg/data"
+	paging "github.com/muchlist/moneymagnet/pkg/paging"
 	xulid "github.com/muchlist/moneymagnet/pkg/xulid"
 )
 
@@ -80,11 +80,11 @@ func (mr *MockPocketStorerMockRecorder) Edit(ctx, Pocket interface{}) *gomock.Ca
 }
 
 // Find mocks base method.
-func (m *MockPocketStorer) Find(ctx context.Context, owner xulid.ULID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
+func (m *MockPocketStorer) Find(ctx context.Context, owner xulid.ULID, filter paging.Filters) ([]model.Pocket, paging.Metadata, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Find", ctx, owner, filter)
 	ret0, _ := ret[0].([]model.Pocket)
-	ret1, _ := ret[1].(data.Metadata)
+	ret1, _ := ret[1].(paging.Metadata)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
@@ -96,11 +96,11 @@ func (mr *MockPocketStorerMockRecorder) Find(ctx, owner, filter interface{}) *go
 }
 
 // FindUserPocketsByRelation mocks base method.
-func (m *MockPocketStorer) FindUserPocketsByRelation(ctx context.Context, owner xulid.ULID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
+func (m *MockPocketStorer) FindUserPocketsByRelation(ctx context.Context, owner xulid.ULID, filter paging.Filters) ([]model.Pocket, paging.Metadata, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindUserPocketsByRelation", ctx, owner, filter)
 	ret0, _ := ret[0].([]model.Pocket)
-	ret1, _ := ret[1].(data.Metadata)
+	ret1, _ := ret[1].(paging.Metadata)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
@@ -301,11 +301,11 @@ func (m *MockPocketReader) EXPECT() *MockPocketReaderMockRecorder {
 }
 
 // Find mocks base method.
-func (m *MockPocketReader) Find(ctx context.Context, owner xulid.ULID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
+func (m *MockPocketReader) Find(ctx context.Context, owner xulid.ULID, filter paging.Filters) ([]model.Pocket, paging.Metadata, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Find", ctx, owner, filter)
 	ret0, _ := ret[0].([]model.Pocket)
-	ret1, _ := ret[1].(data.Metadata)
+	ret1, _ := ret[1].(paging.Metadata)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
@@ -317,11 +317,11 @@ func (mr *MockPocketReaderMockRecorder) Find(ctx, owner, filter interface{}) *go
 }
 
 // FindUserPocketsByRelation mocks base method.
-func (m *MockPocketReader) FindUserPocketsByRelation(ctx context.Context, owner xulid.ULID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
+func (m *MockPocketReader) FindUserPocketsByRelation(ctx context.Context, owner xulid.ULID, filter paging.Filters) ([]model.Pocket, paging.Metadata, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindUserPocketsByRelation", ctx, owner, filter)
 	ret0, _ := ret[0].([]model.Pocket)
-	ret1, _ := ret[1].(data.Metadata)
+	ret1, _ := ret[1].(paging.Metadata)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }

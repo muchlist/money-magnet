@@ -7,11 +7,11 @@ import (
 
 	"github.com/muchlist/moneymagnet/business/request/model"
 	"github.com/muchlist/moneymagnet/business/request/port"
-	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 	"github.com/muchlist/moneymagnet/pkg/xulid"
 )
 
@@ -135,7 +135,7 @@ func (s Core) ApproveRequest(ctx context.Context, claims mjwt.CustomClaim, IsApp
 }
 
 // FindAllByRequester ...
-func (s Core) FindAllByRequester(ctx context.Context, claims mjwt.CustomClaim, filter data.Filters) ([]model.RequestPocket, data.Metadata, error) {
+func (s Core) FindAllByRequester(ctx context.Context, claims mjwt.CustomClaim, filter paging.Filters) ([]model.RequestPocket, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-FindAllByRequester")
 	defer span.End()
 
@@ -146,14 +146,14 @@ func (s Core) FindAllByRequester(ctx context.Context, claims mjwt.CustomClaim, f
 
 	reqs, metadata, err := s.repo.Find(ctx, findBy, filter)
 	if err != nil {
-		return nil, data.Metadata{}, fmt.Errorf("find request: %w", err)
+		return nil, paging.Metadata{}, fmt.Errorf("find request: %w", err)
 	}
 
 	return reqs, metadata, nil
 }
 
 // FindAllByApprover ...
-func (s Core) FindAllByApprover(ctx context.Context, claims mjwt.CustomClaim, filter data.Filters) ([]model.RequestPocket, data.Metadata, error) {
+func (s Core) FindAllByApprover(ctx context.Context, claims mjwt.CustomClaim, filter paging.Filters) ([]model.RequestPocket, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-FindAllByApprover")
 	defer span.End()
 
@@ -164,7 +164,7 @@ func (s Core) FindAllByApprover(ctx context.Context, claims mjwt.CustomClaim, fi
 
 	reqs, metadata, err := s.repo.Find(ctx, findBy, filter)
 	if err != nil {
-		return nil, data.Metadata{}, fmt.Errorf("find request: %w", err)
+		return nil, paging.Metadata{}, fmt.Errorf("find request: %w", err)
 	}
 
 	return reqs, metadata, nil

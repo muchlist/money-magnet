@@ -10,10 +10,10 @@ import (
 	"github.com/muchlist/moneymagnet/business/spend/model"
 	"github.com/muchlist/moneymagnet/business/spend/port"
 	"github.com/muchlist/moneymagnet/constant"
-	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 	"github.com/muchlist/moneymagnet/pkg/slicer"
 	"github.com/muchlist/moneymagnet/pkg/xulid"
 
@@ -297,25 +297,25 @@ func (s Core) GetDetail(ctx context.Context, spendID xulid.ULID) (model.SpendRes
 }
 
 // FindAllSpend ...
-func (s Core) FindAllSpend(ctx context.Context, claims mjwt.CustomClaim, spendFilter model.SpendFilter, filter data.Filters) ([]model.SpendResp, data.Metadata, error) {
+func (s Core) FindAllSpend(ctx context.Context, claims mjwt.CustomClaim, spendFilter model.SpendFilter, filter paging.Filters) ([]model.SpendResp, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-FindAllSpend")
 	defer span.End()
 
 	// Get existing Pocket
 	pocketExisting, err := s.pocketRepo.GetByID(ctx, spendFilter.PocketID.ULID)
 	if err != nil {
-		return nil, data.Metadata{}, fmt.Errorf("get pocket by id: %w", err)
+		return nil, paging.Metadata{}, fmt.Errorf("get pocket by id: %w", err)
 	}
 
 	// Validate Pocket Roles Editor
 	if !slicer.In(xulid.MustParse(claims.Identity).String(), pocketExisting.EditorID) &&
 		!slicer.In(xulid.MustParse(claims.Identity).String(), pocketExisting.WatcherID) {
-		return nil, data.Metadata{}, errr.New("not have access to this pocket", 400)
+		return nil, paging.Metadata{}, errr.New("not have access to this pocket", 400)
 	}
 
 	spends, metadata, err := s.repo.Find(ctx, spendFilter, filter)
 	if err != nil {
-		return nil, data.Metadata{}, fmt.Errorf("find spend by pocketID: %w", err)
+		return nil, paging.Metadata{}, fmt.Errorf("find spend by pocketID: %w", err)
 	}
 
 	spendResult := make([]model.SpendResp, len(spends))
@@ -324,6 +324,55 @@ func (s Core) FindAllSpend(ctx context.Context, claims mjwt.CustomClaim, spendFi
 	}
 
 	return spendResult, metadata, nil
+}
+
+// FindAllSpendByCursor ...
+func (s Core) FindAllSpendByCursor(ctx context.Context, claims mjwt.CustomClaim, spendFilter model.SpendFilter, filter paging.Cursor) ([]model.SpendResp, paging.CursorMetadata, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-FindAllSpend")
+	defer span.End()
+
+	// Get existing Pocket
+	pocketExisting, err := s.pocketRepo.GetByID(ctx, spendFilter.PocketID.ULID)
+	if err != nil {
+		return nil, paging.CursorMetadata{}, fmt.Errorf("get pocket by id: %w", err)
+	}
+
+	// Validate Pocket Roles Editor
+	if !slicer.In(xulid.MustParse(claims.Identity).String(), pocketExisting.EditorID) &&
+		!slicer.In(xulid.MustParse(claims.Identity).String(), pocketExisting.WatcherID) {
+		return nil, paging.CursorMetadata{}, errr.New("not have access to this pocket", 400)
+	}
+
+	spends, err := s.repo.FindWithCursor(ctx, spendFilter, filter)
+	if err != nil {
+		return nil, paging.CursorMetadata{}, fmt.Errorf("find all spend by pocketID with cursor: %w", err)
+	}
+
+	// Menentukan cursor selanjutnya
+	var reverseCursor string
+	var nextCursor string
+	if len(spends) > 0 {
+		reverseCursor = spends[0].Date.Format(time.RFC3339) // Set prev cursor
+	}
+	if len(spends) > int(filter.GetPageSize()) {
+		nextCursor = spends[filter.GetPageSize()-1].Date.Format(time.RFC3339) // Set next cursor apabila ditemukan data lebih dari limit
+		spends = spends[:filter.GetPageSize()]                                // Hapus data yang kelebihan
+	}
+
+	spendResult := make([]model.SpendResp, len(spends))
+	for i := range spends {
+		spendResult[i] = spends[i].ToResp()
+	}
+
+	return spendResult, paging.CursorMetadata{
+		CurrentCursor: filter.GetCursor(),
+		CursorType:    filter.GetCursorType(),
+		PageSize:      filter.GetPageSize(),
+		NextCursor:    nextCursor,
+		NextPage:      "",
+		ReverseCursor: reverseCursor,
+		ReversePage:   "",
+	}, nil
 }
 
 // SyncBalance ...

@@ -737,110 +737,6 @@ const docTemplate = `{
             }
         },
         "/spends": {
-            "get": {
-                "description": "Find spend",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Spend"
-                ],
-                "summary": "Find Spend",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "page",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "page-size",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "sort",
-                        "name": "sort",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "user",
-                        "name": "user",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "category",
-                        "name": "category",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "is_income",
-                        "name": "is_income",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "type",
-                        "name": "type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "date_start",
-                        "name": "date_start",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "date_end",
-                        "name": "date_end",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/misc.ResponseSuccessList"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_spend_model.SpendResp"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/misc.ResponseErr"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/misc.Response500Err"
-                        }
-                    }
-                }
-            },
             "post": {
                 "description": "Create spend",
                 "consumes": [
@@ -971,6 +867,218 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/misc.ResponseMessage"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            }
+        },
+        "/spends/{id}": {
+            "get": {
+                "description": "Find spend",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Spend"
+                ],
+                "summary": "Find Spend",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "page-size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "sort",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user",
+                        "name": "user",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "category",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "is_income",
+                        "name": "is_income",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "type",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "date_start",
+                        "name": "date_start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "date_end",
+                        "name": "date_end",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/misc.ResponseSuccessList"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_spend_model.SpendResp"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            }
+        },
+        "/spends/{id}/with-cursor": {
+            "get": {
+                "description": "Find spend By Cursor",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Spend"
+                ],
+                "summary": "Find Spend By Cursor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cursor",
+                        "name": "cursor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "cursor_type",
+                        "name": "cursor_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "page-size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "user",
+                        "name": "user",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "category",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "is_income",
+                        "name": "is_income",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "type",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "date_start",
+                        "name": "date_start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "date_end",
+                        "name": "date_end",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/misc.ResponseSuccessListCursor"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_spend_model.SpendResp"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1534,7 +1642,40 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_muchlist_moneymagnet_pkg_data.Metadata": {
+        "github_com_muchlist_moneymagnet_pkg_paging.CursorMetadata": {
+            "type": "object",
+            "properties": {
+                "current_cursor": {
+                    "type": "string",
+                    "example": "01ARZ3NDEKTSV4RRFFQ69G5FAW"
+                },
+                "cursor_type": {
+                    "type": "string",
+                    "example": "id"
+                },
+                "next_cursor": {
+                    "type": "string",
+                    "example": "01ARZ3NDEKTSV5RRFFQ69G5AAA"
+                },
+                "next_page": {
+                    "type": "string",
+                    "example": "/users?limit=50\u0026cursor=01ARZ3NDEKTSV5RRFFQ69G5AAA\u0026cursor_type=id"
+                },
+                "page_size": {
+                    "type": "integer",
+                    "example": 50
+                },
+                "reverse_cursor": {
+                    "type": "string",
+                    "example": "01ARZ3NDEKTSV5RRFFQ69G5AAA"
+                },
+                "reverse_page": {
+                    "type": "string",
+                    "example": "/users?limit=50\u0026cursor=01ARZ3NDEKTSV5RRFFQ69G5AAA\u0026cursor_type=-id"
+                }
+            }
+        },
+        "github_com_muchlist_moneymagnet_pkg_paging.Metadata": {
             "type": "object",
             "properties": {
                 "current_page": {
@@ -1609,7 +1750,19 @@ const docTemplate = `{
                     "items": {}
                 },
                 "meta_data": {
-                    "$ref": "#/definitions/github_com_muchlist_moneymagnet_pkg_data.Metadata"
+                    "$ref": "#/definitions/github_com_muchlist_moneymagnet_pkg_paging.Metadata"
+                }
+            }
+        },
+        "misc.ResponseSuccessListCursor": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {}
+                },
+                "meta_data": {
+                    "$ref": "#/definitions/github_com_muchlist_moneymagnet_pkg_paging.CursorMetadata"
                 }
             }
         }

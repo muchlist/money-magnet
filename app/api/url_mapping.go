@@ -115,6 +115,7 @@ func (app *application) routes() http.Handler {
 		})
 
 		r.Route("/spends", func(r chi.Router) {
+			r.Get("/from-pocket/{id}/with-cursor", spendHandler.FindSpendByCursor)
 			r.Get("/from-pocket/{id}", spendHandler.FindSpend)
 			r.Get("/{id}", spendHandler.GetByID)
 			r.Post("/sync/{id}", spendHandler.SyncBalance)

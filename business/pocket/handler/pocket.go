@@ -6,10 +6,10 @@ import (
 	"github.com/muchlist/moneymagnet/business/pocket/model"
 	"github.com/muchlist/moneymagnet/business/pocket/service"
 	"github.com/muchlist/moneymagnet/business/zhelper"
-	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/lrucache"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 	"github.com/muchlist/moneymagnet/pkg/validate"
 
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -223,7 +223,7 @@ func (pt pocketHandler) FindUserPocket(w http.ResponseWriter, r *http.Request) {
 	page := web.ReadInt(r.URL.Query(), "page", 0)
 	pageSize := web.ReadInt(r.URL.Query(), "page_size", 0)
 
-	result, metadata, err := pt.service.FindAllPocket(ctx, claims, data.Filters{
+	result, metadata, err := pt.service.FindAllPocket(ctx, claims, paging.Filters{
 		Page:     page,
 		PageSize: pageSize,
 		Sort:     sort,
