@@ -7,10 +7,10 @@ import (
 	"github.com/muchlist/moneymagnet/business/request/model"
 	"github.com/muchlist/moneymagnet/business/request/service"
 	"github.com/muchlist/moneymagnet/business/zhelper"
-	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 	"github.com/muchlist/moneymagnet/pkg/validate"
 	"github.com/muchlist/moneymagnet/pkg/web"
 )
@@ -163,7 +163,7 @@ func (pt requestHandler) FindRequestByApprover(w http.ResponseWriter, r *http.Re
 	page := web.ReadInt(r.URL.Query(), "page", 0)
 	pageSize := web.ReadInt(r.URL.Query(), "page_size", 0)
 
-	result, metadata, err := pt.service.FindAllByApprover(ctx, claims, data.Filters{
+	result, metadata, err := pt.service.FindAllByApprover(ctx, claims, paging.Filters{
 		Page:     page,
 		PageSize: pageSize,
 		Sort:     sort,
@@ -209,7 +209,7 @@ func (pt requestHandler) FindByRequester(w http.ResponseWriter, r *http.Request)
 	page := web.ReadInt(r.URL.Query(), "page", 0)
 	pageSize := web.ReadInt(r.URL.Query(), "page_size", 0)
 
-	result, metadata, err := pt.service.FindAllByRequester(ctx, claims, data.Filters{
+	result, metadata, err := pt.service.FindAllByRequester(ctx, claims, paging.Filters{
 		Page:     page,
 		PageSize: pageSize,
 		Sort:     sort,

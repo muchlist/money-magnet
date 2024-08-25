@@ -7,10 +7,10 @@ import (
 
 	"github.com/muchlist/moneymagnet/business/pocket/model"
 	"github.com/muchlist/moneymagnet/business/pocket/port"
-	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 	"github.com/muchlist/moneymagnet/pkg/xulid"
 
 	sq "github.com/Masterminds/squirrel"
@@ -269,14 +269,14 @@ func (r Repo) GetByID(ctx context.Context, id xulid.ULID) (model.Pocket, error) 
 }
 
 // Find get all pocket
-func (r Repo) Find(ctx context.Context, owner xulid.ULID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
+func (r Repo) Find(ctx context.Context, owner xulid.ULID, filter paging.Filters) ([]model.Pocket, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-Find")
 	defer span.End()
 
 	// Validation filter
 	filter.SortSafelist = []string{"name", "-name", "updated_at", "-updated_at"}
 	if err := filter.Validate(); err != nil {
-		return nil, data.Metadata{}, db.ErrDBSortFilter
+		return nil, paging.Metadata{}, db.ErrDBSortFilter
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -305,7 +305,7 @@ func (r Repo) Find(ctx context.Context, owner xulid.ULID, filter data.Filters) (
 		ToSql()
 
 	if err != nil {
-		return nil, data.Metadata{}, fmt.Errorf("build query find pocket: %w", err)
+		return nil, paging.Metadata{}, fmt.Errorf("build query find pocket: %w", err)
 	}
 
 	dbtx := db.ExtractTx(ctx, r.db)
@@ -313,7 +313,7 @@ func (r Repo) Find(ctx context.Context, owner xulid.ULID, filter data.Filters) (
 	rows, err := dbtx.Query(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
-		return nil, data.Metadata{}, db.ParseError(err)
+		return nil, paging.Metadata{}, db.ParseError(err)
 	}
 	defer rows.Close()
 
@@ -337,29 +337,29 @@ func (r Repo) Find(ctx context.Context, owner xulid.ULID, filter data.Filters) (
 			&pocket.Version)
 		if err != nil {
 			r.log.InfoT(ctx, err.Error())
-			return nil, data.Metadata{}, db.ParseError(err)
+			return nil, paging.Metadata{}, db.ParseError(err)
 		}
 		pockets = append(pockets, pocket)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, data.Metadata{}, err
+		return nil, paging.Metadata{}, err
 	}
 
-	metadata := data.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
+	metadata := paging.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
 
 	return pockets, metadata, nil
 }
 
 // FindUserPockets get all pocket user has uuid in it by relation constrain
-func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner xulid.ULID, filter data.Filters) ([]model.Pocket, data.Metadata, error) {
+func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner xulid.ULID, filter paging.Filters) ([]model.Pocket, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-FindUserPocketsByRelation")
 	defer span.End()
 
 	// Validation filter
 	filter.SortSafelist = []string{"pocket_name", "-pocket_name", "updated_at", "-updated_at"}
 	if err := filter.Validate(); err != nil {
-		return nil, data.Metadata{}, db.ErrDBSortFilter
+		return nil, paging.Metadata{}, db.ErrDBSortFilter
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -390,7 +390,7 @@ func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner xulid.ULID, f
 		ToSql()
 
 	if err != nil {
-		return nil, data.Metadata{}, fmt.Errorf("build query find user pocket: %w", err)
+		return nil, paging.Metadata{}, fmt.Errorf("build query find user pocket: %w", err)
 	}
 
 	dbtx := db.ExtractTx(ctx, r.db)
@@ -398,7 +398,7 @@ func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner xulid.ULID, f
 	rows, err := dbtx.Query(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
-		return nil, data.Metadata{}, db.ParseError(err)
+		return nil, paging.Metadata{}, db.ParseError(err)
 	}
 	defer rows.Close()
 
@@ -422,16 +422,16 @@ func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner xulid.ULID, f
 			&pocket.Version)
 		if err != nil {
 			r.log.InfoT(ctx, err.Error())
-			return nil, data.Metadata{}, db.ParseError(err)
+			return nil, paging.Metadata{}, db.ParseError(err)
 		}
 		pockets = append(pockets, pocket)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, data.Metadata{}, err
+		return nil, paging.Metadata{}, err
 	}
 
-	metadata := data.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
+	metadata := paging.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
 
 	return pockets, metadata, nil
 }

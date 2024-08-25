@@ -8,10 +8,10 @@ import (
 	"github.com/muchlist/moneymagnet/business/spend/model"
 	"github.com/muchlist/moneymagnet/business/spend/service"
 	"github.com/muchlist/moneymagnet/business/zhelper"
-	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/lrucache"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 	"github.com/muchlist/moneymagnet/pkg/validate"
 
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
@@ -291,7 +291,7 @@ func (pt spendHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func extractSpendFIlter(values url.Values) model.SpendFilter {
+func extractSpendFilter(values url.Values) model.SpendFilter {
 	rawFilter := model.SpendFilterRaw{
 		User:      values.Get("user"),
 		Category:  values.Get("category"),
@@ -320,7 +320,7 @@ func extractSpendFIlter(values url.Values) model.SpendFilter {
 // @Success      200  {object}  misc.ResponseSuccessList{data=[]model.SpendResp}
 // @Failure      400  {object}  misc.ResponseErr
 // @Failure      500  {object}  misc.Response500Err
-// @Router       /spends [get]
+// @Router       /spends/{id} [get]
 func (pt spendHandler) FindSpend(w http.ResponseWriter, r *http.Request) {
 	ctx, span := observ.GetTracer().Start(r.Context(), "handler-FindSpend")
 	defer span.End()
@@ -343,10 +343,10 @@ func (pt spendHandler) FindSpend(w http.ResponseWriter, r *http.Request) {
 	page := web.ReadInt(r.URL.Query(), "page", 0)
 	pageSize := web.ReadInt(r.URL.Query(), "page_size", 0)
 
-	filter := extractSpendFIlter(r.URL.Query())
+	filter := extractSpendFilter(r.URL.Query())
 	filter.PocketID.ULID = pocketID
 
-	result, metadata, err := pt.service.FindAllSpend(ctx, claims, filter, data.Filters{
+	result, metadata, err := pt.service.FindAllSpend(ctx, claims, filter, paging.Filters{
 		Page:     page,
 		PageSize: pageSize,
 		Sort:     sort,
@@ -357,6 +357,83 @@ func (pt spendHandler) FindSpend(w http.ResponseWriter, r *http.Request) {
 		web.ErrorResponse(w, statusCode, msg)
 		return
 	}
+	env := web.Envelope{
+		"metadata": metadata,
+		"data":     result,
+	}
+	err = web.WriteJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+}
+
+// @Summary      Find Spend By Cursor
+// @Description  Find spend By Cursor
+// @Tags         Spend
+// @Accept       json
+// @Produce      json
+// @Param 		 cursor query string false "cursor"
+// @Param 		 cursor_type query string false "cursor_type"
+// @Param 		 page_size query int false "page-size"
+// @Param 		 user query string false "user"
+// @Param 		 category query string false "category"
+// @Param 		 is_income query bool false "is_income"
+// @Param 		 type query string false "type"
+// @Param 		 date_start query int false "date_start"
+// @Param 		 date_end query int false "date_end"
+// @Success      200  {object}  misc.ResponseSuccessListCursor{data=[]model.SpendResp}
+// @Failure      400  {object}  misc.ResponseErr
+// @Failure      500  {object}  misc.Response500Err
+// @Router       /spends/{id}/with-cursor [get]
+func (pt spendHandler) FindSpendByCursor(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-FindSpend")
+	defer span.End()
+
+	claims, err := mid.GetClaims(ctx)
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	pocketID, err := web.ReadULIDParam(r)
+	if err != nil {
+		pt.log.WarnT(ctx, err.Error(), err)
+		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// extract url query
+	queryValues := r.URL.Query()
+	cursor := web.ReadString(queryValues, "cursor", "")
+	cursorType := web.ReadString(queryValues, "cursor_type", "")
+	pageSize := web.ReadInt(queryValues, "page_size", 0)
+
+	filter := extractSpendFilter(queryValues)
+	filter.PocketID.ULID = pocketID
+
+	cursorDataInput := paging.Cursor{}
+	cursorDataInput.SetCursorList([]string{"-date", "date", "-id", "id"})
+	cursorDataInput.SetCursor(cursor)
+	cursorDataInput.SetCursorType(cursorType)
+	cursorDataInput.SetPageSize(pageSize)
+
+	err = cursorDataInput.Validate()
+	if err != nil {
+		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	result, metadata, err := pt.service.FindAllSpendByCursor(ctx, claims, filter, cursorDataInput)
+	if err != nil {
+		pt.log.ErrorT(ctx, "error find spend by cursor", err)
+		statusCode, msg := zhelper.ParseError(err)
+		web.ErrorResponse(w, statusCode, msg)
+		return
+	}
+
+	metadata.GenerateAndApplyPageUri(fmt.Sprintf("/spends/from-pocket/%s/with-cursor", pocketID), queryValues)
+
 	env := web.Envelope{
 		"metadata": metadata,
 		"data":     result,

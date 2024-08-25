@@ -8,11 +8,11 @@ import (
 
 	"github.com/muchlist/moneymagnet/business/pocket/model"
 	"github.com/muchlist/moneymagnet/business/pocket/port"
-	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 	"github.com/muchlist/moneymagnet/pkg/xulid"
 
 	"github.com/muchlist/moneymagnet/pkg/ds"
@@ -326,14 +326,14 @@ func (s Core) GetDetail(ctx context.Context, claims mjwt.CustomClaim, pocketID x
 }
 
 // FindAllPocket ...
-func (s Core) FindAllPocket(ctx context.Context, claims mjwt.CustomClaim, filter data.Filters) ([]model.PocketResp, data.Metadata, error) {
+func (s Core) FindAllPocket(ctx context.Context, claims mjwt.CustomClaim, filter paging.Filters) ([]model.PocketResp, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-FindAllPocket")
 	defer span.End()
 
 	// Get existing Pocket
 	pockets, metadata, err := s.repo.FindUserPocketsByRelation(ctx, claims.GetULID(), filter)
 	if err != nil {
-		return nil, data.Metadata{}, fmt.Errorf("find pocket user: %w", err)
+		return nil, paging.Metadata{}, fmt.Errorf("find pocket user: %w", err)
 	}
 
 	// Get all users id
@@ -346,7 +346,7 @@ func (s Core) FindAllPocket(ctx context.Context, claims mjwt.CustomClaim, filter
 	// Get all users
 	users, err := s.userRepo.GetByIDs(ctx, userUUIDsets.Reveal())
 	if err != nil {
-		return nil, data.Metadata{}, fmt.Errorf("find user: %w", err)
+		return nil, paging.Metadata{}, fmt.Errorf("find user: %w", err)
 	}
 
 	// Mappping user to response

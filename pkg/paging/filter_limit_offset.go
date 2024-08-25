@@ -1,4 +1,4 @@
-package data
+package paging
 
 import (
 	"errors"
@@ -36,6 +36,12 @@ func (f *Filters) setDefault() {
 // Validate do set default value for filter field and validate when
 // user use the field
 func (f *Filters) Validate() error {
+
+	if len(f.SortSafelist) == 0 {
+		return errors.New("list of fields that are safe to sort is required")
+	}
+
+	// set default
 	f.setDefault()
 
 	if f.Page < 1 || f.Page > 1000 {

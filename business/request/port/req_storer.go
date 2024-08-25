@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/muchlist/moneymagnet/business/request/model"
-	"github.com/muchlist/moneymagnet/pkg/data"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 )
 
 type RequestStorer interface {
@@ -19,7 +19,7 @@ type RequestSaver interface {
 
 type RequestReader interface {
 	GetByID(ctx context.Context, id uint64) (model.RequestPocket, error)
-	Find(ctx context.Context, findBy model.FindBy, filter data.Filters) ([]model.RequestPocket, data.Metadata, error)
+	Find(ctx context.Context, findBy model.FindBy, filter paging.Filters) ([]model.RequestPocket, paging.Metadata, error)
 }
 
 type Transactor interface {

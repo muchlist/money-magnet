@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/muchlist/moneymagnet/business/spend/model"
-	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 	"github.com/muchlist/moneymagnet/pkg/xulid"
 
 	sq "github.com/Masterminds/squirrel"
@@ -251,14 +251,14 @@ func (r Repo) GetByID(ctx context.Context, id xulid.ULID) (model.Spend, error) {
 }
 
 // Find get all spend
-func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter data.Filters) ([]model.Spend, data.Metadata, error) {
+func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter paging.Filters) ([]model.Spend, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-Find")
 	defer span.End()
 
 	// Validation filter
 	filter.SortSafelist = []string{"-date", "date", "updated_at", "-updated_at"}
 	if err := filter.Validate(); err != nil {
-		return nil, data.Metadata{}, db.ErrDBSortFilter
+		return nil, paging.Metadata{}, db.ErrDBSortFilter
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -291,14 +291,11 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter da
 		LeftJoin("categories D ON A.category_id = D.id")
 
 	// WHERE builder
-	// mapping where filter
+	// mapping where filter equal
 	whereMap := sq.Eq{db.A(keyPocketID): spendFilter.PocketID.ULID}
 	if spendFilter.User.Valid {
 		whereMap[db.A(keyUserID)] = spendFilter.User.ULID
 	}
-	// if spendFilter.Category.Valid {
-	// 	whereMap[db.A(keyCategoryID)] = spendFilter.Category.UUID
-	// }
 	if spendFilter.IsIncome != nil {
 		whereMap[db.A(keyIsIncome)] = *spendFilter.IsIncome
 	}
@@ -327,14 +324,14 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter da
 
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
-		return nil, data.Metadata{}, fmt.Errorf("build query find spend: %w", err)
+		return nil, paging.Metadata{}, fmt.Errorf("build query find spend: %w", err)
 	}
 
 	dbtx := db.ExtractTx(ctx, r.db)
 
 	rows, err := dbtx.Query(ctx, sqlStatement, args...)
 	if err != nil {
-		return nil, data.Metadata{}, db.ParseError(err)
+		return nil, paging.Metadata{}, db.ParseError(err)
 	}
 	defer rows.Close()
 
@@ -364,18 +361,155 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter da
 		)
 		if err != nil {
 			r.log.InfoT(ctx, err.Error())
-			return nil, data.Metadata{}, db.ParseError(err)
+			return nil, paging.Metadata{}, db.ParseError(err)
 		}
 		spends = append(spends, spend)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, data.Metadata{}, err
+		return nil, paging.Metadata{}, err
 	}
 
-	metadata := data.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
+	metadata := paging.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
 
 	return spends, metadata, nil
+}
+
+// Find With Cursor Pagination
+func (r Repo) FindWithCursor(ctx context.Context, spendFilter model.SpendFilter, filter paging.Cursor) ([]model.Spend, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-Find")
+	defer span.End()
+
+	// Validation filter
+	filter.SetCursorList([]string{"-date", "date", "updated_at", "-updated_at"})
+	if err := filter.Validate(); err != nil {
+		return nil, db.ErrDBInvalidCursorType
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	query := r.sb.Select(
+		db.A(keyID),
+		db.A(keyUserID),
+		db.A(keyPocketID),
+		db.A(keyCategoryID),
+		db.A(keyName),
+		db.A(keyPrice),
+		db.A(keyBalance),
+		db.A(keyIsIncome),
+		db.A(keyType),
+		db.A(keyDate),
+		db.A(keyCreatedAt),
+		db.A(keyUpdatedAt),
+		db.A(keyVersion),
+		db.B("name"),
+		db.C("pocket_name"),
+		db.CoalesceString(db.D("category_name"), ""),
+		db.CoalesceInt(db.D("category_icon"), 0),
+	).
+		From(keyTable + " A").
+		LeftJoin("users B ON A.user_id = B.id").
+		LeftJoin("pockets C ON A.pocket_id = C.id").
+		LeftJoin("categories D ON A.category_id = D.id")
+
+	// WHERE builder
+	// mapping where filter equal
+	whereMap := sq.Eq{db.A(keyPocketID): spendFilter.PocketID.ULID}
+	if spendFilter.User.Valid {
+		whereMap[db.A(keyUserID)] = spendFilter.User.ULID
+	}
+	if spendFilter.IsIncome != nil {
+		whereMap[db.A(keyIsIncome)] = *spendFilter.IsIncome
+	}
+	if len(spendFilter.Type) != 0 {
+		whereMap[db.A(keyType)] = spendFilter.Type
+	}
+
+	// building where clause
+	query = query.Where(whereMap)
+
+	// apply cursor value
+	if filter.GetCursor() != "" {
+		cursorColumn, _ := filter.GetCursorColumn()
+		direction := filter.GetDirection()
+
+		if direction == ">" {
+			query = query.Where(sq.Gt{cursorColumn: filter.GetCursor()})
+		} else {
+			query = query.Where(sq.Lt{cursorColumn: filter.GetCursor()})
+		}
+	}
+
+	if spendFilter.Category.Valid {
+		query = query.Where(
+			sq.Eq{db.A(keyCategoryID): spendFilter.Category.ULID},
+		)
+	}
+	if spendFilter.DateStart != nil {
+		query = query.Where(sq.GtOrEq{db.A(keyDate): *spendFilter.DateStart})
+	}
+	if spendFilter.DateEnd != nil {
+		query = query.Where(sq.Lt{db.A(keyDate): *spendFilter.DateEnd})
+	}
+
+	// apply order by
+	orderByStr, err := filter.GetSortColumnDirection()
+	if err != nil {
+		return nil, db.ErrDBSortFilter
+	}
+
+	sqlStatement, args, err := query.OrderBy(orderByStr).
+		Limit(uint64(filter.GetPageSizePlusOne())).
+		ToSql()
+
+	if err != nil {
+		r.log.InfoT(ctx, err.Error())
+		return nil, fmt.Errorf("build query find spend: %w", err)
+	}
+
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	rows, err := dbtx.Query(ctx, sqlStatement, args...)
+	if err != nil {
+		return nil, db.ParseError(err)
+	}
+	defer rows.Close()
+
+	spends := make([]model.Spend, 0)
+	for rows.Next() {
+		var spend model.Spend
+		err := rows.Scan(
+			&spend.ID,
+			&spend.UserID,
+			&spend.PocketID,
+			&spend.CategoryID,
+			&spend.Name,
+			&spend.Price,
+			&spend.BalanceSnapshoot,
+			&spend.IsIncome,
+			&spend.SpendType,
+			&spend.Date,
+			&spend.CreatedAt,
+			&spend.UpdatedAt,
+			&spend.Version,
+			&spend.UserName,
+			&spend.PocketName,
+			&spend.CategoryName,
+			&spend.CategoryIcon,
+		)
+		if err != nil {
+			r.log.InfoT(ctx, err.Error())
+			return nil, db.ParseError(err)
+		}
+		spends = append(spends, spend)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return spends, nil
 }
 
 // Count All Price

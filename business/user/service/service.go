@@ -8,10 +8,10 @@ import (
 
 	"github.com/muchlist/moneymagnet/business/user/model"
 	"github.com/muchlist/moneymagnet/business/user/port"
-	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 	"github.com/muchlist/moneymagnet/pkg/xulid"
 
 	"github.com/muchlist/moneymagnet/pkg/mcrypto"
@@ -298,13 +298,13 @@ func (s Core) GetProfile(ctx context.Context, id string) (model.UserResp, error)
 }
 
 // FindUserByName do find user filter by *name*
-func (s Core) FindUserByName(ctx context.Context, name string, filter data.Filters) ([]model.UserResp, data.Metadata, error) {
+func (s Core) FindUserByName(ctx context.Context, name string, filter paging.Filters) ([]model.UserResp, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-FindUserByName")
 	defer span.End()
 
 	users, metadata, err := s.repo.Find(ctx, name, filter)
 	if err != nil {
-		return nil, data.Metadata{}, fmt.Errorf("find user: %w", err)
+		return nil, paging.Metadata{}, fmt.Errorf("find user: %w", err)
 	}
 	usersResult := make([]model.UserResp, len(users))
 	for i := range users {

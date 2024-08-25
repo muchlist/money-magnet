@@ -1,6 +1,6 @@
 package misc
 
-import "github.com/muchlist/moneymagnet/pkg/data"
+import "github.com/muchlist/moneymagnet/pkg/paging"
 
 // ResponseErr just for wrapping swaggo type generator
 type ResponseErr struct {
@@ -25,6 +25,12 @@ type ResponseMessage struct {
 
 // ResponseSuccessList just for wrapping swaggo type generator
 type ResponseSuccessList struct {
-	Data     []any         `json:"data"`
-	Metadata data.Metadata `json:"meta_data"`
+	Data     []any           `json:"data"`
+	Metadata paging.Metadata `json:"meta_data"`
+}
+
+// ResponseSuccessListCursor just for wrapping swaggo type generator
+type ResponseSuccessListCursor struct {
+	Data     []any                 `json:"data"`
+	Metadata paging.CursorMetadata `json:"meta_data"`
 }

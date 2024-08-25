@@ -86,7 +86,7 @@ import (
         "github.com/muchlist/moneymagnet/business/pocket/model"
         "github.com/muchlist/moneymagnet/business/pocket/storer"
         "github.com/muchlist/moneymagnet/business/shared"
-        "github.com/muchlist/moneymagnet/pkg/data"
+        "github.com/muchlist/moneymagnet/pkg/paging"
         "github.com/muchlist/moneymagnet/pkg/db"
         "github.com/muchlist/moneymagnet/pkg/errr"
         "github.com/muchlist/moneymagnet/pkg/mjwt"
@@ -352,14 +352,14 @@ func (s Core) GetDetail(ctx context.Context, claims mjwt.CustomClaim, pocketid x
 }
 
 // FindAllPocket ...
-func (s Core) FindAllPocket(ctx context.Context, claims mjwt.CustomClaim, filter data.Filters) ([]model.PocketResp, data.Metadata, error) <span class="cov0" title="0">{
+func (s Core) FindAllPocket(ctx context.Context, claims mjwt.CustomClaim, filter paging.Filters) ([]model.PocketResp, paging.Metadata, error) <span class="cov0" title="0">{
         ctx, span := observ.GetTracer().Start(ctx, "service-FindAllPocket")
         defer span.End()
 
         // Get existing Pocket
         pockets, metadata, err := s.repo.FindUserPocketsByRelation(ctx, claims.GetUUID(), filter)
         if err != nil </span><span class="cov0" title="0">{
-                return nil, data.Metadata{}, fmt.Errorf("find pocket user: %w", err)
+                return nil, paging.Metadata{}, fmt.Errorf("find pocket user: %w", err)
         }</span>
 
         <span class="cov0" title="0">pocketResult := make([]model.PocketResp, len(pockets))
@@ -381,7 +381,7 @@ import (
         sq "github.com/Masterminds/squirrel"
         "github.com/jackc/pgx/v4/pgxpool"
         "github.com/muchlist/moneymagnet/business/request/model"
-        "github.com/muchlist/moneymagnet/pkg/data"
+        "github.com/muchlist/moneymagnet/pkg/paging"
         "github.com/muchlist/moneymagnet/pkg/db"
         "github.com/muchlist/moneymagnet/pkg/mlogger"
         "github.com/muchlist/moneymagnet/pkg/observ"
@@ -566,14 +566,14 @@ func (r Repo) GetByID(ctx context.Context, id uint64) (model.RequestPocket, erro
 }
 
 // Find get all request by FIND model
-func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter data.Filters) ([]model.RequestPocket, data.Metadata, error) <span class="cov0" title="0">{
+func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter paging.Filters) ([]model.RequestPocket, paging.Metadata, error) <span class="cov0" title="0">{
         ctx, span := observ.GetTracer().Start(ctx, "req-repo-Find")
         defer span.End()
 
         // Validation filter
         filter.SortSafelist = []string{"updated_at", "-updated_at"}
         if err := filter.Validate(); err != nil </span><span class="cov0" title="0">{
-                return nil, data.Metadata{}, db.ErrDBSortFilter
+                return nil, paging.Metadata{}, db.ErrDBSortFilter
         }</span>
 
         <span class="cov0" title="0">ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -596,7 +596,7 @@ func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter data.Filters
         }</span>
 
         <span class="cov0" title="0">if inputCount == 0 </span><span class="cov0" title="0">{
-                return []model.RequestPocket{}, data.Metadata{}, nil
+                return []model.RequestPocket{}, paging.Metadata{}, nil
         }</span>
 
         <span class="cov0" title="0">sqlStatement, args, err := r.sb.Select(
@@ -619,13 +619,13 @@ func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter data.Filters
                 ToSql()
 
         if err != nil </span><span class="cov0" title="0">{
-                return nil, data.Metadata{}, fmt.Errorf("build query find request: %w", err)
+                return nil, paging.Metadata{}, fmt.Errorf("build query find request: %w", err)
         }</span>
 
         <span class="cov0" title="0">rows, err := r.mod(ctx).Query(ctx, sqlStatement, args...)
         if err != nil </span><span class="cov0" title="0">{
                 r.log.InfoT(ctx, err.Error())
-                return nil, data.Metadata{}, db.ParseError(err)
+                return nil, paging.Metadata{}, db.ParseError(err)
         }</span>
         <span class="cov0" title="0">defer rows.Close()
 
@@ -647,16 +647,16 @@ func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter data.Filters
                 )
                 if err != nil </span><span class="cov0" title="0">{
                         r.log.InfoT(ctx, err.Error())
-                        return nil, data.Metadata{}, db.ParseError(err)
+                        return nil, paging.Metadata{}, db.ParseError(err)
                 }</span>
                 <span class="cov0" title="0">requests = append(requests, request)</span>
         }
 
         <span class="cov0" title="0">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
-                return nil, data.Metadata{}, err
+                return nil, paging.Metadata{}, err
         }</span>
 
-        <span class="cov0" title="0">metadata := data.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
+        <span class="cov0" title="0">metadata := paging.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
 
         return requests, metadata, nil</span>
 }

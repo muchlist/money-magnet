@@ -6,10 +6,10 @@ import (
 	"github.com/muchlist/moneymagnet/business/category/model"
 	"github.com/muchlist/moneymagnet/business/category/service"
 	"github.com/muchlist/moneymagnet/business/zhelper"
-	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 	"github.com/muchlist/moneymagnet/pkg/validate"
 	"github.com/muchlist/moneymagnet/pkg/web"
 )
@@ -159,7 +159,7 @@ func (ch catHandler) FindPocketCategory(w http.ResponseWriter, r *http.Request) 
 	page := web.ReadInt(r.URL.Query(), "page", 0)
 	pageSize := web.ReadInt(r.URL.Query(), "page_size", 0)
 
-	result, metadata, err := ch.service.FindAllCategory(r.Context(), pocketID, data.Filters{
+	result, metadata, err := ch.service.FindAllCategory(r.Context(), pocketID, paging.Filters{
 		Page:     page,
 		PageSize: pageSize,
 		Sort:     sort,

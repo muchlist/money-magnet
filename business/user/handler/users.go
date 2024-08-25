@@ -6,10 +6,10 @@ import (
 	"github.com/muchlist/moneymagnet/business/user/model"
 	"github.com/muchlist/moneymagnet/business/user/service"
 	"github.com/muchlist/moneymagnet/business/zhelper"
-	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/observ"
 	"github.com/muchlist/moneymagnet/pkg/observ/mmetric"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 	"github.com/muchlist/moneymagnet/pkg/validate"
 	"github.com/muchlist/moneymagnet/pkg/xulid"
 
@@ -385,7 +385,7 @@ func (usr userHandler) FindByName(w http.ResponseWriter, r *http.Request) {
 	page := web.ReadInt(r.URL.Query(), "page", 0)
 	pageSize := web.ReadInt(r.URL.Query(), "page_size", 0)
 
-	result, metadata, err := usr.service.FindUserByName(ctx, name, data.Filters{
+	result, metadata, err := usr.service.FindUserByName(ctx, name, paging.Filters{
 		Page:     page,
 		PageSize: pageSize,
 		Sort:     sort,

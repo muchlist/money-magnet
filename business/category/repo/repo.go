@@ -9,10 +9,10 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/muchlist/moneymagnet/business/category/model"
 	"github.com/muchlist/moneymagnet/business/category/port"
-	"github.com/muchlist/moneymagnet/pkg/data"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/observ"
+	"github.com/muchlist/moneymagnet/pkg/paging"
 )
 
 const (
@@ -253,14 +253,14 @@ func (r Repo) GetByID(ctx context.Context, id string) (model.Category, error) {
 }
 
 // Find get all category within user
-func (r Repo) Find(ctx context.Context, pocketID string, filter data.Filters) ([]model.Category, data.Metadata, error) {
+func (r Repo) Find(ctx context.Context, pocketID string, filter paging.Filters) ([]model.Category, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "category-repo-Find")
 	defer span.End()
 
 	// Validation filter
 	filter.SortSafelist = []string{"category_name", "-category_name", "updated_at", "-updated_at"}
 	if err := filter.Validate(); err != nil {
-		return nil, data.Metadata{}, db.ErrDBSortFilter
+		return nil, paging.Metadata{}, db.ErrDBSortFilter
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -284,7 +284,7 @@ func (r Repo) Find(ctx context.Context, pocketID string, filter data.Filters) ([
 		ToSql()
 
 	if err != nil {
-		return nil, data.Metadata{}, fmt.Errorf("build query find category: %w", err)
+		return nil, paging.Metadata{}, fmt.Errorf("build query find category: %w", err)
 	}
 
 	dbtx := db.ExtractTx(ctx, r.db)
@@ -292,7 +292,7 @@ func (r Repo) Find(ctx context.Context, pocketID string, filter data.Filters) ([
 	rows, err := dbtx.Query(ctx, sqlStatement, args...)
 	if err != nil {
 		r.log.InfoT(ctx, err.Error())
-		return nil, data.Metadata{}, db.ParseError(err)
+		return nil, paging.Metadata{}, db.ParseError(err)
 	}
 	defer rows.Close()
 
@@ -311,16 +311,16 @@ func (r Repo) Find(ctx context.Context, pocketID string, filter data.Filters) ([
 			&cat.UpdatedAt)
 		if err != nil {
 			r.log.InfoT(ctx, err.Error())
-			return nil, data.Metadata{}, db.ParseError(err)
+			return nil, paging.Metadata{}, db.ParseError(err)
 		}
 		cats = append(cats, cat)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, data.Metadata{}, err
+		return nil, paging.Metadata{}, err
 	}
 
-	metadata := data.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
+	metadata := paging.CalculateMetadata(totalRecords, filter.Page, filter.PageSize)
 
 	return cats, metadata, nil
 }
