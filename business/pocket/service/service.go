@@ -90,6 +90,7 @@ func (s Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req mod
 
 	timeNow := time.Now()
 	pocket := model.Pocket{
+		ID:         xulid.Instance().NewULID(),
 		OwnerID:    claims.GetULID(),
 		EditorID:   req.EditorID,
 		WatcherID:  req.WatcherID,

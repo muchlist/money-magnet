@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS "categories" (
-  "id" ulid DEFAULT gen_ulid() PRIMARY KEY,
-  "pocket_id" ulid NULL,
+  "id" varchar(26) NOT NULL PRIMARY KEY, -- ULID stored as varchar
+  "pocket_id" varchar(26) NULL, -- ULID stored as varchar
   "category_name" varchar(100) NOT NULL,
   "is_income" boolean NOT NULL DEFAULT false,
   "created_at" timestamp NOT NULL DEFAULT (now()),

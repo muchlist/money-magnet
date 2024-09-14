@@ -10,6 +10,7 @@ import (
 	"github.com/muchlist/moneymagnet/business/spend/model"
 	"github.com/muchlist/moneymagnet/business/spend/port"
 	"github.com/muchlist/moneymagnet/constant"
+	"github.com/muchlist/moneymagnet/pkg/ctype"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/observ"
@@ -74,7 +75,7 @@ func (s Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req mode
 		UserID:           claims.GetULID(),
 		PocketID:         req.PocketID,
 		CategoryID:       req.CategoryID,
-		Name:             req.Name,
+		Name:             ctype.ToUppercaseString(req.Name),
 		Price:            req.Price,
 		BalanceSnapshoot: 0,
 		IsIncome:         req.IsIncome,
@@ -155,7 +156,7 @@ func (s Core) TransferToPocketAsSpend(ctx context.Context, claims mjwt.CustomCla
 				ULID:  xulid.MustParse(constant.CAT_TRANSFER_OUT_ID),
 				Valid: true,
 			},
-			Name:      fmt.Sprintf("Transfer To %s", toPocket.PocketName),
+			Name:      ctype.ToUppercaseString(fmt.Sprintf("Transfer To %s", toPocket.PocketName)),
 			Price:     -req.Price,
 			IsIncome:  false,
 			SpendType: 0,
@@ -175,7 +176,7 @@ func (s Core) TransferToPocketAsSpend(ctx context.Context, claims mjwt.CustomCla
 				ULID:  xulid.MustParse(constant.CAT_TRANSFER_IN_ID),
 				Valid: true,
 			},
-			Name:      fmt.Sprintf("Transfer From %s", fromPocket.PocketName),
+			Name:      ctype.ToUppercaseString(fmt.Sprintf("Transfer From %s", fromPocket.PocketName)),
 			Price:     req.Price,
 			IsIncome:  true,
 			SpendType: 0,
@@ -246,7 +247,8 @@ func (s Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, r
 		spendExisting.CategoryID = req.CategoryID
 	}
 	if req.Name != nil {
-		spendExisting.Name = *req.Name
+		name := ctype.ToUppercaseString(*req.Name)
+		spendExisting.Name = name
 	}
 	if req.IsIncome != nil {
 		spendExisting.IsIncome = *req.IsIncome

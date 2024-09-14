@@ -106,9 +106,10 @@ func (r Repo) InsertMany(ctx context.Context, categories []model.Category) error
 
 	sqBuilder := r.sb.Insert(keyTable).
 		Columns(
+			keyID,
+			keyPocketID,
 			keyCategoryName,
 			keyCategoryIcon,
-			keyPocketID,
 			keyIsIncome,
 			keyUpdatedAt,
 			keyCreatedAt,
@@ -116,9 +117,10 @@ func (r Repo) InsertMany(ctx context.Context, categories []model.Category) error
 
 	for _, category := range categories {
 		sqBuilder = sqBuilder.Values(
+			category.ID,
+			category.PocketID,
 			category.CategoryName,
 			category.CategoryIcon,
-			category.PocketID,
 			category.IsIncome,
 			category.CreatedAt,
 			category.UpdatedAt,

@@ -1,9 +1,9 @@
 CREATE TABLE  IF NOT EXISTS "spends" (
-  "id" ulid DEFAULT gen_ulid() PRIMARY KEY,
-  "user_id" ulid NULL,
-  "pocket_id" ulid NULL,
-  "category_id" ulid NULL,
-  "category_id_2" ulid NULL,
+  "id" varchar(26) NOT NULL PRIMARY KEY, -- ULID stored as varchar
+  "user_id" varchar(26) NULL, -- ULID stored as varchar
+  "pocket_id" varchar(26) NULL, -- ULID stored as varchar
+  "category_id" varchar(26) NULL, -- ULID stored as varchar
+  "category_id_2" varchar(26) NULL, -- ULID stored as varchar
   "name" varchar(255) NOT NULL,
   "price" bigint NOT NULL,
   "balance_snapshoot" bigint NOT NULL,
