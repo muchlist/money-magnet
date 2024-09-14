@@ -285,7 +285,7 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter pa
 		db.CoalesceString(db.D("category_name"), ""),
 		db.CoalesceInt(db.D("category_icon"), 0),
 	).
-		From(keyTable + " A").
+		From("spends A").
 		LeftJoin("users B ON A.user_id = B.id").
 		LeftJoin("pockets C ON A.pocket_id = C.id").
 		LeftJoin("categories D ON A.category_id = D.id")
@@ -315,6 +315,16 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter pa
 	}
 	if spendFilter.DateEnd != nil {
 		query = query.Where(sq.Lt{db.A(keyDate): *spendFilter.DateEnd})
+	}
+	// searchable name
+	if spendFilter.Name != "" {
+		// query = query.Where(sq.Expr("A.name % ?", spendFilter.Name))
+		query = query.Where(
+			sq.Or{
+				sq.Expr("A.name % ?", spendFilter.Name),
+				sq.Like{"A.name": fmt.Sprint("%", spendFilter.Name, "%")},
+			},
+		)
 	}
 
 	sqlStatement, args, err := query.OrderBy(filter.SortColumnDirection()).
@@ -408,7 +418,7 @@ func (r Repo) FindWithCursor(ctx context.Context, spendFilter model.SpendFilter,
 		db.CoalesceString(db.D("category_name"), ""),
 		db.CoalesceInt(db.D("category_icon"), 0),
 	).
-		From(keyTable + " A").
+		From("spends A").
 		LeftJoin("users B ON A.user_id = B.id").
 		LeftJoin("pockets C ON A.pocket_id = C.id").
 		LeftJoin("categories D ON A.category_id = D.id")
@@ -451,6 +461,16 @@ func (r Repo) FindWithCursor(ctx context.Context, spendFilter model.SpendFilter,
 	}
 	if spendFilter.DateEnd != nil {
 		query = query.Where(sq.Lt{db.A(keyDate): *spendFilter.DateEnd})
+	}
+
+	// searchable name
+	if spendFilter.Name != "" {
+		query = query.Where(
+			sq.Or{
+				sq.Expr("A.name % ?", spendFilter.Name),
+				sq.Like{"A.name": fmt.Sprint("%", spendFilter.Name, "%")},
+			},
+		)
 	}
 
 	// apply order by
