@@ -1,7 +1,7 @@
 CREATE TABLE "user_pocket" (
   "id" BIGSERIAL PRIMARY KEY,
-  "user_id" ulid,
-  "pocket_id" ulid
+  "user_id" varchar(26), -- ULID stored as varchar
+  "pocket_id" varchar(26) -- ULID stored as varchar
 );
 
 ALTER TABLE "user_pocket" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE;

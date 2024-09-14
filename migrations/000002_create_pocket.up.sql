@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS "pockets" (
-  "id" ulid DEFAULT gen_ulid() PRIMARY KEY,
-  "owner_id" ulid NULL,
+  "id" varchar(26) NOT NULL PRIMARY KEY, -- ULID stored as varchar
+  "owner_id" varchar(26) NULL,
   "editor_id" text[],
   "watcher_id" text[],
   "pocket_name" varchar(100) NOT NULL,

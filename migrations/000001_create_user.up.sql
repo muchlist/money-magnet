@@ -1,8 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS citext;
-CREATE EXTENSION IF NOT EXISTS ulid;
 
 CREATE TABLE IF NOT EXISTS "users" (
-  "id" ulid DEFAULT gen_ulid() PRIMARY KEY,
+  "id" varchar(26) NOT NULL PRIMARY KEY, -- ULID stored as varchar
   "email" citext NOT NULL,
   "name" varchar(255) NOT NULL,
   "password" bytea NOT NULL,

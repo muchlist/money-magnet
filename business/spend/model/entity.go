@@ -3,6 +3,7 @@ package model
 import (
 	"time"
 
+	"github.com/muchlist/moneymagnet/pkg/ctype"
 	"github.com/muchlist/moneymagnet/pkg/xulid"
 )
 
@@ -15,7 +16,7 @@ type Spend struct {
 	CategoryID       xulid.NullULID
 	CategoryName     string // Join
 	CategoryIcon     int    // Join
-	Name             string
+	Name             ctype.UppercaseString
 	Price            int64
 	BalanceSnapshoot int64
 	IsIncome         bool
@@ -36,7 +37,7 @@ func (s *Spend) ToResp() SpendResp {
 		CategoryID:       s.CategoryID,
 		CategoryName:     s.CategoryName,
 		CategoryIcon:     s.CategoryIcon,
-		Name:             s.Name,
+		Name:             ctype.FromUppercaseString(s.Name),
 		Price:            s.Price,
 		BalanceSnapshoot: s.BalanceSnapshoot,
 		IsIncome:         s.IsIncome,

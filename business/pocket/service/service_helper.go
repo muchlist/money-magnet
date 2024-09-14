@@ -9,9 +9,11 @@ import (
 
 func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 	timeNow := time.Now()
+	ulidInstance := xulid.Instance()
 	categories := []model.Category{
 		/*INCOME CATEGORY*/
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Salary",
 			CategoryIcon: 1,
@@ -20,6 +22,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Grants",
 			CategoryIcon: 2,
@@ -28,6 +31,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Refunds",
 			CategoryIcon: 3,
@@ -36,6 +40,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Sale",
 			CategoryIcon: 4,
@@ -44,6 +49,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Rental",
 			CategoryIcon: 5,
@@ -53,6 +59,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 		},
 		/*EXPENSE CATEGORY*/
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Baby",
 			CategoryIcon: 6,
@@ -61,6 +68,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Beauty",
 			CategoryIcon: 7,
@@ -69,6 +77,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Bills",
 			CategoryIcon: 8,
@@ -77,6 +86,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Vehicle",
 			CategoryIcon: 9,
@@ -85,6 +95,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Clothing",
 			CategoryIcon: 10,
@@ -93,6 +104,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Education",
 			CategoryIcon: 11,
@@ -101,6 +113,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Electronics",
 			CategoryIcon: 12,
@@ -109,6 +122,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Entertainment",
 			CategoryIcon: 13,
@@ -117,6 +131,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Food",
 			CategoryIcon: 14,
@@ -125,6 +140,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Health",
 			CategoryIcon: 15,
@@ -133,6 +149,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Home",
 			CategoryIcon: 16,
@@ -141,6 +158,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Insurance",
 			CategoryIcon: 17,
@@ -149,6 +167,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Shopping",
 			CategoryIcon: 18,
@@ -157,6 +176,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Social",
 			CategoryIcon: 19,
@@ -165,6 +185,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Sport",
 			CategoryIcon: 20,
@@ -173,6 +194,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Tax",
 			CategoryIcon: 21,
@@ -181,6 +203,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Telephone",
 			CategoryIcon: 22,
@@ -189,6 +212,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Internet",
 			CategoryIcon: 23,
@@ -197,6 +221,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Transportation",
 			CategoryIcon: 24,
@@ -205,6 +230,7 @@ func generateDefaultCategory(pocketID xulid.ULID) []model.Category {
 			UpdatedAt:    timeNow,
 		},
 		{
+			ID:           ulidInstance.NewULID(),
 			PocketID:     pocketID,
 			CategoryName: "Work",
 			CategoryIcon: 25,

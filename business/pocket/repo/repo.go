@@ -67,6 +67,7 @@ func (r Repo) Insert(ctx context.Context, pocket *model.Pocket) error {
 
 	sqlStatement, args, err := r.sb.Insert(keyTable).
 		Columns(
+			keyID,
 			keyPocketName,
 			keyCurrency,
 			keyOwnerID,
@@ -79,6 +80,7 @@ func (r Repo) Insert(ctx context.Context, pocket *model.Pocket) error {
 			keyCreatedAt,
 		).
 		Values(
+			pocket.ID,
 			pocket.PocketName,
 			pocket.Currency,
 			pocket.OwnerID,
