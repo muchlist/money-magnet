@@ -951,6 +951,12 @@ const docTemplate = `{
                         "description": "date_end",
                         "name": "date_end",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "search by name",
+                        "name": "name",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1056,6 +1062,12 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "date_end",
                         "name": "date_end",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "search by name",
+                        "name": "name",
                         "in": "query"
                     }
                 ],

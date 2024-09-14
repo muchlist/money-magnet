@@ -922,6 +922,10 @@ paths:
         in: query
         name: date_end
         type: integer
+      - description: search by name
+        in: query
+        name: name
+        type: string
       produces:
       - application/json
       responses:
@@ -989,6 +993,10 @@ paths:
         in: query
         name: date_end
         type: integer
+      - description: search by name
+        in: query
+        name: name
+        type: string
       produces:
       - application/json
       responses:

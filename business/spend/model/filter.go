@@ -1,6 +1,7 @@
 package model
 
 import (
+	"strings"
 	"time"
 
 	"github.com/muchlist/moneymagnet/pkg/convert"
@@ -12,6 +13,7 @@ type SpendFilter struct {
 	PocketID  xulid.NullULID
 	User      xulid.NullULID
 	Category  xulid.NullULID
+	Name      string
 	IsIncome  *bool
 	Type      []int
 	DateStart *time.Time
@@ -21,6 +23,7 @@ type SpendFilter struct {
 type SpendFilterRaw struct {
 	User      string
 	Category  string
+	Name      string
 	IsIncome  string
 	Type      string
 	DateStart string
@@ -30,7 +33,7 @@ type SpendFilterRaw struct {
 func (p SpendFilterRaw) ToModel() SpendFilter {
 	var result SpendFilter
 
-	// user must be uuid format
+	// user must be ulid format
 	if p.User != "" {
 		userULID, err := xulid.Parse(p.User)
 		if err == nil {
@@ -39,7 +42,7 @@ func (p SpendFilterRaw) ToModel() SpendFilter {
 		}
 	}
 
-	// category must be uuid format
+	// category must be ulid format
 	if p.Category != "" {
 		categoryULID, err := xulid.Parse(p.Category)
 		if err == nil {
@@ -47,6 +50,8 @@ func (p SpendFilterRaw) ToModel() SpendFilter {
 			result.Category.Valid = true
 		}
 	}
+
+	result.Name = strings.ToUpper(p.Name)
 
 	result.IsIncome = convert.StringToPtrBool(p.IsIncome)
 

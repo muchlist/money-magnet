@@ -295,6 +295,7 @@ func extractSpendFilter(values url.Values) model.SpendFilter {
 	rawFilter := model.SpendFilterRaw{
 		User:      values.Get("user"),
 		Category:  values.Get("category"),
+		Name:      values.Get("name"),
 		IsIncome:  values.Get("is_income"),
 		Type:      values.Get("type"),
 		DateStart: values.Get("date_start"),
@@ -317,6 +318,7 @@ func extractSpendFilter(values url.Values) model.SpendFilter {
 // @Param 		 type query string false "type"
 // @Param 		 date_start query int false "date_start"
 // @Param 		 date_end query int false "date_end"
+// @Param 		 name query string false "search by name"
 // @Success      200  {object}  misc.ResponseSuccessList{data=[]model.SpendResp}
 // @Failure      400  {object}  misc.ResponseErr
 // @Failure      500  {object}  misc.Response500Err
@@ -382,6 +384,7 @@ func (pt spendHandler) FindSpend(w http.ResponseWriter, r *http.Request) {
 // @Param 		 type query string false "type"
 // @Param 		 date_start query int false "date_start"
 // @Param 		 date_end query int false "date_end"
+// @Param 		 name query string false "search by name"
 // @Success      200  {object}  misc.ResponseSuccessListCursor{data=[]model.SpendResp}
 // @Failure      400  {object}  misc.ResponseErr
 // @Failure      500  {object}  misc.Response500Err
