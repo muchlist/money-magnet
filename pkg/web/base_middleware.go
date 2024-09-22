@@ -26,9 +26,11 @@ func midLogger(l mlogger.Logger) func(next http.Handler) http.Handler {
 			clientID := r.Header.Get("X-Client-Id")
 			ipAddress := r.Header.Get("X-Forwarded-For")
 
+			path := fmt.Sprintf("%s_%s", r.Method, r.URL.Path)
+
 			// log incomming request
 			l.Info("request started",
-				zap.String("path", r.URL.Path),
+				zap.String("path", path),
 				zap.String("request_id", ReadRequestID(r.Context())),
 				zap.String("trace_id", ReadTraceID(r.Context())),
 				zap.String("client_id", clientID),
@@ -38,7 +40,7 @@ func midLogger(l mlogger.Logger) func(next http.Handler) http.Handler {
 			// log request end
 			defer func() {
 				l.Info("request completed",
-					zap.String("path", r.URL.Path),
+					zap.String("path", path),
 					zap.String("request_id", ReadRequestID(r.Context())),
 					zap.String("trace_id", ReadTraceID(r.Context())),
 					zap.String("client_id", clientID),
