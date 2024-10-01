@@ -27,6 +27,7 @@ type PocketSaver interface {
 
 type PocketReader interface {
 	GetByID(ctx context.Context, id xulid.ULID) (model.Pocket, error)
+	GetFirst(ctx context.Context, ownerID string) (model.Pocket, error)
 	Find(ctx context.Context, owner xulid.ULID, filter paging.Filters) ([]model.Pocket, paging.Metadata, error)
 	FindUserPocketsByRelation(ctx context.Context, owner xulid.ULID, filter paging.Filters) ([]model.Pocket, paging.Metadata, error)
 }
