@@ -270,6 +270,61 @@ func (r Repo) GetByID(ctx context.Context, id xulid.ULID) (model.Pocket, error) 
 	return pocket, nil
 }
 
+// GetByID get one pocket by id
+func (r Repo) GetFirst(ctx context.Context, ownerID string) (model.Pocket, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-GetByID")
+	defer span.End()
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	sqlStatement, args, err := r.sb.Select(
+		keyID,
+		keyOwnerID,
+		keyEditorID,
+		keyWatcherID,
+		keyPocketName,
+		keyBalance,
+		keyCurrency,
+		keyIcon,
+		keyLevel,
+		keyCreatedAt,
+		keyUpdatedAt,
+		keyVersion,
+	).From(keyTable).
+		Where(sq.Eq{"owner_id": ownerID}).
+		Limit(1).
+		OrderBy("id").ToSql()
+
+	if err != nil {
+		return model.Pocket{}, fmt.Errorf("build query get pocket by id: %w", err)
+	}
+
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	var pocket model.Pocket
+	err = dbtx.QueryRow(ctx, sqlStatement, args...).
+		Scan(
+			&pocket.ID,
+			&pocket.OwnerID,
+			&pocket.EditorID,
+			&pocket.WatcherID,
+			&pocket.PocketName,
+			&pocket.Balance,
+			&pocket.Currency,
+			&pocket.Icon,
+			&pocket.Level,
+			&pocket.CreatedAt,
+			&pocket.UpdatedAt,
+			&pocket.Version)
+	if err != nil {
+		r.log.InfoT(ctx, err.Error())
+		return model.Pocket{}, db.ParseError(err)
+	}
+
+	return pocket, nil
+}
+
 // Find get all pocket
 func (r Repo) Find(ctx context.Context, owner xulid.ULID, filter paging.Filters) ([]model.Pocket, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-Find")

@@ -8,6 +8,7 @@ import (
 
 	"github.com/muchlist/moneymagnet/business/pocket/model"
 	"github.com/muchlist/moneymagnet/business/pocket/port"
+	"github.com/muchlist/moneymagnet/constant"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
@@ -57,10 +58,10 @@ func (s Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req mod
 	defer span.End()
 
 	// Sanitize editor and watcher
-	if req.EditorID == nil || len(req.EditorID) == 0 {
+	if len(req.EditorID) == 0 {
 		req.EditorID = []string{claims.GetULID().String()}
 	}
-	if req.WatcherID == nil || len(req.WatcherID) == 0 {
+	if len(req.WatcherID) == 0 {
 		req.WatcherID = []string{claims.GetULID().String()}
 	}
 
@@ -278,10 +279,21 @@ func (s Core) GetDetail(ctx context.Context, claims mjwt.CustomClaim, pocketID x
 	ctx, span := observ.GetTracer().Start(ctx, "service-GetDetail")
 	defer span.End()
 
-	// Get existing Pocket
-	pocketDetail, err := s.repo.GetByID(ctx, pocketID)
-	if err != nil {
-		return model.PocketResp{}, fmt.Errorf("get pocket detail by id: %w", err)
+	var pocketDetail model.Pocket
+	var err error
+
+	if pocketID.String() == constant.POCK_MAIN_ID {
+		// If ULID is default, get first pocket available
+		pocketDetail, err = s.repo.GetFirst(ctx, claims.Identity)
+		if err != nil {
+			return model.PocketResp{}, fmt.Errorf("get first pocket detail: %w", err)
+		}
+	} else {
+		// Get existing Pocket by ID
+		pocketDetail, err = s.repo.GetByID(ctx, pocketID)
+		if err != nil {
+			return model.PocketResp{}, fmt.Errorf("get pocket detail by id: %w", err)
+		}
 	}
 
 	// Validate Pocket Roles Watcher or Editor
