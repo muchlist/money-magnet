@@ -70,6 +70,9 @@ func (s Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req mode
 	if req.ID.Valid {
 		spendID = req.ID.ULID
 	}
+
+	isIncome := req.Price > 0
+
 	spend := model.Spend{
 		ID:               spendID,
 		UserID:           claims.GetULID(),
@@ -78,7 +81,7 @@ func (s Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req mode
 		Name:             ctype.ToUppercaseString(req.Name),
 		Price:            req.Price,
 		BalanceSnapshoot: 0,
-		IsIncome:         req.IsIncome,
+		IsIncome:         isIncome,
 		SpendType:        req.SpendType,
 		Date:             req.Date,
 		CreatedAt:        timeNow,
@@ -250,9 +253,6 @@ func (s Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, r
 		name := ctype.ToUppercaseString(*req.Name)
 		spendExisting.Name = name
 	}
-	if req.IsIncome != nil {
-		spendExisting.IsIncome = *req.IsIncome
-	}
 	if req.SpendType != nil {
 		spendExisting.SpendType = *req.SpendType
 	}
@@ -265,6 +265,10 @@ func (s Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, r
 	if req.Price != nil {
 		diff = *req.Price - spendExisting.Price
 		spendExisting.Price = *req.Price
+
+		if *req.Price > 0 {
+			spendExisting.IsIncome = true
+		}
 	}
 
 	// Edit
