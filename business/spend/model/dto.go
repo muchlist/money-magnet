@@ -32,7 +32,6 @@ type NewSpend struct {
 	CategoryID xulid.NullULID `json:"category_id" example:"01ARZ3NDEKTSV4RRFFQ69G5FXX"`
 	Name       string         `json:"name" example:"Makan siang"`
 	Price      int64          `json:"price" example:"50000"`
-	IsIncome   bool           `json:"is_income" example:"false"`
 	SpendType  int            `json:"type" example:"2"`
 	Date       time.Time      `json:"date" example:"2022-09-10T17:03:15.091267+08:00"`
 }
@@ -49,7 +48,6 @@ type UpdateSpend struct {
 	CategoryID xulid.NullULID `json:"category_id" example:"01ARZ3NDEKTSV4RRFFQ69G5FXX"`
 	Name       *string        `json:"name" example:"Makan siang"`
 	Price      *int64         `json:"price" example:"50000"`
-	IsIncome   *bool          `json:"is_income" example:"false"`
 	SpendType  *int           `json:"type" example:"2"`
 	Date       *time.Time     `json:"date" example:"2022-09-10T17:03:15.091267+08:00"`
 }

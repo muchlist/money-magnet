@@ -1509,10 +1509,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "01ARZ3NDEKTSV4RRFFQ69G5FZZ"
                 },
-                "is_income": {
-                    "type": "boolean",
-                    "example": false
-                },
                 "name": {
                     "type": "string",
                     "example": "Makan siang"
@@ -1635,10 +1631,6 @@ const docTemplate = `{
                 "date": {
                     "type": "string",
                     "example": "2022-09-10T17:03:15.091267+08:00"
-                },
-                "is_income": {
-                    "type": "boolean",
-                    "example": false
                 },
                 "name": {
                     "type": "string",

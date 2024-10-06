@@ -199,9 +199,6 @@ definitions:
       id:
         example: 01ARZ3NDEKTSV4RRFFQ69G5FZZ
         type: string
-      is_income:
-        example: false
-        type: boolean
       name:
         example: Makan siang
         type: string
@@ -292,9 +289,6 @@ definitions:
       date:
         example: "2022-09-10T17:03:15.091267+08:00"
         type: string
-      is_income:
-        example: false
-        type: boolean
       name:
         example: Makan siang
         type: string
