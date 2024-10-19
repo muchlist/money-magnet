@@ -43,8 +43,8 @@ func NewCore(
 	userRepo port.UserReader,
 	categoryRepo port.CategorySaver,
 	txManager port.Transactor,
-) Core {
-	return Core{
+) *Core {
+	return &Core{
 		log:          log,
 		repo:         repo,
 		userRepo:     userRepo,
@@ -53,7 +53,7 @@ func NewCore(
 	}
 }
 
-func (s Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req model.NewPocket) (model.PocketResp, error) {
+func (s *Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req model.NewPocket) (model.PocketResp, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-CreatePocket")
 	defer span.End()
 
@@ -143,7 +143,7 @@ func (s Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req mod
 	return pocket.ToPocketResp(), nil
 }
 
-func (s Core) UpdatePocket(ctx context.Context, claims mjwt.CustomClaim, newData model.PocketUpdate) (model.PocketResp, error) {
+func (s *Core) UpdatePocket(ctx context.Context, claims mjwt.CustomClaim, newData model.PocketUpdate) (model.PocketResp, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-UpdatePocket")
 	defer span.End()
 
@@ -178,7 +178,7 @@ func (s Core) UpdatePocket(ctx context.Context, claims mjwt.CustomClaim, newData
 	return pocketExisting.ToPocketResp(), nil
 }
 
-func (s Core) AddPerson(ctx context.Context, claims mjwt.CustomClaim, data AddPersonData) (model.PocketResp, error) {
+func (s *Core) AddPerson(ctx context.Context, claims mjwt.CustomClaim, data AddPersonData) (model.PocketResp, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-AddPerson")
 	defer span.End()
 
@@ -234,7 +234,7 @@ func (s Core) AddPerson(ctx context.Context, claims mjwt.CustomClaim, data AddPe
 }
 
 // RemovePerson will remove person from both editor and watcher
-func (s Core) RemovePerson(ctx context.Context, claims mjwt.CustomClaim, data RemovePersonData) (model.PocketResp, error) {
+func (s *Core) RemovePerson(ctx context.Context, claims mjwt.CustomClaim, data RemovePersonData) (model.PocketResp, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-RemovePerson")
 	defer span.End()
 
@@ -275,7 +275,7 @@ func (s Core) RemovePerson(ctx context.Context, claims mjwt.CustomClaim, data Re
 }
 
 // GetDetail ...
-func (s Core) GetDetail(ctx context.Context, claims mjwt.CustomClaim, pocketID xulid.ULID) (model.PocketResp, error) {
+func (s *Core) GetDetail(ctx context.Context, claims mjwt.CustomClaim, pocketID xulid.ULID) (model.PocketResp, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-GetDetail")
 	defer span.End()
 
@@ -339,7 +339,7 @@ func (s Core) GetDetail(ctx context.Context, claims mjwt.CustomClaim, pocketID x
 }
 
 // FindAllPocket ...
-func (s Core) FindAllPocket(ctx context.Context, claims mjwt.CustomClaim, filter paging.Filters) ([]model.PocketResp, paging.Metadata, error) {
+func (s *Core) FindAllPocket(ctx context.Context, claims mjwt.CustomClaim, filter paging.Filters) ([]model.PocketResp, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-FindAllPocket")
 	defer span.End()
 

@@ -47,8 +47,8 @@ type Repo struct {
 }
 
 // NewRepo constructs a data for api access..
-func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) Repo {
-	return Repo{
+func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) *Repo {
+	return &Repo{
 		db:  sqlDB,
 		log: log,
 		sb:  sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
@@ -59,7 +59,7 @@ func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) Repo {
 // MANIPULATOR
 
 // Insert ...
-func (r Repo) Insert(ctx context.Context, request *model.RequestPocket) error {
+func (r *Repo) Insert(ctx context.Context, request *model.RequestPocket) error {
 	ctx, span := observ.GetTracer().Start(ctx, "req-repo-Insert")
 	defer span.End()
 
@@ -100,7 +100,7 @@ func (r Repo) Insert(ctx context.Context, request *model.RequestPocket) error {
 }
 
 // UpdateStatus update approver, is_approved and udpdated_at
-func (r Repo) UpdateStatus(ctx context.Context, request *model.RequestPocket) error {
+func (r *Repo) UpdateStatus(ctx context.Context, request *model.RequestPocket) error {
 	ctx, span := observ.GetTracer().Start(ctx, "req-repo-UpdateStatus")
 	defer span.End()
 
@@ -152,7 +152,7 @@ func (r Repo) UpdateStatus(ctx context.Context, request *model.RequestPocket) er
 // =========================================================================
 // GETTER
 // GetByID get one pocket by email
-func (r Repo) GetByID(ctx context.Context, id uint64) (model.RequestPocket, error) {
+func (r *Repo) GetByID(ctx context.Context, id uint64) (model.RequestPocket, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "req-repo-GetByID")
 	defer span.End()
 
@@ -199,7 +199,7 @@ func (r Repo) GetByID(ctx context.Context, id uint64) (model.RequestPocket, erro
 }
 
 // Find get all request by FIND model
-func (r Repo) Find(ctx context.Context, findBy model.FindBy, filter paging.Filters) ([]model.RequestPocket, paging.Metadata, error) {
+func (r *Repo) Find(ctx context.Context, findBy model.FindBy, filter paging.Filters) ([]model.RequestPocket, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "req-repo-Find")
 	defer span.End()
 

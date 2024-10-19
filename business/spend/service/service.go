@@ -41,8 +41,8 @@ func NewCore(
 	repo port.SpendStorer,
 	pocketRepo port.PocketStorer,
 	txManager port.Transactor,
-) Core {
-	return Core{
+) *Core {
+	return &Core{
 		log:        log,
 		repo:       repo,
 		pocketRepo: pocketRepo,
@@ -50,7 +50,7 @@ func NewCore(
 	}
 }
 
-func (s Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req model.NewSpend) (model.SpendResp, error) {
+func (s *Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req model.NewSpend) (model.SpendResp, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-CreateSpend")
 	defer span.End()
 
@@ -111,7 +111,7 @@ func (s Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req mode
 	return spend.ToResp(), nil
 }
 
-func (s Core) TransferToPocketAsSpend(ctx context.Context, claims mjwt.CustomClaim, req model.TransferSpend) error {
+func (s *Core) TransferToPocketAsSpend(ctx context.Context, claims mjwt.CustomClaim, req model.TransferSpend) error {
 	ctx, span := observ.GetTracer().Start(ctx, "service-TransferToPocketAsSpend")
 	defer span.End()
 
@@ -219,7 +219,7 @@ func (s Core) TransferToPocketAsSpend(ctx context.Context, claims mjwt.CustomCla
 	return nil
 }
 
-func (s Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, req model.UpdateSpend) (model.SpendResp, error) {
+func (s *Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, req model.UpdateSpend) (model.SpendResp, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-UpdatePartialSpend")
 	defer span.End()
 
@@ -289,7 +289,7 @@ func (s Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, r
 }
 
 // GetDetail ...
-func (s Core) GetDetail(ctx context.Context, spendID xulid.ULID) (model.SpendResp, error) {
+func (s *Core) GetDetail(ctx context.Context, spendID xulid.ULID) (model.SpendResp, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-GetDetail")
 	defer span.End()
 
@@ -303,7 +303,7 @@ func (s Core) GetDetail(ctx context.Context, spendID xulid.ULID) (model.SpendRes
 }
 
 // FindAllSpend ...
-func (s Core) FindAllSpend(ctx context.Context, claims mjwt.CustomClaim, spendFilter model.SpendFilter, filter paging.Filters) ([]model.SpendResp, paging.Metadata, error) {
+func (s *Core) FindAllSpend(ctx context.Context, claims mjwt.CustomClaim, spendFilter model.SpendFilter, filter paging.Filters) ([]model.SpendResp, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-FindAllSpend")
 	defer span.End()
 
@@ -333,7 +333,7 @@ func (s Core) FindAllSpend(ctx context.Context, claims mjwt.CustomClaim, spendFi
 }
 
 // FindAllSpendByCursor ...
-func (s Core) FindAllSpendByCursor(ctx context.Context, claims mjwt.CustomClaim, spendFilter model.SpendFilter, filter paging.Cursor) ([]model.SpendResp, paging.CursorMetadata, error) {
+func (s *Core) FindAllSpendByCursor(ctx context.Context, claims mjwt.CustomClaim, spendFilter model.SpendFilter, filter paging.Cursor) ([]model.SpendResp, paging.CursorMetadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-FindAllSpend")
 	defer span.End()
 
@@ -382,7 +382,7 @@ func (s Core) FindAllSpendByCursor(ctx context.Context, claims mjwt.CustomClaim,
 }
 
 // SyncBalance ...
-func (s Core) SyncBalance(ctx context.Context, claims mjwt.CustomClaim, pocketID xulid.ULID) (int64, error) {
+func (s *Core) SyncBalance(ctx context.Context, claims mjwt.CustomClaim, pocketID xulid.ULID) (int64, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-SyncBalance")
 	defer span.End()
 

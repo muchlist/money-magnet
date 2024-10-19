@@ -18,7 +18,7 @@ type txManager struct {
 }
 
 func NewTxManager(sqlDB *pgxpool.Pool, log mlogger.Logger) TxManager {
-	return txManager{
+	return &txManager{
 		db:  sqlDB,
 		log: log,
 	}
@@ -29,7 +29,7 @@ func NewTxManager(sqlDB *pgxpool.Pool, log mlogger.Logger) TxManager {
 
 // WithAtomic runs function within transaction
 // The transaction commits when function were finished without error
-func (r txManager) WithAtomic(ctx context.Context, tFunc func(ctx context.Context) error) error {
+func (r *txManager) WithAtomic(ctx context.Context, tFunc func(ctx context.Context) error) error {
 
 	// begin transaction
 	tx, err := r.db.Begin(ctx)
@@ -48,7 +48,7 @@ func (r txManager) WithAtomic(ctx context.Context, tFunc func(ctx context.Contex
 	}
 	// if no error, commit
 	if errCommit := tx.Commit(ctx); errCommit != nil {
-		r.log.Error("commit transaction", errCommit)
+		return fmt.Errorf("commit transaction: %w", errCommit)
 	}
 	return nil
 }

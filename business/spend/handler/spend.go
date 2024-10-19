@@ -21,8 +21,8 @@ import (
 func NewSpendHandler(log mlogger.Logger,
 	validator validate.Validator,
 	cache lrucache.CacheStorer,
-	spendService service.Core) spendHandler {
-	return spendHandler{
+	spendService *service.Core) *spendHandler {
+	return &spendHandler{
 		log:       log,
 		validator: validator,
 		cache:     cache,
@@ -34,7 +34,7 @@ type spendHandler struct {
 	log       mlogger.Logger
 	validator validate.Validator
 	cache     lrucache.CacheStorer
-	service   service.Core
+	service   *service.Core
 }
 
 // @Summary      Create Spend
@@ -47,7 +47,7 @@ type spendHandler struct {
 // @Failure      400  {object}  misc.ResponseErr
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /spends [post]
-func (pt spendHandler) CreateSpend(w http.ResponseWriter, r *http.Request) {
+func (pt *spendHandler) CreateSpend(w http.ResponseWriter, r *http.Request) {
 	ctx, span := observ.GetTracer().Start(r.Context(), "handler-CreateSpend")
 	defer span.End()
 
@@ -100,7 +100,7 @@ func (pt spendHandler) CreateSpend(w http.ResponseWriter, r *http.Request) {
 // @Failure      400  {object}  misc.ResponseErr
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /spends/transfer [post]
-func (pt spendHandler) TransferSpend(w http.ResponseWriter, r *http.Request) {
+func (pt *spendHandler) TransferSpend(w http.ResponseWriter, r *http.Request) {
 	ctx, span := observ.GetTracer().Start(r.Context(), "handler-TransferSpend")
 	defer span.End()
 
@@ -154,7 +154,7 @@ func (pt spendHandler) TransferSpend(w http.ResponseWriter, r *http.Request) {
 // @Failure      400  {object}  misc.ResponseErr
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /spends/{spend_id} [patch]
-func (pt spendHandler) EditSpend(w http.ResponseWriter, r *http.Request) {
+func (pt *spendHandler) EditSpend(w http.ResponseWriter, r *http.Request) {
 	ctx, span := observ.GetTracer().Start(r.Context(), "handler-EditSpend")
 	defer span.End()
 
@@ -217,7 +217,7 @@ func (pt spendHandler) EditSpend(w http.ResponseWriter, r *http.Request) {
 // @Failure      400  {object}  misc.ResponseErr
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /spends/sync/{spend_id} [post]
-func (pt spendHandler) SyncBalance(w http.ResponseWriter, r *http.Request) {
+func (pt *spendHandler) SyncBalance(w http.ResponseWriter, r *http.Request) {
 	ctx, span := observ.GetTracer().Start(r.Context(), "handler-SyncBalance")
 	defer span.End()
 
@@ -262,7 +262,7 @@ func (pt spendHandler) SyncBalance(w http.ResponseWriter, r *http.Request) {
 // @Failure      400  {object}  misc.ResponseErr
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /spends/{spend_id} [get]
-func (pt spendHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+func (pt *spendHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	ctx, span := observ.GetTracer().Start(r.Context(), "handler-GetByID")
 	defer span.End()
 
@@ -323,7 +323,7 @@ func extractSpendFilter(values url.Values) model.SpendFilter {
 // @Failure      400  {object}  misc.ResponseErr
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /spends/{id} [get]
-func (pt spendHandler) FindSpend(w http.ResponseWriter, r *http.Request) {
+func (pt *spendHandler) FindSpend(w http.ResponseWriter, r *http.Request) {
 	ctx, span := observ.GetTracer().Start(r.Context(), "handler-FindSpend")
 	defer span.End()
 
@@ -389,7 +389,7 @@ func (pt spendHandler) FindSpend(w http.ResponseWriter, r *http.Request) {
 // @Failure      400  {object}  misc.ResponseErr
 // @Failure      500  {object}  misc.Response500Err
 // @Router       /spends/{id}/with-cursor [get]
-func (pt spendHandler) FindSpendByCursor(w http.ResponseWriter, r *http.Request) {
+func (pt *spendHandler) FindSpendByCursor(w http.ResponseWriter, r *http.Request) {
 	ctx, span := observ.GetTracer().Start(r.Context(), "handler-FindSpend")
 	defer span.End()
 

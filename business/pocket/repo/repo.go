@@ -44,8 +44,8 @@ type Repo struct {
 }
 
 // NewRepo constructs a data for api access..
-func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) Repo {
-	return Repo{
+func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) *Repo {
+	return &Repo{
 		db:  sqlDB,
 		log: log,
 		sb:  sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
@@ -56,7 +56,7 @@ func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) Repo {
 // MANIPULATOR
 
 // Insert ...
-func (r Repo) Insert(ctx context.Context, pocket *model.Pocket) error {
+func (r *Repo) Insert(ctx context.Context, pocket *model.Pocket) error {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-Insert")
 	defer span.End()
 
@@ -109,7 +109,7 @@ func (r Repo) Insert(ctx context.Context, pocket *model.Pocket) error {
 }
 
 // Edit ...
-func (r Repo) Edit(ctx context.Context, pocket *model.Pocket) error {
+func (r *Repo) Edit(ctx context.Context, pocket *model.Pocket) error {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-Edit")
 	defer span.End()
 
@@ -150,7 +150,7 @@ func (r Repo) Edit(ctx context.Context, pocket *model.Pocket) error {
 }
 
 // UpdateBalance ...
-func (r Repo) UpdateBalance(ctx context.Context, pocketID xulid.ULID, balance int64, isSetOperaton bool) (int64, error) {
+func (r *Repo) UpdateBalance(ctx context.Context, pocketID xulid.ULID, balance int64, isSetOperaton bool) (int64, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-UpdateBalance")
 	defer span.End()
 
@@ -187,7 +187,7 @@ func (r Repo) UpdateBalance(ctx context.Context, pocketID xulid.ULID, balance in
 }
 
 // Delete ...
-func (r Repo) Delete(ctx context.Context, id xulid.ULID) error {
+func (r *Repo) Delete(ctx context.Context, id xulid.ULID) error {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-Delete")
 	defer span.End()
 
@@ -219,7 +219,7 @@ func (r Repo) Delete(ctx context.Context, id xulid.ULID) error {
 // GETTER
 
 // GetByID get one pocket by id
-func (r Repo) GetByID(ctx context.Context, id xulid.ULID) (model.Pocket, error) {
+func (r *Repo) GetByID(ctx context.Context, id xulid.ULID) (model.Pocket, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-GetByID")
 	defer span.End()
 
@@ -271,7 +271,7 @@ func (r Repo) GetByID(ctx context.Context, id xulid.ULID) (model.Pocket, error) 
 }
 
 // GetByID get one pocket by id
-func (r Repo) GetFirst(ctx context.Context, ownerID string) (model.Pocket, error) {
+func (r *Repo) GetFirst(ctx context.Context, ownerID string) (model.Pocket, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-GetByID")
 	defer span.End()
 
@@ -326,7 +326,7 @@ func (r Repo) GetFirst(ctx context.Context, ownerID string) (model.Pocket, error
 }
 
 // Find get all pocket
-func (r Repo) Find(ctx context.Context, owner xulid.ULID, filter paging.Filters) ([]model.Pocket, paging.Metadata, error) {
+func (r *Repo) Find(ctx context.Context, owner xulid.ULID, filter paging.Filters) ([]model.Pocket, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-Find")
 	defer span.End()
 
@@ -409,7 +409,7 @@ func (r Repo) Find(ctx context.Context, owner xulid.ULID, filter paging.Filters)
 }
 
 // FindUserPockets get all pocket user has uuid in it by relation constrain
-func (r Repo) FindUserPocketsByRelation(ctx context.Context, owner xulid.ULID, filter paging.Filters) ([]model.Pocket, paging.Metadata, error) {
+func (r *Repo) FindUserPocketsByRelation(ctx context.Context, owner xulid.ULID, filter paging.Filters) ([]model.Pocket, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "pocket-repo-FindUserPocketsByRelation")
 	defer span.End()
 

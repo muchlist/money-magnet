@@ -19,7 +19,7 @@ import (
 func NewPocketHandler(log mlogger.Logger,
 	validator validate.Validator,
 	cache lrucache.CacheStorer,
-	pocketService service.Core) pocketHandler {
+	pocketService *service.Core) pocketHandler {
 	return pocketHandler{
 		log:       log,
 		validator: validator,
@@ -32,7 +32,7 @@ type pocketHandler struct {
 	log       mlogger.Logger
 	validator validate.Validator
 	cache     lrucache.CacheStorer
-	service   service.Core
+	service   *service.Core
 }
 
 // @Summary      Create Pocket

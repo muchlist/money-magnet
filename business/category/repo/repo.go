@@ -37,8 +37,8 @@ type Repo struct {
 }
 
 // NewRepo constructs a data for api access..
-func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) Repo {
-	return Repo{
+func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) *Repo {
+	return &Repo{
 		db:  sqlDB,
 		log: log,
 		sb:  sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
@@ -49,7 +49,7 @@ func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) Repo {
 // MANIPULATOR
 
 // Insert ...
-func (r Repo) Insert(ctx context.Context, category *model.Category) error {
+func (r *Repo) Insert(ctx context.Context, category *model.Category) error {
 	ctx, span := observ.GetTracer().Start(ctx, "category-repo-Insert")
 	defer span.End()
 
@@ -93,7 +93,7 @@ func (r Repo) Insert(ctx context.Context, category *model.Category) error {
 }
 
 // Insert Many...
-func (r Repo) InsertMany(ctx context.Context, categories []model.Category) error {
+func (r *Repo) InsertMany(ctx context.Context, categories []model.Category) error {
 	ctx, span := observ.GetTracer().Start(ctx, "category-repo-Insert")
 	defer span.End()
 
@@ -145,7 +145,7 @@ func (r Repo) InsertMany(ctx context.Context, categories []model.Category) error
 }
 
 // Edit ...
-func (r Repo) Edit(ctx context.Context, category *model.Category) error {
+func (r *Repo) Edit(ctx context.Context, category *model.Category) error {
 	ctx, span := observ.GetTracer().Start(ctx, "category-repo-Edit")
 	defer span.End()
 
@@ -180,7 +180,7 @@ func (r Repo) Edit(ctx context.Context, category *model.Category) error {
 }
 
 // Delete ...
-func (r Repo) Delete(ctx context.Context, id string) error {
+func (r *Repo) Delete(ctx context.Context, id string) error {
 	ctx, span := observ.GetTracer().Start(ctx, "category-repo-Delete")
 	defer span.End()
 
@@ -212,7 +212,7 @@ func (r Repo) Delete(ctx context.Context, id string) error {
 // GETTER
 
 // GetByID get one category by email
-func (r Repo) GetByID(ctx context.Context, id string) (model.Category, error) {
+func (r *Repo) GetByID(ctx context.Context, id string) (model.Category, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "category-repo-GetByID")
 	defer span.End()
 
@@ -255,7 +255,7 @@ func (r Repo) GetByID(ctx context.Context, id string) (model.Category, error) {
 }
 
 // Find get all category within user
-func (r Repo) Find(ctx context.Context, pocketID string, filter paging.Filters) ([]model.Category, paging.Metadata, error) {
+func (r *Repo) Find(ctx context.Context, pocketID string, filter paging.Filters) ([]model.Category, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "category-repo-Find")
 	defer span.End()
 

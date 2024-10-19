@@ -41,8 +41,8 @@ type Repo struct {
 }
 
 // NewRepo constructs a data for api access..
-func NewRepo(sqlDB *pgxpool.Pool, logger mlogger.Logger) Repo {
-	return Repo{
+func NewRepo(sqlDB *pgxpool.Pool, logger mlogger.Logger) *Repo {
+	return &Repo{
 		db:  sqlDB,
 		log: logger,
 		sb:  sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
@@ -53,7 +53,7 @@ func NewRepo(sqlDB *pgxpool.Pool, logger mlogger.Logger) Repo {
 // MANIPULATOR
 
 // Insert ...
-func (r Repo) Insert(ctx context.Context, spend *model.Spend) error {
+func (r *Repo) Insert(ctx context.Context, spend *model.Spend) error {
 	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-Insert")
 	defer span.End()
 
@@ -109,7 +109,7 @@ func (r Repo) Insert(ctx context.Context, spend *model.Spend) error {
 }
 
 // Edit ...
-func (r Repo) Edit(ctx context.Context, spend *model.Spend) error {
+func (r *Repo) Edit(ctx context.Context, spend *model.Spend) error {
 	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-Edit")
 	defer span.End()
 
@@ -151,7 +151,7 @@ func (r Repo) Edit(ctx context.Context, spend *model.Spend) error {
 }
 
 // Delete ...
-func (r Repo) Delete(ctx context.Context, id xulid.ULID) error {
+func (r *Repo) Delete(ctx context.Context, id xulid.ULID) error {
 	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-Delete")
 	defer span.End()
 
@@ -183,7 +183,7 @@ func (r Repo) Delete(ctx context.Context, id xulid.ULID) error {
 // GETTER
 
 // GetByID get one spend by email
-func (r Repo) GetByID(ctx context.Context, id xulid.ULID) (model.Spend, error) {
+func (r *Repo) GetByID(ctx context.Context, id xulid.ULID) (model.Spend, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-GetByID")
 	defer span.End()
 
@@ -251,7 +251,7 @@ func (r Repo) GetByID(ctx context.Context, id xulid.ULID) (model.Spend, error) {
 }
 
 // Find get all spend
-func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter paging.Filters) ([]model.Spend, paging.Metadata, error) {
+func (r *Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter paging.Filters) ([]model.Spend, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-Find")
 	defer span.End()
 
@@ -386,7 +386,7 @@ func (r Repo) Find(ctx context.Context, spendFilter model.SpendFilter, filter pa
 }
 
 // Find With Cursor Pagination
-func (r Repo) FindWithCursor(ctx context.Context, spendFilter model.SpendFilter, filter paging.Cursor) ([]model.Spend, error) {
+func (r *Repo) FindWithCursor(ctx context.Context, spendFilter model.SpendFilter, filter paging.Cursor) ([]model.Spend, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-Find")
 	defer span.End()
 
@@ -533,7 +533,7 @@ func (r Repo) FindWithCursor(ctx context.Context, spendFilter model.SpendFilter,
 }
 
 // Count All Price
-func (r Repo) CountAllPrice(ctx context.Context, pocketID xulid.ULID) (int64, error) {
+func (r *Repo) CountAllPrice(ctx context.Context, pocketID xulid.ULID) (int64, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "spend-repo-CountAllPrice")
 	defer span.End()
 

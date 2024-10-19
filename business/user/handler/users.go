@@ -19,7 +19,7 @@ import (
 
 func NewUserHandler(log mlogger.Logger,
 	validator validate.Validator,
-	userService service.Core) userHandler {
+	userService *service.Core) userHandler {
 	return userHandler{
 		log:       log,
 		validator: validator,
@@ -30,7 +30,7 @@ func NewUserHandler(log mlogger.Logger,
 type userHandler struct {
 	log       mlogger.Logger
 	validator validate.Validator
-	service   service.Core
+	service   *service.Core
 }
 
 func (usr userHandler) Register(w http.ResponseWriter, r *http.Request) {
