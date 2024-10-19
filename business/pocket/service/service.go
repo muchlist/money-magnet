@@ -125,13 +125,6 @@ func (s *Core) CreatePocket(ctx context.Context, claims mjwt.CustomClaim, req mo
 				return fmt.Errorf("loop insert pocket_user to db: %w", err)
 			}
 
-			// generate default category
-			categories := generateDefaultCategory(pocket.ID)
-			err = s.categoryRepo.InsertMany(ctx, categories)
-			if err != nil {
-				return fmt.Errorf("insert default category to db: %w", err)
-			}
-
 			return nil
 		},
 	)
