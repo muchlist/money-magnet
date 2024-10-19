@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/muchlist/moneymagnet/business/category/model"
 	"github.com/muchlist/moneymagnet/business/category/port"
+	"github.com/muchlist/moneymagnet/constant"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/observ"
@@ -211,7 +212,7 @@ func (r *Repo) Delete(ctx context.Context, id string) error {
 // =========================================================================
 // GETTER
 
-// GetByID get one category by email
+// GetByID get one category by id
 func (r *Repo) GetByID(ctx context.Context, id string) (model.Category, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "category-repo-GetByID")
 	defer span.End()
@@ -254,7 +255,7 @@ func (r *Repo) GetByID(ctx context.Context, id string) (model.Category, error) {
 	return cat, nil
 }
 
-// Find get all category within user
+// Find get all category within pocketID
 func (r *Repo) Find(ctx context.Context, pocketID string, filter paging.Filters) ([]model.Category, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "category-repo-Find")
 	defer span.End()
@@ -268,6 +269,11 @@ func (r *Repo) Find(ctx context.Context, pocketID string, filter paging.Filters)
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
+	where := sq.Or{
+		sq.Eq{keyPocketID: pocketID},
+		sq.Eq{keyPocketID: constant.POCK_MAIN_ID}, // OR 00000000000000000000000000
+	}
+
 	sqlStatement, args, err := r.sb.Select(
 		"count(*) OVER()",
 		keyID,
@@ -279,7 +285,7 @@ func (r *Repo) Find(ctx context.Context, pocketID string, filter paging.Filters)
 		keyUpdatedAt,
 	).
 		From(keyTable).
-		Where(sq.Eq{keyPocketID: pocketID}).
+		Where(where).
 		OrderBy(filter.SortColumnDirection()).
 		Limit(uint64(filter.Limit())).
 		Offset(uint64(filter.Offset())).
