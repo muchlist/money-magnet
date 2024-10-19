@@ -16,7 +16,7 @@ import (
 
 func NewCatHandler(log mlogger.Logger,
 	validator validate.Validator,
-	catService service.Core) catHandler {
+	catService *service.Core) catHandler {
 	return catHandler{
 		log:       log,
 		validator: validator,
@@ -27,7 +27,7 @@ func NewCatHandler(log mlogger.Logger,
 type catHandler struct {
 	log       mlogger.Logger
 	validator validate.Validator
-	service   service.Core
+	service   *service.Core
 }
 
 // @Summary      Create Category

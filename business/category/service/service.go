@@ -29,15 +29,15 @@ func NewCore(
 	log mlogger.Logger,
 	repo port.CategoryStorer,
 	pockerReader pocketPort.PocketReader,
-) Core {
-	return Core{
+) *Core {
+	return &Core{
 		log:          log,
 		repo:         repo,
 		pockerReader: pockerReader,
 	}
 }
 
-func (s Core) CreateCategory(ctx context.Context, claims mjwt.CustomClaim, req model.NewCategory) (model.CategoryResp, error) {
+func (s *Core) CreateCategory(ctx context.Context, claims mjwt.CustomClaim, req model.NewCategory) (model.CategoryResp, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "category-service-CreateCategory")
 	defer span.End()
 
@@ -70,7 +70,7 @@ func (s Core) CreateCategory(ctx context.Context, claims mjwt.CustomClaim, req m
 	return cat.ToCategoryResp(), nil
 }
 
-func (s Core) EditCategory(ctx context.Context, claims mjwt.CustomClaim, newData model.UpdateCategory) (model.CategoryResp, error) {
+func (s *Core) EditCategory(ctx context.Context, claims mjwt.CustomClaim, newData model.UpdateCategory) (model.CategoryResp, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "category-service-EditCategory")
 	defer span.End()
 
@@ -105,7 +105,7 @@ func (s Core) EditCategory(ctx context.Context, claims mjwt.CustomClaim, newData
 }
 
 // FindAllCategory ...
-func (s Core) FindAllCategory(ctx context.Context, pocketID xulid.ULID, filter paging.Filters) ([]model.CategoryResp, paging.Metadata, error) {
+func (s *Core) FindAllCategory(ctx context.Context, pocketID xulid.ULID, filter paging.Filters) ([]model.CategoryResp, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "category-service-FindAllCategory")
 	defer span.End()
 
@@ -124,7 +124,7 @@ func (s Core) FindAllCategory(ctx context.Context, pocketID xulid.ULID, filter p
 }
 
 // DeleteCategory ...
-func (s Core) DeleteCategory(ctx context.Context, categoryID xulid.ULID) error {
+func (s *Core) DeleteCategory(ctx context.Context, categoryID xulid.ULID) error {
 	ctx, span := observ.GetTracer().Start(ctx, "category-service-DeleteCategory")
 	defer span.End()
 

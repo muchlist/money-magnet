@@ -17,7 +17,7 @@ import (
 
 func NewRequestHandler(log mlogger.Logger,
 	validator validate.Validator,
-	requestService service.Core) requestHandler {
+	requestService *service.Core) requestHandler {
 	return requestHandler{
 		log:       log,
 		validator: validator,
@@ -28,7 +28,7 @@ func NewRequestHandler(log mlogger.Logger,
 type requestHandler struct {
 	log       mlogger.Logger
 	validator validate.Validator
-	service   service.Core
+	service   *service.Core
 }
 
 // @Summary      Create Join Request

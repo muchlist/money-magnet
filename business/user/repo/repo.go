@@ -37,8 +37,8 @@ type Repo struct {
 }
 
 // NewRepo constructs a data for api access..
-func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) Repo {
-	return Repo{
+func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) *Repo {
+	return &Repo{
 		db:  sqlDB,
 		log: log,
 		sb:  sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
@@ -49,7 +49,7 @@ func NewRepo(sqlDB *pgxpool.Pool, log mlogger.Logger) Repo {
 // MANIPULATOR
 
 // Insert ...
-func (r Repo) Insert(ctx context.Context, user *model.User) error {
+func (r *Repo) Insert(ctx context.Context, user *model.User) error {
 	ctx, span := observ.GetTracer().Start(ctx, "user-repo-Insert")
 	defer span.End()
 
@@ -93,7 +93,7 @@ func (r Repo) Insert(ctx context.Context, user *model.User) error {
 }
 
 // Edit ...
-func (r Repo) Edit(ctx context.Context, user *model.User) error {
+func (r *Repo) Edit(ctx context.Context, user *model.User) error {
 	ctx, span := observ.GetTracer().Start(ctx, "user-repo-Edit")
 	defer span.End()
 
@@ -128,7 +128,7 @@ func (r Repo) Edit(ctx context.Context, user *model.User) error {
 	return nil
 }
 
-func (r Repo) EditFCM(ctx context.Context, id xulid.ULID, fcm string) error {
+func (r *Repo) EditFCM(ctx context.Context, id xulid.ULID, fcm string) error {
 	ctx, span := observ.GetTracer().Start(ctx, "user-repo-EditFCM")
 	defer span.End()
 
@@ -159,7 +159,7 @@ func (r Repo) EditFCM(ctx context.Context, id xulid.ULID, fcm string) error {
 }
 
 // Delete ...
-func (r Repo) Delete(ctx context.Context, id xulid.ULID) error {
+func (r *Repo) Delete(ctx context.Context, id xulid.ULID) error {
 	ctx, span := observ.GetTracer().Start(ctx, "user-repo-Delete")
 	defer span.End()
 
@@ -190,7 +190,7 @@ func (r Repo) Delete(ctx context.Context, id xulid.ULID) error {
 }
 
 // ChangePassword ...
-func (r Repo) ChangePassword(ctx context.Context, user *model.User) error {
+func (r *Repo) ChangePassword(ctx context.Context, user *model.User) error {
 	ctx, span := observ.GetTracer().Start(ctx, "user-repo-ChangePassword")
 	defer span.End()
 
@@ -226,7 +226,7 @@ func (r Repo) ChangePassword(ctx context.Context, user *model.User) error {
 // GETTER
 
 // GetByID get one user by ulid
-func (r Repo) GetByID(ctx context.Context, ulid xulid.ULID) (model.User, error) {
+func (r *Repo) GetByID(ctx context.Context, ulid xulid.ULID) (model.User, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "user-repo-GetByID")
 	defer span.End()
 
@@ -272,7 +272,7 @@ func (r Repo) GetByID(ctx context.Context, ulid xulid.ULID) (model.User, error) 
 }
 
 // GetByIDs get many user by []uuid
-func (r Repo) GetByIDs(ctx context.Context, ulids []string) ([]model.User, error) {
+func (r *Repo) GetByIDs(ctx context.Context, ulids []string) ([]model.User, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "user-repo-GetByIDs")
 	defer span.End()
 
@@ -330,7 +330,7 @@ func (r Repo) GetByIDs(ctx context.Context, ulids []string) ([]model.User, error
 }
 
 // GetByEmail get one user by email
-func (r Repo) GetByEmail(ctx context.Context, email string) (model.User, error) {
+func (r *Repo) GetByEmail(ctx context.Context, email string) (model.User, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "user-repo-GetByEmail")
 	defer span.End()
 
@@ -376,7 +376,7 @@ func (r Repo) GetByEmail(ctx context.Context, email string) (model.User, error) 
 }
 
 // Find get all user
-func (r Repo) Find(ctx context.Context, name string, filter paging.Filters) ([]model.User, paging.Metadata, error) {
+func (r *Repo) Find(ctx context.Context, name string, filter paging.Filters) ([]model.User, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "user-repo-Find")
 	defer span.End()
 

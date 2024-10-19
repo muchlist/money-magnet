@@ -29,8 +29,8 @@ func NewCore(
 	repo port.RequestStorer,
 	pocketRepo port.PocketStorer,
 	txManager port.Transactor,
-) Core {
-	return Core{
+) *Core {
+	return &Core{
 		log:        log,
 		repo:       repo,
 		pocketRepo: pocketRepo,
@@ -38,7 +38,7 @@ func NewCore(
 	}
 }
 
-func (s Core) CreateRequest(ctx context.Context, claims mjwt.CustomClaim, pocketID xulid.ULID) (model.RequestPocket, error) {
+func (s *Core) CreateRequest(ctx context.Context, claims mjwt.CustomClaim, pocketID xulid.ULID) (model.RequestPocket, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-CreateRequest")
 	defer span.End()
 
@@ -67,7 +67,7 @@ func (s Core) CreateRequest(ctx context.Context, claims mjwt.CustomClaim, pocket
 	return req, nil
 }
 
-func (s Core) ApproveRequest(ctx context.Context, claims mjwt.CustomClaim, IsApproved bool, requestID uint64) error {
+func (s *Core) ApproveRequest(ctx context.Context, claims mjwt.CustomClaim, IsApproved bool, requestID uint64) error {
 	ctx, span := observ.GetTracer().Start(ctx, "service-ApproveRequest")
 	defer span.End()
 
@@ -135,7 +135,7 @@ func (s Core) ApproveRequest(ctx context.Context, claims mjwt.CustomClaim, IsApp
 }
 
 // FindAllByRequester ...
-func (s Core) FindAllByRequester(ctx context.Context, claims mjwt.CustomClaim, filter paging.Filters) ([]model.RequestPocket, paging.Metadata, error) {
+func (s *Core) FindAllByRequester(ctx context.Context, claims mjwt.CustomClaim, filter paging.Filters) ([]model.RequestPocket, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-FindAllByRequester")
 	defer span.End()
 
@@ -153,7 +153,7 @@ func (s Core) FindAllByRequester(ctx context.Context, claims mjwt.CustomClaim, f
 }
 
 // FindAllByApprover ...
-func (s Core) FindAllByApprover(ctx context.Context, claims mjwt.CustomClaim, filter paging.Filters) ([]model.RequestPocket, paging.Metadata, error) {
+func (s *Core) FindAllByApprover(ctx context.Context, claims mjwt.CustomClaim, filter paging.Filters) ([]model.RequestPocket, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-FindAllByApprover")
 	defer span.End()
 

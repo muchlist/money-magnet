@@ -44,8 +44,8 @@ func NewCore(
 	repo port.UserStorer,
 	crypto mcrypto.Crypter,
 	jwt mjwt.TokenHandler,
-) Core {
-	return Core{
+) *Core {
+	return &Core{
 		log:    log,
 		repo:   repo,
 		crypto: crypto,
@@ -54,7 +54,7 @@ func NewCore(
 }
 
 // Login return detail user with access token and refresh token
-func (s Core) Login(ctx context.Context, email, password string) (model.UserResp, error) {
+func (s *Core) Login(ctx context.Context, email, password string) (model.UserResp, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-Login")
 	defer span.End()
 
@@ -115,7 +115,7 @@ func (s Core) Login(ctx context.Context, email, password string) (model.UserResp
 }
 
 // InsertUser used for register user
-func (s Core) InsertUser(ctx context.Context, req model.UserRegisterReq) (model.UserResp, error) {
+func (s *Core) InsertUser(ctx context.Context, req model.UserRegisterReq) (model.UserResp, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-InsertUser")
 	defer span.End()
 
@@ -159,7 +159,7 @@ func (s Core) InsertUser(ctx context.Context, req model.UserRegisterReq) (model.
 
 // PatchUser do edit user with ignoring nil field
 // ID is required
-func (s Core) PatchUser(ctx context.Context, req model.UserUpdate) (model.UserResp, error) {
+func (s *Core) PatchUser(ctx context.Context, req model.UserUpdate) (model.UserResp, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-PatchUser")
 	defer span.End()
 
@@ -196,7 +196,7 @@ func (s Core) PatchUser(ctx context.Context, req model.UserUpdate) (model.UserRe
 }
 
 // UpdateFCM do save fcm to database
-func (s Core) UpdateFCM(ctx context.Context, id string, fcm string) error {
+func (s *Core) UpdateFCM(ctx context.Context, id string, fcm string) error {
 	ctx, span := observ.GetTracer().Start(ctx, "service-UpdateFCM")
 	defer span.End()
 
@@ -211,7 +211,7 @@ func (s Core) UpdateFCM(ctx context.Context, id string, fcm string) error {
 }
 
 // Delete ...
-func (s Core) Delete(ctx context.Context, userIDToDelete xulid.ULID, userIDExecutor xulid.ULID) error {
+func (s *Core) Delete(ctx context.Context, userIDToDelete xulid.ULID, userIDExecutor xulid.ULID) error {
 	ctx, span := observ.GetTracer().Start(ctx, "service-Delete")
 	defer span.End()
 
@@ -223,7 +223,7 @@ func (s Core) Delete(ctx context.Context, userIDToDelete xulid.ULID, userIDExecu
 
 // Refresh do refresh token,
 // access token in reslt is new but tagged as not fresh
-func (s Core) Refresh(ctx context.Context, refreshToken string) (model.UserResp, error) {
+func (s *Core) Refresh(ctx context.Context, refreshToken string) (model.UserResp, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-Refresh")
 	defer span.End()
 
@@ -281,7 +281,7 @@ func (s Core) Refresh(ctx context.Context, refreshToken string) (model.UserResp,
 }
 
 // GetProfile do load user by id
-func (s Core) GetProfile(ctx context.Context, id string) (model.UserResp, error) {
+func (s *Core) GetProfile(ctx context.Context, id string) (model.UserResp, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-GetProfile")
 	defer span.End()
 
@@ -298,7 +298,7 @@ func (s Core) GetProfile(ctx context.Context, id string) (model.UserResp, error)
 }
 
 // FindUserByName do find user filter by *name*
-func (s Core) FindUserByName(ctx context.Context, name string, filter paging.Filters) ([]model.UserResp, paging.Metadata, error) {
+func (s *Core) FindUserByName(ctx context.Context, name string, filter paging.Filters) ([]model.UserResp, paging.Metadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-FindUserByName")
 	defer span.End()
 
