@@ -3,11 +3,11 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	"net/url"
 
 	"github.com/muchlist/moneymagnet/business/spend/model"
 	"github.com/muchlist/moneymagnet/business/spend/service"
 	"github.com/muchlist/moneymagnet/business/zhelper"
+	"github.com/muchlist/moneymagnet/pkg/daterange"
 	"github.com/muchlist/moneymagnet/pkg/lrucache"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/observ"
@@ -291,19 +291,6 @@ func (pt *spendHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func extractSpendFilter(values url.Values) model.SpendFilter {
-	rawFilter := model.SpendFilterRaw{
-		User:      values.Get("user"),
-		Category:  values.Get("category"),
-		Name:      values.Get("name"),
-		IsIncome:  values.Get("is_income"),
-		Type:      values.Get("type"),
-		DateStart: values.Get("date_start"),
-		DateEnd:   values.Get("date_end"),
-	}
-	return rawFilter.ToModel()
-}
-
 // @Summary      Find Spend
 // @Description  Find spend
 // @Tags         Spend
@@ -436,6 +423,91 @@ func (pt *spendHandler) FindSpendByCursor(w http.ResponseWriter, r *http.Request
 	}
 
 	metadata.GenerateAndApplyPageUri(fmt.Sprintf("/spends/from-pocket/%s/with-cursor", pocketID), queryValues)
+
+	env := web.Envelope{
+		"metadata": metadata,
+		"data":     result,
+	}
+	err = web.WriteJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+}
+
+// @Summary      Find Spend By Cursor With AutoDate
+// @Description  Find spend By Cursor With AutoDate
+// @Tags         Spend
+// @Accept       json
+// @Produce      json
+// @Param 		 cursor query string false "cursor"
+// @Param 		 cursor_type query string false "cursor_type"
+// @Param 		 page_size query int false "page-size"
+// @Param 		 range_type query string true "last-7-days, 2024-1, 2024-2"
+// @Param 		 time_zone query string true "Asia/Makasar"
+// @Success      200  {object}  misc.ResponseSuccessListCursor{data=[]model.SpendResp}
+// @Failure      400  {object}  misc.ResponseErr
+// @Failure      500  {object}  misc.Response500Err
+// @Router       /spends/{id}/with-cursor-auto [get]
+func (pt *spendHandler) FindSpendAutoDateByCursor(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-FindSpendAutoDateByCursor")
+	defer span.End()
+
+	claims, err := mid.GetClaims(ctx)
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	pocketID, err := web.ReadULIDParam(r)
+	if err != nil {
+		pt.log.WarnT(ctx, err.Error(), err)
+		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// extract url query
+	queryValues := r.URL.Query()
+	cursor := web.ReadString(queryValues, "cursor", "")
+	cursorType := web.ReadString(queryValues, "cursor_type", "")
+	pageSize := web.ReadInt(queryValues, "page_size", 0)
+	rangeType := web.ReadString(queryValues, "range_type", "")
+	timeZone := web.ReadString(queryValues, "time_zone", "")
+
+	dateRange, err := daterange.ParseDateRange(rangeType, timeZone)
+	if err != nil {
+		pt.log.WarnT(ctx, err.Error(), err)
+		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	filter := model.SpendFilter{
+		DateStart: &dateRange.StartDate,
+		DateEnd:   &dateRange.EndDate,
+	}
+	filter.PocketID.ULID = pocketID
+
+	cursorDataInput := paging.Cursor{}
+	cursorDataInput.SetCursorList([]string{"-date", "date", "-id", "id"})
+	cursorDataInput.SetCursor(cursor)
+	cursorDataInput.SetCursorType(cursorType)
+	cursorDataInput.SetPageSize(pageSize)
+
+	err = cursorDataInput.Validate()
+	if err != nil {
+		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	result, metadata, err := pt.service.FindAllSpendByCursor(ctx, claims, filter, cursorDataInput)
+	if err != nil {
+		pt.log.ErrorT(ctx, "error find spend by cursor auto date", err)
+		statusCode, msg := zhelper.ParseError(err)
+		web.ErrorResponse(w, statusCode, msg)
+		return
+	}
+
+	metadata.GenerateAndApplyPageUri(fmt.Sprintf("/spends/from-pocket/%s/with-cursor-auto", pocketID), queryValues)
 
 	env := web.Envelope{
 		"metadata": metadata,
