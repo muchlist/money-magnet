@@ -9,9 +9,9 @@ CREATE TABLE  IF NOT EXISTS "spends" (
   "balance_snapshoot" bigint NOT NULL,
   "is_income" boolean NOT NULL DEFAULT false,
   "type" int NOT NULL,
-  "date" timestamp NOT NULL DEFAULT (now()),
-  "created_at" timestamp NOT NULL DEFAULT (now()),
-  "updated_at" timestamp NOT NULL DEFAULT (now()),
+  "date" timestamptz NOT NULL DEFAULT (now()),
+  "created_at" timestamptz NOT NULL DEFAULT (now()),
+  "updated_at" timestamptz NOT NULL DEFAULT (now()),
   "version" integer NOT NULL DEFAULT 1
 );
 
