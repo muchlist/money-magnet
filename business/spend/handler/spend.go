@@ -435,6 +435,77 @@ func (pt *spendHandler) FindSpendByCursor(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// @Summary      Search Spend By Cursor
+// @Description  Search spend By Cursor
+// @Tags         Spend
+// @Accept       json
+// @Produce      json
+// @Param 		 cursor query string false "cursor"
+// @Param 		 cursor_type query string false "cursor_type"
+// @Param 		 page_size query int false "page-size"
+// @Param 		 pockets query string false "pockets"
+// @Param 		 users query string false "users"
+// @Param 		 categories query string false "categories"
+// @Param 		 is_income query bool false "is_income"
+// @Param 		 type query string false "type"
+// @Param 		 date_start query int false "date_start"
+// @Param 		 date_end query int false "date_end"
+// @Param 		 name query string false "search by name"
+// @Success      200  {object}  misc.ResponseSuccessListCursor{data=[]model.SpendResp}
+// @Failure      400  {object}  misc.ResponseErr
+// @Failure      500  {object}  misc.Response500Err
+// @Router       /spends [get]
+func (pt *spendHandler) SearchSpends(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-SearchSpendByCursor")
+	defer span.End()
+
+	claims, err := mid.GetClaims(ctx)
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	// extract url query
+	queryValues := r.URL.Query()
+	cursor := web.ReadString(queryValues, "cursor", "")
+	cursorType := web.ReadString(queryValues, "cursor_type", "")
+	pageSize := web.ReadInt(queryValues, "page_size", 0)
+
+	filter := extractSpendMultiPocketFilter(queryValues)
+
+	cursorDataInput := paging.Cursor{}
+	cursorDataInput.SetCursorList([]string{"-date", "date", "-id", "id"})
+	cursorDataInput.SetCursor(cursor)
+	cursorDataInput.SetCursorType(cursorType)
+	cursorDataInput.SetPageSize(pageSize)
+
+	err = cursorDataInput.Validate()
+	if err != nil {
+		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	result, metadata, err := pt.service.FindAllSpendMultiPocketByCursor(ctx, claims, filter, cursorDataInput)
+	if err != nil {
+		pt.log.ErrorT(ctx, "error find spend multi pocket by cursor", err)
+		statusCode, msg := zhelper.ParseError(err)
+		web.ErrorResponse(w, statusCode, msg)
+		return
+	}
+
+	metadata.GenerateAndApplyPageUri("/spends", queryValues)
+
+	env := web.Envelope{
+		"metadata": metadata,
+		"data":     result,
+	}
+	err = web.WriteJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+}
+
 // @Summary      Find Spend By Cursor With AutoDate
 // @Description  Find spend By Cursor With AutoDate
 // @Tags         Spend

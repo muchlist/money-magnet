@@ -23,6 +23,7 @@ type SpendReader interface {
 	GetByID(ctx context.Context, id xulid.ULID) (model.Spend, error)
 	Find(ctx context.Context, spendFilter model.SpendFilter, filter paging.Filters) ([]model.Spend, paging.Metadata, error)
 	FindWithCursor(ctx context.Context, spendFilter model.SpendFilter, filter paging.Cursor) ([]model.Spend, error)
+	FindWithCursorMultiPockets(ctx context.Context, spendFilter model.SpendFilterMultiPocket, filter paging.Cursor) ([]model.Spend, error)
 	CountAllPrice(ctx context.Context, pocketid xulid.ULID) (int64, error)
 }
 

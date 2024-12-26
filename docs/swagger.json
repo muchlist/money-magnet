@@ -731,6 +731,122 @@
             }
         },
         "/spends": {
+            "get": {
+                "description": "Search spend By Cursor",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Spend"
+                ],
+                "summary": "Search Spend By Cursor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cursor",
+                        "name": "cursor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "cursor_type",
+                        "name": "cursor_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "page-size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "pockets",
+                        "name": "pockets",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "users",
+                        "name": "users",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "categories",
+                        "name": "categories",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "is_income",
+                        "name": "is_income",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "type",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "date_start",
+                        "name": "date_start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "date_end",
+                        "name": "date_end",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "search by name",
+                        "name": "name",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/misc.ResponseSuccessListCursor"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_spend_model.SpendResp"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Create spend",
                 "consumes": [
@@ -1063,6 +1179,90 @@
                         "description": "search by name",
                         "name": "name",
                         "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/misc.ResponseSuccessListCursor"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/github_com_muchlist_moneymagnet_business_spend_model.SpendResp"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/misc.ResponseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/misc.Response500Err"
+                        }
+                    }
+                }
+            }
+        },
+        "/spends/{id}/with-cursor-auto": {
+            "get": {
+                "description": "Find spend By Cursor With AutoDate",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Spend"
+                ],
+                "summary": "Find Spend By Cursor With AutoDate",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cursor",
+                        "name": "cursor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "cursor_type",
+                        "name": "cursor_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "page-size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "last-7-days, 2024-1, 2024-2",
+                        "name": "range_type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Asia/Makasar",
+                        "name": "time_zone",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
