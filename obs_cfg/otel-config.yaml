@@ -2,8 +2,11 @@ receivers:
   otlp:
     protocols:
       grpc:
+        endpoint: 0.0.0.0:4317
 
 exporters:
+  # debug:
+  #   verbosity: detailed
   otlp:
     endpoint: ${OTEL_NEW_RELIC_EXPORTER_OTLP_ENDPOINT}
     headers:
@@ -34,3 +37,4 @@ service:
       exporters:
         - otlp
         - prometheus
+        # - debug
