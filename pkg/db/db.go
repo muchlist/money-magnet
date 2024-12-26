@@ -4,10 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/jackc/pgx/v4/pgxpool"
-
+	"github.com/jackc/pgx/v5/pgxpool"
 	// Make sure to import this so the instrumented driver is registered.
-	_ "github.com/signalfx/splunk-otel-go/instrumentation/github.com/jackc/pgx/splunkpgx"
+	// _ "github.com/signalfx/splunk-otel-go/instrumentation/github.com/jackc/pgx/splunkpgx"
 )
 
 type Config struct {
@@ -26,7 +25,7 @@ func OpenDB(cfg Config) (*pgxpool.Pool, error) {
 	config.MaxConns = int32(cfg.MaxOpenConns)
 	config.MinConns = int32(cfg.MinOpenConns)
 
-	db, err := pgxpool.ConnectConfig(context.Background(), config)
+	db, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
 		return nil, err
 	}

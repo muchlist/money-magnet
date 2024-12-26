@@ -15,7 +15,7 @@ import (
 
 	"github.com/muchlist/moneymagnet/pkg/validate"
 
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/muchlist/moneymagnet/docs"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"
 	"github.com/muchlist/moneymagnet/pkg/web"
