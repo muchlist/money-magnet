@@ -840,6 +840,80 @@ paths:
       tags:
       - Join
   /spends:
+    get:
+      consumes:
+      - application/json
+      description: Search spend By Cursor
+      parameters:
+      - description: cursor
+        in: query
+        name: cursor
+        type: string
+      - description: cursor_type
+        in: query
+        name: cursor_type
+        type: string
+      - description: page-size
+        in: query
+        name: page_size
+        type: integer
+      - description: pockets
+        in: query
+        name: pockets
+        type: string
+      - description: users
+        in: query
+        name: users
+        type: string
+      - description: categories
+        in: query
+        name: categories
+        type: string
+      - description: is_income
+        in: query
+        name: is_income
+        type: boolean
+      - description: type
+        in: query
+        name: type
+        type: string
+      - description: date_start
+        in: query
+        name: date_start
+        type: integer
+      - description: date_end
+        in: query
+        name: date_end
+        type: integer
+      - description: search by name
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/misc.ResponseSuccessListCursor'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_muchlist_moneymagnet_business_spend_model.SpendResp'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/misc.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/misc.Response500Err'
+      summary: Search Spend By Cursor
+      tags:
+      - Spend
     post:
       consumes:
       - application/json
@@ -1014,6 +1088,59 @@ paths:
           schema:
             $ref: '#/definitions/misc.Response500Err'
       summary: Find Spend By Cursor
+      tags:
+      - Spend
+  /spends/{id}/with-cursor-auto:
+    get:
+      consumes:
+      - application/json
+      description: Find spend By Cursor With AutoDate
+      parameters:
+      - description: cursor
+        in: query
+        name: cursor
+        type: string
+      - description: cursor_type
+        in: query
+        name: cursor_type
+        type: string
+      - description: page-size
+        in: query
+        name: page_size
+        type: integer
+      - description: last-7-days, 2024-1, 2024-2
+        in: query
+        name: range_type
+        required: true
+        type: string
+      - description: Asia/Makasar
+        in: query
+        name: time_zone
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/misc.ResponseSuccessListCursor'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/github_com_muchlist_moneymagnet_business_spend_model.SpendResp'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/misc.ResponseErr'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/misc.Response500Err'
+      summary: Find Spend By Cursor With AutoDate
       tags:
       - Spend
   /spends/{spend_id}:

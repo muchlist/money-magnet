@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"sort"
 	"time"
 
@@ -352,6 +353,61 @@ func (s *Core) FindAllSpendByCursor(ctx context.Context, claims mjwt.CustomClaim
 	spends, err := s.repo.FindWithCursor(ctx, spendFilter, filter)
 	if err != nil {
 		return nil, paging.CursorMetadata{}, fmt.Errorf("find all spend by pocketID with cursor: %w", err)
+	}
+
+	// Menentukan cursor selanjutnya
+	var reverseCursor string
+	var nextCursor string
+	if len(spends) > 0 {
+		reverseCursor = spends[0].Date.Format(time.RFC3339) // Set prev cursor
+	}
+	if len(spends) > int(filter.GetPageSize()) {
+		nextCursor = spends[filter.GetPageSize()-1].Date.Format(time.RFC3339) // Set next cursor apabila ditemukan data lebih dari limit
+		spends = spends[:filter.GetPageSize()]                                // Hapus data yang kelebihan
+	}
+
+	spendResult := make([]model.SpendResp, len(spends))
+	for i := range spends {
+		spendResult[i] = spends[i].ToResp()
+	}
+
+	return spendResult, paging.CursorMetadata{
+		CurrentCursor: filter.GetCursor(),
+		CursorType:    filter.GetCursorType(),
+		PageSize:      filter.GetPageSize(),
+		NextCursor:    nextCursor,
+		NextPage:      "",
+		ReverseCursor: reverseCursor,
+		ReversePage:   "",
+	}, nil
+}
+
+// FindAllSpendMultiPocketByCursor ...
+func (s *Core) FindAllSpendMultiPocketByCursor(ctx context.Context, claims mjwt.CustomClaim, spendFilter model.SpendFilterMultiPocket, filter paging.Cursor) ([]model.SpendResp, paging.CursorMetadata, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-FindAllSpendMultiPocketByCursor")
+	defer span.End()
+
+	// Must Have PocketID
+	if len(spendFilter.Pockets) == 0 {
+		return nil, paging.CursorMetadata{}, errr.New("pocket id is required", http.StatusBadRequest)
+	}
+
+	// Get existing Pocket
+	// TECHDEBT MVP : Validate just first pocket rather than all pocket
+	pocketExisting, err := s.pocketRepo.GetByID(ctx, spendFilter.Pockets[0])
+	if err != nil {
+		return nil, paging.CursorMetadata{}, fmt.Errorf("get pocket by id: %w", err)
+	}
+
+	// Validate Pocket Roles Editor
+	if !slicer.In(xulid.MustParse(claims.Identity).String(), pocketExisting.EditorID) &&
+		!slicer.In(xulid.MustParse(claims.Identity).String(), pocketExisting.WatcherID) {
+		return nil, paging.CursorMetadata{}, errr.New("not have access to this pocket", 400)
+	}
+
+	spends, err := s.repo.FindWithCursorMultiPockets(ctx, spendFilter, filter)
+	if err != nil {
+		return nil, paging.CursorMetadata{}, fmt.Errorf("find all spend by multi filter with cursor: %w", err)
 	}
 
 	// Menentukan cursor selanjutnya
