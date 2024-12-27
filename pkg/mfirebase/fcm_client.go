@@ -1,4 +1,4 @@
-package fcm
+package mfirebase
 
 import (
 	"context"
@@ -28,8 +28,7 @@ func NewFcmClient(app *firebase.App) (FCMSender, error) {
 }
 
 // SendMessage sends a notification message to the specified receiver tokens.
-func (c *fcmClient) SendMessage(ctx context.Context, payload Payload) ([]string /*invalid token*/, error) {
-	// Validate receiver tokens
+func (c *fcmClient) SendMessage(ctx context.Context, payload Payload) ([]string, error) {
 	validTokens, err := validateTokens(payload.ReceiverTokens)
 	if err != nil {
 		return nil, err
@@ -39,21 +38,21 @@ func (c *fcmClient) SendMessage(ctx context.Context, payload Payload) ([]string 
 		return nil, nil
 	}
 
-	// Create message with the valid tokens
-	message := createMulticastMessage(payload, validTokens)
-
-	// Send message
-	resp, err := c.client.SendEachForMulticast(ctx, message)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send message: %w", err)
-	}
-
 	var invalidTokens []string
-	if resp.FailureCount > 0 {
-		for i, result := range resp.Responses {
-			if result.Error != nil {
-				invalidTokens = append(invalidTokens, validTokens[i])
-			}
+
+	// Split tokens into chunks if exceeding max limit
+	tokenChunks := chunkTokens(validTokens, 500)
+
+	for _, tokens := range tokenChunks {
+		message := createMulticastMessage(payload, tokens)
+		resp, err := c.client.SendEachForMulticast(ctx, message)
+		if err != nil {
+			return nil, fmt.Errorf("failed to send message: %w", err)
+		}
+
+		if resp.FailureCount > 0 {
+			invalid := extractInvalidTokens(tokens, resp.Responses)
+			invalidTokens = append(invalidTokens, invalid...)
 		}
 	}
 
@@ -74,6 +73,28 @@ func validateTokens(tokens []string) ([]string, error) {
 	}
 
 	return validTokens, nil
+}
+
+func chunkTokens(tokens []string, chunkSize int) [][]string {
+	var chunks [][]string
+	for i := 0; i < len(tokens); i += chunkSize {
+		end := i + chunkSize
+		if end > len(tokens) {
+			end = len(tokens)
+		}
+		chunks = append(chunks, tokens[i:end])
+	}
+	return chunks
+}
+
+func extractInvalidTokens(tokens []string, responses []*messaging.SendResponse) []string {
+	var invalidTokens []string
+	for i, result := range responses {
+		if result.Error != nil {
+			invalidTokens = append(invalidTokens, tokens[i])
+		}
+	}
+	return invalidTokens
 }
 
 // createMulticastMessage creates a MulticastMessage struct with the given payload and tokens.

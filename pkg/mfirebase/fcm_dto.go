@@ -1,4 +1,4 @@
-package fcm
+package mfirebase
 
 type Payload struct {
 	Title          string
