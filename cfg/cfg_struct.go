@@ -15,6 +15,10 @@ type DbConfig struct {
 	MinOpenCons int
 }
 
+type GoogleConfig struct {
+	CredentialLocation string
+}
+
 type Telemetry struct {
 	URL      string
 	Key      string

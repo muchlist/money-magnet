@@ -8,9 +8,11 @@ import (
 	"sort"
 	"time"
 
+	notifModel "github.com/muchlist/moneymagnet/business/notification/model"
 	"github.com/muchlist/moneymagnet/business/spend/model"
 	"github.com/muchlist/moneymagnet/business/spend/port"
 	"github.com/muchlist/moneymagnet/constant"
+	"github.com/muchlist/moneymagnet/pkg/bg"
 	"github.com/muchlist/moneymagnet/pkg/ctype"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
@@ -30,10 +32,11 @@ var (
 
 // Core manages the set of APIs for user access.
 type Core struct {
-	log        mlogger.Logger
-	repo       port.SpendStorer
-	pocketRepo port.PocketStorer
-	txManager  port.Transactor
+	log                mlogger.Logger
+	repo               port.SpendStorer
+	pocketRepo         port.PocketStorer
+	notificationSender port.NotificationSender
+	txManager          port.Transactor
 }
 
 // NewCore constructs a core for user api access.
@@ -41,13 +44,15 @@ func NewCore(
 	log mlogger.Logger,
 	repo port.SpendStorer,
 	pocketRepo port.PocketStorer,
+	notificationSender port.NotificationSender,
 	txManager port.Transactor,
 ) *Core {
 	return &Core{
-		log:        log,
-		repo:       repo,
-		pocketRepo: pocketRepo,
-		txManager:  txManager,
+		log:                log,
+		repo:               repo,
+		pocketRepo:         pocketRepo,
+		notificationSender: notificationSender,
+		txManager:          txManager,
 	}
 }
 
@@ -107,6 +112,24 @@ func (s *Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req mod
 
 	if transErr != nil {
 		return model.SpendResp{}, transErr
+	}
+
+	// send notification to other user if any
+	otherUsers := pocketExisting.GetOtherUsers(claims.Identity)
+	if len(otherUsers) != 0 {
+		bg.RunSafeBackground(ctx, bg.BackgroundJob{
+			JobTitle: "Send Notification Create Spend",
+			Execute: func(ctx context.Context) {
+				err := s.notificationSender.SendNotificationToUser(ctx, notifModel.SendMessage{
+					Title:   fmt.Sprintf("Penambahan record pada %s oleh %s", pocketExisting.PocketName, claims.Name),
+					Message: fmt.Sprintf("%s %d", req.Name, req.Price),
+					UserIds: otherUsers,
+				})
+				if err != nil {
+					s.log.ErrorT(ctx, "error send notification to user", err)
+				}
+			},
+		})
 	}
 
 	return spend.ToResp(), nil
@@ -284,6 +307,24 @@ func (s *Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, 
 			return model.SpendResp{}, fmt.Errorf("fail to change balance: %w", err)
 		}
 		spendExisting.BalanceSnapshoot = newBalance
+	}
+
+	// send notification to other user if any
+	otherUsers := pocketExisting.GetOtherUsers(claims.Identity)
+	if len(otherUsers) != 0 {
+		bg.RunSafeBackground(ctx, bg.BackgroundJob{
+			JobTitle: "Send Notification Update Spend",
+			Execute: func(ctx context.Context) {
+				err := s.notificationSender.SendNotificationToUser(ctx, notifModel.SendMessage{
+					Title:   fmt.Sprintf("Perubahan record pada %s oleh %s", pocketExisting.PocketName, claims.Name),
+					Message: fmt.Sprintf("%s %d", spendExisting.Name, spendExisting.Price),
+					UserIds: otherUsers,
+				})
+				if err != nil {
+					s.log.ErrorT(ctx, "error send notification to user", err)
+				}
+			},
+		})
 	}
 
 	return spendExisting.ToResp(), nil

@@ -4,39 +4,50 @@ import (
 	"context"
 
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric/instrument"
-	"go.opentelemetry.io/otel/metric/unit"
+	"go.opentelemetry.io/otel/metric"
 )
 
-// http request counter =========================
-var endpointHitCounter, _ = meter.SyncInt64().Counter("http.request",
-	instrument.WithDescription("number of request per path"),
-	instrument.WithUnit(unit.Dimensionless),
+var (
+	endpointHitCounter metric.Int64Counter
+	latencyHisto       metric.Int64Histogram
 )
+
+func init() {
+	var err error
+	endpointHitCounter, err = meter.Int64Counter(
+		"http.request",
+		metric.WithDescription("number of request per path"),
+		metric.WithUnit("1"),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	latencyHisto, err = meter.Int64Histogram(
+		"response.latency",
+		metric.WithDescription("latency of request"),
+		metric.WithUnit("microseconds"),
+	)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func AddEndpointHitCounter(ctx context.Context, code int, path string) {
-	atrs := []attribute.KeyValue{
-		uniquePerNodeID,
-		attribute.String("method_path", path),
-		attribute.Int("code", code),
-	}
-	endpointHitCounter.Add(ctx, 1, atrs...)
+	endpointHitCounter.Add(ctx, 1,
+		metric.WithAttributes(
+			uniquePerNodeID,
+			attribute.String("method_path", path),
+			attribute.Int("code", code),
+		),
+	)
 }
-
-// End of endpoint hit counter =====================
-
-// Latency histogram =========================
-var latencyHisto, _ = meter.SyncInt64().Histogram("response.latency",
-	instrument.WithDescription("latency of request"),
-	instrument.WithUnit("microseconds"),
-)
 
 func AddLatencyPerPath(ctx context.Context, durMicrosecond int64, path string) {
-	atrs := []attribute.KeyValue{
-		uniquePerNodeID,
-		attribute.String("method_path", path),
-	}
-	latencyHisto.Record(ctx, durMicrosecond, atrs...)
+	latencyHisto.Record(ctx, durMicrosecond,
+		metric.WithAttributes(
+			uniquePerNodeID,
+			attribute.String("method_path", path),
+		),
+	)
 }
-
-// End of Latency histogram =====================

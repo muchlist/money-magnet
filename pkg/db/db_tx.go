@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/jackc/pgconn"
-	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type DBTX interface {
@@ -14,7 +14,6 @@ type DBTX interface {
 	Exec(ctx context.Context, sql string, arguments ...interface{}) (commandTag pgconn.CommandTag, err error)
 	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
 	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
-	QueryFunc(ctx context.Context, sql string, args []interface{}, scans []interface{}, f func(pgx.QueryFuncRow) error) (pgconn.CommandTag, error)
 
 	Begin(ctx context.Context) (pgx.Tx, error)
 	Commit(ctx context.Context) error
@@ -83,14 +82,6 @@ func (p *PGStore) Query(ctx context.Context, sql string, args ...interface{}) (p
 		return p.Tx.Query(ctx, sql, args...)
 	}
 	return p.NonTX.Query(ctx, sql, args...)
-}
-
-// QueryFunc implements DBTX
-func (p *PGStore) QueryFunc(ctx context.Context, sql string, args []interface{}, scans []interface{}, f func(pgx.QueryFuncRow) error) (pgconn.CommandTag, error) {
-	if p.Tx != nil {
-		return p.Tx.QueryFunc(ctx, sql, args, scans, f)
-	}
-	return p.NonTX.QueryFunc(ctx, sql, args, scans, f)
 }
 
 // QueryRow implements DBTX

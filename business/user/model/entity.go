@@ -12,7 +12,7 @@ type User struct {
 	Name      string
 	Password  []byte
 	Roles     []string
-	Fcm       string
+	Fcm       []string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Version   int

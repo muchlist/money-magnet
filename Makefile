@@ -28,7 +28,7 @@ run/admin:
 
 ## run/collector: run the otel collector
 run/collector:
-	docker compose -f docker-compose.observ.yml --env-file .env up
+	docker-compose -f docker-compose.observ.yml --env-file .env up
 
 ## build/api/linux: build application for linux server
 build/api/linux:

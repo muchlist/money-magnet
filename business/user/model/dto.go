@@ -38,5 +38,5 @@ type UserUpdate struct {
 	Name     *string    `json:"name"`
 	Password *string    `json:"password"`
 	Roles    []string   `json:"roles"`
-	Fcm      *string    `json:"fcm"`
+	Fcm      []string   `json:"fcm"`
 }

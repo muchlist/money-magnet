@@ -5,62 +5,80 @@ import (
 	"sync"
 
 	"github.com/muchlist/moneymagnet/pkg/monitor"
-	"go.opentelemetry.io/otel/metric/instrument"
-	"go.opentelemetry.io/otel/metric/unit"
+	"go.opentelemetry.io/otel/metric"
 )
 
-var doOnce sync.Once
-
-var alloc, _ = meter.AsyncInt64().Gauge(
-	"mem.alloc",
-	instrument.WithUnit(unit.Dimensionless),
-	instrument.WithDescription("allocated heap objects in MB"),
+var (
+	doOnce     sync.Once
+	alloc      metric.Int64ObservableGauge
+	totalAlloc metric.Int64ObservableGauge
+	sys        metric.Int64ObservableGauge
+	gc         metric.Int64ObservableGauge
+	goroutine  metric.Int64ObservableGauge
 )
 
-var totalAlloc, _ = meter.AsyncInt64().Gauge(
-	"mem.total_alloc",
-	instrument.WithUnit(unit.Dimensionless),
-	instrument.WithDescription("cumulative MB allocated for heap objects"),
-)
+func init() {
+	var err error
+	alloc, err = meter.Int64ObservableGauge(
+		"mem.alloc",
+		metric.WithDescription("allocated heap objects in MB"),
+		metric.WithUnit("MB"),
+	)
+	if err != nil {
+		panic(err)
+	}
 
-var sys, _ = meter.AsyncInt64().Gauge(
-	"mem.sys",
-	instrument.WithUnit(unit.Dimensionless),
-	instrument.WithDescription("total MB of memory obtained from the OS"),
-)
+	totalAlloc, err = meter.Int64ObservableGauge(
+		"mem.total_alloc",
+		metric.WithDescription("cumulative MB allocated for heap objects"),
+		metric.WithUnit("MB"),
+	)
+	if err != nil {
+		panic(err)
+	}
 
-var gc, _ = meter.AsyncInt64().Gauge(
-	"num.gc",
-	instrument.WithUnit(unit.Dimensionless),
-	instrument.WithDescription("number of garbage collectore finished"),
-)
+	sys, err = meter.Int64ObservableGauge(
+		"mem.sys",
+		metric.WithDescription("total MB of memory obtained from the OS"),
+		metric.WithUnit("MB"),
+	)
+	if err != nil {
+		panic(err)
+	}
 
-var goroutine, _ = meter.AsyncInt64().Gauge(
-	"goroutine",
-	instrument.WithUnit(unit.Dimensionless),
-	instrument.WithDescription("number of goroutine active"),
-)
+	gc, err = meter.Int64ObservableGauge(
+		"num.gc",
+		metric.WithDescription("number of garbage collectors finished"),
+		metric.WithUnit("1"),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	goroutine, err = meter.Int64ObservableGauge(
+		"goroutine",
+		metric.WithDescription("number of goroutine active"),
+		metric.WithUnit("1"),
+	)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func RegisterMonitorMetric(ctx context.Context) {
 	doOnce.Do(func() {
-		if err := meter.RegisterCallback(
-			[]instrument.Asynchronous{
-				alloc,
-				totalAlloc,
-				sys,
-				gc,
-				goroutine,
-			},
-			func(ctx context.Context) {
-				data := monitor.GetMemUsage()
+		_, err := meter.RegisterCallback(func(_ context.Context, o metric.Observer) error {
+			data := monitor.GetMemUsage()
 
-				alloc.Observe(ctx, int64(data.AllocMB), uniquePerNodeID)
-				totalAlloc.Observe(ctx, int64(data.TotalAllocMB), uniquePerNodeID)
-				sys.Observe(ctx, int64(data.SysMB), uniquePerNodeID)
-				gc.Observe(ctx, int64(data.NumGC), uniquePerNodeID)
-				goroutine.Observe(ctx, int64(data.NumGoroutine), uniquePerNodeID)
-			},
-		); err != nil {
+			o.ObserveInt64(alloc, int64(data.AllocMB), metric.WithAttributes(uniquePerNodeID))
+			o.ObserveInt64(totalAlloc, int64(data.TotalAllocMB), metric.WithAttributes(uniquePerNodeID))
+			o.ObserveInt64(sys, int64(data.SysMB), metric.WithAttributes(uniquePerNodeID))
+			o.ObserveInt64(gc, int64(data.NumGC), metric.WithAttributes(uniquePerNodeID))
+			o.ObserveInt64(goroutine, int64(data.NumGoroutine), metric.WithAttributes(uniquePerNodeID))
+			return nil
+		}, alloc, totalAlloc, sys, gc, goroutine)
+
+		if err != nil {
 			panic(err)
 		}
 	})

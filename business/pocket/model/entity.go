@@ -12,7 +12,7 @@ type Pocket struct {
 	OwnerID    xulid.ULID
 	EditorID   []string
 	WatcherID  []string
-	Users      []PocketUser
+	Users      []PocketUser // not included in get pocket by id
 	PocketName string
 	Balance    int64
 	Currency   string
@@ -38,6 +38,31 @@ func (p *Pocket) Sanitize() {
 
 	p.EditorID = editorSet.RevealSorted()
 	p.WatcherID = watcherSet.RevealSorted()
+}
+
+// GetOtherUsers returns a unique list of user IDs from
+// EditorID, WatcherID, and OwnerID,
+// excluding the given userID.
+func (p *Pocket) GetOtherUsers(excludeUserID string) []string {
+	userSet := ds.NewStringSet()
+
+	if p.OwnerID.String() != excludeUserID {
+		userSet.Add(p.OwnerID.String())
+	}
+
+	for _, id := range p.EditorID {
+		if id != excludeUserID {
+			userSet.Add(id)
+		}
+	}
+
+	for _, id := range p.WatcherID {
+		if id != excludeUserID {
+			userSet.Add(id)
+		}
+	}
+
+	return userSet.RevealNotEmptySorted()
 }
 
 func (p *Pocket) ToPocketResp() PocketResp {

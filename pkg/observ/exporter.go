@@ -2,6 +2,7 @@ package observ
 
 import (
 	"context"
+	"crypto/tls"
 
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -10,41 +11,50 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-func getTraceExporter(ctx context.Context, opt Option) (*otlptrace.Exporter, error) {
-	secureOption := otlptracegrpc.WithTLSCredentials(credentials.NewClientTLSFromCert(nil, ""))
-	if opt.Insecure {
-		secureOption = otlptracegrpc.WithInsecure()
+type exporterFactory struct {
+	ctx context.Context
+	opt Option
+}
+
+func newExporterFactory(ctx context.Context, opt Option) *exporterFactory {
+	return &exporterFactory{
+		ctx: ctx,
+		opt: opt,
 	}
+}
+
+func (f *exporterFactory) createTraceExporter() (*otlptrace.Exporter, error) {
+	secureOption := f.getSecureOption()
 	return otlptrace.New(
-		ctx,
+		f.ctx,
 		otlptracegrpc.NewClient(
 			secureOption,
-			otlptracegrpc.WithEndpoint(opt.CollectorURL),
-			otlptracegrpc.WithHeaders(opt.Headers),
+			otlptracegrpc.WithEndpoint(f.opt.CollectorURL),
+			otlptracegrpc.WithHeaders(f.opt.Headers),
 		),
 	)
 }
 
-func getOtlpMetricExporter(ctx context.Context, opt Option) (metric.Exporter, error) {
-	secureOption := otlpmetricgrpc.WithTLSCredentials(credentials.NewClientTLSFromCert(nil, ""))
-	if opt.Insecure {
-		secureOption = otlpmetricgrpc.WithInsecure()
-	}
-
-	exp, err := otlpmetricgrpc.New(ctx,
-		otlpmetricgrpc.WithEndpoint(opt.CollectorURL),
+func (f *exporterFactory) createMetricExporter() (metric.Exporter, error) {
+	secureOption := f.getMetricSecureOption()
+	return otlpmetricgrpc.New(f.ctx,
+		otlpmetricgrpc.WithEndpoint(f.opt.CollectorURL),
 		secureOption,
 	)
-	if err != nil {
-		return nil, err
-	}
-
-	return exp, nil
 }
 
-// func getPrometheuspMetricExporter(ctx context.Context, opt Option) (*prometheus.Exporter, error) {
-// -- need to import "go.opentelemetry.io/otel/exporters/prometheus"
-// -- need to enable expose /metrics using prometheus http middlware
+func (f *exporterFactory) getSecureOption() otlptracegrpc.Option {
+	if f.opt.Insecure {
+		return otlptracegrpc.WithInsecure()
+	}
+	// Gunakan sistem sertifikat default atau specify sertifikat
+	creds := credentials.NewTLS(&tls.Config{})
+	return otlptracegrpc.WithTLSCredentials(creds)
+}
 
-// 	return prometheus.New()
-// }
+func (f *exporterFactory) getMetricSecureOption() otlpmetricgrpc.Option {
+	if f.opt.Insecure {
+		return otlpmetricgrpc.WithInsecure()
+	}
+	return otlpmetricgrpc.WithTLSCredentials(credentials.NewClientTLSFromCert(nil, ""))
+}

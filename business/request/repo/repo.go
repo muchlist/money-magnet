@@ -6,7 +6,7 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/muchlist/moneymagnet/business/request/model"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/mlogger"

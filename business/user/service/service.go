@@ -135,7 +135,7 @@ func (s *Core) InsertUser(ctx context.Context, req model.UserRegisterReq) (model
 		Name:      req.Name,
 		Password:  hashPassword,
 		Roles:     req.Roles,
-		Fcm:       "",
+		Fcm:       []string{},
 		CreatedAt: timeNow,
 		UpdatedAt: timeNow,
 		Version:   1,
@@ -184,8 +184,8 @@ func (s *Core) PatchUser(ctx context.Context, req model.UserUpdate) (model.UserR
 		}
 		userExisting.Password = hashPassword
 	}
-	if req.Fcm != nil {
-		userExisting.Fcm = *req.Fcm
+	if len(req.Fcm) != 0 {
+		userExisting.Fcm = req.Fcm
 	}
 
 	if err := s.repo.Edit(ctx, &userExisting); err != nil {
@@ -204,7 +204,7 @@ func (s *Core) UpdateFCM(ctx context.Context, id string, fcm string) error {
 	if err != nil {
 		return ErrInvalidID
 	}
-	if err := s.repo.EditFCM(ctx, userID, fcm); err != nil {
+	if err := s.repo.AppendFCM(ctx, userID, fcm); err != nil {
 		return fmt.Errorf("edit fcm: %w", err)
 	}
 	return nil

@@ -10,6 +10,7 @@ import (
 type Config struct {
 	App       App
 	DB        DbConfig
+	Google    GoogleConfig
 	Telemetry Telemetry
 	Toggle    Toggle
 }
@@ -34,6 +35,9 @@ func Load() *Config {
 			DSN:         env.Get("DB_DSN", "postgres://postgres:postgres@localhost:5432/money_magnet?sslmode=disable"),
 			MaxOpenCons: env.Get("DB_MAX_CONN", 100),
 			MinOpenCons: env.Get("DB_MIN_CONN", 2),
+		},
+		Google: GoogleConfig{
+			CredentialLocation: env.Get("GOOGLE_CREDENTIAL_LOCATION", ""),
 		},
 		Telemetry: Telemetry{
 			URL:      env.Get("OTEL_URL", "localhost:4317"),
