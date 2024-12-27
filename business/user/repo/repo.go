@@ -128,7 +128,7 @@ func (r *Repo) Edit(ctx context.Context, user *model.User) error {
 	return nil
 }
 
-func (r *Repo) EditFCM(ctx context.Context, id xulid.ULID, fcm string) error {
+func (r *Repo) EditFCM(ctx context.Context, id xulid.ULID, fcms []string) error {
 	ctx, span := observ.GetTracer().Start(ctx, "user-repo-EditFCM")
 	defer span.End()
 
@@ -137,7 +137,7 @@ func (r *Repo) EditFCM(ctx context.Context, id xulid.ULID, fcm string) error {
 
 	sqlStatement, args, err := r.sb.Update(keyTable).
 		SetMap(sq.Eq{
-			keyFCM:       fcm,
+			keyFCM:       fcms,
 			keyUpdatedAt: time.Now(),
 		}).
 		Where(sq.Eq{keyID: id}).
@@ -145,6 +145,67 @@ func (r *Repo) EditFCM(ctx context.Context, id xulid.ULID, fcm string) error {
 
 	if err != nil {
 		return fmt.Errorf("build query update fcm user: %w", err)
+	}
+
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	_, err = dbtx.Exec(ctx, sqlStatement, args...)
+	if err != nil {
+		r.log.InfoT(ctx, err.Error())
+		return db.ParseError(err)
+	}
+
+	return nil
+}
+
+func (r *Repo) AppendFCM(ctx context.Context, id xulid.ULID, fcm string) error {
+	ctx, span := observ.GetTracer().Start(ctx, "user-repo-AppendFCM")
+	defer span.End()
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	sqlStatement, args, err := r.sb.Update(keyTable).
+		SetMap(sq.Eq{
+			// keyFCM:       sq.Expr("array_append(fcm, ?)", fcm),
+			keyFCM:       sq.Expr("CASE WHEN array_position(fcm, ?) IS NULL THEN array_append(fcm, ?) ELSE fcm END", fcm, fcm),
+			keyUpdatedAt: time.Now(),
+		}).
+		Where(sq.Eq{keyID: id}).
+		ToSql()
+
+	if err != nil {
+		return fmt.Errorf("build query append fcm user: %w", err)
+	}
+
+	dbtx := db.ExtractTx(ctx, r.db)
+
+	_, err = dbtx.Exec(ctx, sqlStatement, args...)
+	if err != nil {
+		r.log.InfoT(ctx, err.Error())
+		return db.ParseError(err)
+	}
+
+	return nil
+}
+
+func (r *Repo) RemoveFCM(ctx context.Context, id xulid.ULID, fcm string) error {
+	ctx, span := observ.GetTracer().Start(ctx, "user-repo-RemoveFCM")
+	defer span.End()
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	sqlStatement, args, err := r.sb.Update(keyTable).
+		SetMap(sq.Eq{
+			keyFCM:       sq.Expr("array_remove(fcm, ?)", fcm),
+			keyUpdatedAt: time.Now(),
+		}).
+		Where(sq.Eq{keyID: id}).
+		ToSql()
+
+	if err != nil {
+		return fmt.Errorf("build query remove fcm user: %w", err)
 	}
 
 	dbtx := db.ExtractTx(ctx, r.db)
