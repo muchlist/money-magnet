@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	cyhand "github.com/muchlist/moneymagnet/business/category/handler"
 	cyrepo "github.com/muchlist/moneymagnet/business/category/repo"
 	cyserv "github.com/muchlist/moneymagnet/business/category/service"
+	notifserv "github.com/muchlist/moneymagnet/business/notification/service"
 	pthand "github.com/muchlist/moneymagnet/business/pocket/handler"
 	ptrepo "github.com/muchlist/moneymagnet/business/pocket/repo"
 	ptserv "github.com/muchlist/moneymagnet/business/pocket/service"
@@ -20,6 +22,7 @@ import (
 	urserv "github.com/muchlist/moneymagnet/business/user/service"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/lrucache"
+	"github.com/muchlist/moneymagnet/pkg/mfirebase"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -29,13 +32,17 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func (app *application) routes() http.Handler {
+func (app *application) routes() (http.Handler, error) {
 	r := chi.NewRouter()
 
 	// dependency
 	jwt := mjwt.New(app.config.App.Secret)
 	bcrypt := mcrypto.New()
 	cache := lrucache.NewLRUCache()
+	fcmClient, err := mfirebase.NewFcmClient(app.firebase)
+	if err != nil {
+		fmt.Errorf("error get fcm client: %w", err)
+	}
 
 	// middleware
 	idempo := mid.NewIdempotencyMiddleware(cache)
@@ -47,6 +54,8 @@ func (app *application) routes() http.Handler {
 	requestRepo := reqrepo.NewRepo(app.db, app.logger)
 	spendRepo := spnrepo.NewRepo(app.db, app.logger)
 	txManager := db.NewTxManager(app.db, app.logger)
+
+	notificaionService := notifserv.NewCore(app.logger, fcmClient, userRepo)
 
 	userService := urserv.NewCore(app.logger, userRepo, bcrypt, jwt)
 	userHandler := urhand.NewUserHandler(app.logger, app.validator, userService)
@@ -60,7 +69,7 @@ func (app *application) routes() http.Handler {
 	requestService := reqserv.NewCore(app.logger, requestRepo, pocketRepo, txManager)
 	requestHandler := reqhand.NewRequestHandler(app.logger, app.validator, requestService)
 
-	spendService := spnserv.NewCore(app.logger, spendRepo, pocketRepo, txManager)
+	spendService := spnserv.NewCore(app.logger, spendRepo, pocketRepo, notificaionService, txManager)
 	spendHandler := spnhand.NewSpendHandler(app.logger, app.validator, cache, spendService)
 
 	// swagger endpoint
@@ -136,7 +145,7 @@ func (app *application) routes() http.Handler {
 		r.Patch("/user/profile", userHandler.EditSelfUser)
 	})
 
-	return r
+	return r, nil
 }
 
 // =============================================================================

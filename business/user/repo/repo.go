@@ -135,6 +135,10 @@ func (r *Repo) EditFCM(ctx context.Context, id xulid.ULID, fcms []string) error 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
+	if len(fcms) == 0 {
+		fcms = []string{}
+	}
+
 	sqlStatement, args, err := r.sb.Update(keyTable).
 		SetMap(sq.Eq{
 			keyFCM:       fcms,

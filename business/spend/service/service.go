@@ -30,10 +30,11 @@ var (
 
 // Core manages the set of APIs for user access.
 type Core struct {
-	log        mlogger.Logger
-	repo       port.SpendStorer
-	pocketRepo port.PocketStorer
-	txManager  port.Transactor
+	log                mlogger.Logger
+	repo               port.SpendStorer
+	pocketRepo         port.PocketStorer
+	notificationSender port.NotificationSender
+	txManager          port.Transactor
 }
 
 // NewCore constructs a core for user api access.
@@ -41,13 +42,15 @@ func NewCore(
 	log mlogger.Logger,
 	repo port.SpendStorer,
 	pocketRepo port.PocketStorer,
+	notificationSender port.NotificationSender,
 	txManager port.Transactor,
 ) *Core {
 	return &Core{
-		log:        log,
-		repo:       repo,
-		pocketRepo: pocketRepo,
-		txManager:  txManager,
+		log:                log,
+		repo:               repo,
+		pocketRepo:         pocketRepo,
+		notificationSender: notificationSender,
+		txManager:          txManager,
 	}
 }
 

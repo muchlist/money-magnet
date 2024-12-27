@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"time"
 
+	firebase "firebase.google.com/go/v4"
 	"github.com/go-playground/validator/v10"
 	"github.com/muchlist/moneymagnet/cfg"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/global"
+	"github.com/muchlist/moneymagnet/pkg/mfirebase"
 	"github.com/muchlist/moneymagnet/pkg/observ"
 	"github.com/muchlist/moneymagnet/pkg/observ/mmetric"
 
@@ -28,6 +30,7 @@ type application struct {
 	logger    mlogger.Logger
 	validator validate.Validator
 	db        *pgxpool.Pool
+	firebase  *firebase.App
 }
 
 // @title Money Magnet API
@@ -91,6 +94,15 @@ func main() {
 	}
 	defer database.Close()
 
+	// init firebase app
+	firebaseApp, err := mfirebase.InitFirebase(mfirebase.Config{
+		CredLocation: config.Google.CredentialLocation,
+	})
+	if err != nil {
+		log.Error("init firebase", err)
+		panic(err.Error())
+	}
+
 	// init validator
 	validateRegists := []validate.Register{
 		{
@@ -112,6 +124,7 @@ func main() {
 		logger:    log,
 		validator: validatorInst,
 		db:        database,
+		firebase:  firebaseApp,
 	}
 
 	// start debug server
@@ -126,7 +139,13 @@ func main() {
 
 	// create and start api server
 	webApi := web.New(app.logger, config.App.Port, config.App.Env, config.App.Name)
-	err = webApi.Serve(app.routes())
+	routes, err := app.routes()
+	if err != nil {
+		log.Error("generate routes", err)
+		panic(err.Error())
+	}
+
+	err = webApi.Serve(routes)
 	if err != nil {
 		log.Error("serve web api", err)
 	}
