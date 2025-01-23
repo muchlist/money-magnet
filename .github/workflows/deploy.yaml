@@ -26,13 +26,16 @@ jobs:
 
       - name: Deploy and Restart Service
         run: |
-          # Pengecekan build berhasil
-          ssh server 'test -f /home/muchlis/app/money-magnet/magnet-api.backup || exit 1'
+          # Backup
+          ssh server 'mv /home/muchlis/app/money-magnet/magnet-api /home/muchlis/app/money-magnet/magnet-api.backup'
           
-          # Permission eksekusi
+          # Copy file to server
+          scp magnet-api server:/home/muchlis/app/money-magnet/
+          
+          # Permission
           ssh server 'chmod +x /home/muchlis/app/money-magnet/magnet-api'
           
-          # Validasi service status
+          # Validation
           ssh server '
             sudo systemctl restart magnet-api && 
             sleep 5 && # Tunggu beberapa detik
