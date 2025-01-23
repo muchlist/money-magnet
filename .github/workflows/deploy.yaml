@@ -37,12 +37,12 @@ jobs:
           
           # Validation
           ssh server '
-            sudo -n systemctl restart magnet-api && 
+            systemctl restart magnet-api && 
             sleep 5 && # Tunggu beberapa detik
-            if ! sudo -n systemctl is-active --quiet magnet-api; then
+            if ! systemctl is-active --quiet magnet-api; then
               # Rollback jika gagal
               cp /home/muchlis/app/money-magnet/magnet-api.backup /home/muchlis/app/money-magnet/magnet-api
-              sudo -n systemctl restart magnet-api
+              systemctl restart magnet-api
               exit 1
             fi
           '
