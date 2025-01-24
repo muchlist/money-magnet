@@ -3,7 +3,7 @@ name: Deploy to Server
 on:
   push:
     tags:
-      - 'prod-*'
+      - 'stg-*'
 
 jobs:
   deploy:
@@ -12,10 +12,17 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
 
       - name: Build
-        run: export GOOS=linux GOARCH=amd64; go build -o magnet-api ./app/api
+        run: |
+          export GOOS=linux GOARCH=amd64
+          export CGO_ENABLED=1
+          go build \
+            -ldflags '-linkmode external -extldflags "-static" -w -s' \
+            -o magnet-api ./app/api
       
       - name: Setup SSH
         run: |
@@ -27,7 +34,7 @@ jobs:
       - name: Deploy and Restart Service
         run: |
           # Backup
-          ssh server 'mv /home/muchlis/app/money-magnet/magnet-api /home/muchlis/app/money-magnet/magnet-api.backup'
+          ssh server 'mv /home/muchlis/app/money-magnet/magnet-api /home/muchlis/app/money-magnet/magnet-api$(date +%d-%m-%Y--%H-%M-%S).backup'
           
           # Copy file to server
           scp magnet-api server:/home/muchlis/app/money-magnet/
@@ -35,14 +42,7 @@ jobs:
           # Permission
           ssh server 'chmod +x /home/muchlis/app/money-magnet/magnet-api'
           
-          # Validation
-          ssh server '
-            systemctl restart magnet-api && 
-            sleep 5 && # Tunggu beberapa detik
-            if ! systemctl is-active --quiet magnet-api; then
-              # Rollback jika gagal
-              cp /home/muchlis/app/money-magnet/magnet-api.backup /home/muchlis/app/money-magnet/magnet-api
-              systemctl restart magnet-api
-              exit 1
-            fi
-          '
+          # Restart Service
+          ssh server 'sudo /bin/systemctl restart magnet-api.service'
+
+        shell: /usr/bin/bash -e {0}
