@@ -17,14 +17,15 @@ import (
 )
 
 const (
-	keyTable        = "categories"
-	keyID           = "id"
-	keyCategoryName = "category_name"
-	keyCategoryIcon = "category_icon"
-	keyPocketID     = "pocket_id"
-	keyIsIncome     = "is_income"
-	keyCreatedAt    = "created_at"
-	keyUpdatedAt    = "updated_at"
+	keyTable            = "categories"
+	keyID               = "id"
+	keyCategoryName     = "category_name"
+	keyCategoryIcon     = "category_icon"
+	keyPocketID         = "pocket_id"
+	keyIsIncome         = "is_income"
+	keyDefaultSpendType = "default_spend_type"
+	keyCreatedAt        = "created_at"
+	keyUpdatedAt        = "updated_at"
 )
 
 // make sure the implementation satisfies the interface
@@ -64,6 +65,7 @@ func (r *Repo) Insert(ctx context.Context, category *model.Category) error {
 			keyCategoryIcon,
 			keyPocketID,
 			keyIsIncome,
+			keyDefaultSpendType,
 			keyUpdatedAt,
 			keyCreatedAt,
 		).
@@ -73,6 +75,7 @@ func (r *Repo) Insert(ctx context.Context, category *model.Category) error {
 			category.CategoryIcon,
 			category.PocketID,
 			category.IsIncome,
+			category.DefaultSpendType,
 			category.CreatedAt,
 			category.UpdatedAt).
 		Suffix(db.Returning(keyID)).
@@ -112,6 +115,7 @@ func (r *Repo) InsertMany(ctx context.Context, categories []model.Category) erro
 			keyCategoryName,
 			keyCategoryIcon,
 			keyIsIncome,
+			keyDefaultSpendType,
 			keyUpdatedAt,
 			keyCreatedAt,
 		)
@@ -123,6 +127,7 @@ func (r *Repo) InsertMany(ctx context.Context, categories []model.Category) erro
 			category.CategoryName,
 			category.CategoryIcon,
 			category.IsIncome,
+			category.DefaultSpendType,
 			category.CreatedAt,
 			category.UpdatedAt,
 		)
@@ -155,9 +160,10 @@ func (r *Repo) Edit(ctx context.Context, category *model.Category) error {
 
 	sqlStatement, args, err := r.sb.Update(keyTable).
 		SetMap(sq.Eq{
-			keyCategoryName: category.CategoryName,
-			keyCategoryIcon: category.CategoryIcon,
-			keyUpdatedAt:    time.Now(),
+			keyCategoryName:     category.CategoryName,
+			keyCategoryIcon:     category.CategoryIcon,
+			keyDefaultSpendType: category.DefaultSpendType,
+			keyUpdatedAt:        time.Now(),
 		}).
 		Where(sq.Eq{keyID: category.ID}).
 		ToSql()
@@ -225,6 +231,7 @@ func (r *Repo) GetByID(ctx context.Context, id string) (model.Category, error) {
 		keyCategoryName,
 		keyCategoryIcon,
 		keyIsIncome,
+		keyDefaultSpendType,
 		keyPocketID,
 		keyCreatedAt,
 		keyUpdatedAt,
@@ -243,6 +250,7 @@ func (r *Repo) GetByID(ctx context.Context, id string) (model.Category, error) {
 			&cat.CategoryName,
 			&cat.CategoryIcon,
 			&cat.IsIncome,
+			&cat.DefaultSpendType,
 			&cat.PocketID,
 			&cat.CreatedAt,
 			&cat.UpdatedAt,
@@ -280,6 +288,7 @@ func (r *Repo) Find(ctx context.Context, pocketID string, filter paging.Filters)
 		keyCategoryName,
 		keyCategoryIcon,
 		keyIsIncome,
+		keyDefaultSpendType,
 		keyPocketID,
 		keyCreatedAt,
 		keyUpdatedAt,
@@ -314,6 +323,7 @@ func (r *Repo) Find(ctx context.Context, pocketID string, filter paging.Filters)
 			&cat.CategoryName,
 			&cat.CategoryIcon,
 			&cat.IsIncome,
+			&cat.DefaultSpendType,
 			&cat.PocketID,
 			&cat.CreatedAt,
 			&cat.UpdatedAt)
