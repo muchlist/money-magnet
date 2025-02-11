@@ -54,13 +54,14 @@ func (s *Core) CreateCategory(ctx context.Context, claims mjwt.CustomClaim, req 
 
 	timeNow := time.Now()
 	cat := model.Category{
-		ID:           xulid.Instance().NewULID(),
-		PocketID:     req.PocketID,
-		CategoryName: req.CategoryName,
-		CategoryIcon: req.CategoryIcon,
-		IsIncome:     req.IsIncome,
-		CreatedAt:    timeNow,
-		UpdatedAt:    timeNow,
+		ID:               xulid.Instance().NewULID(),
+		PocketID:         req.PocketID,
+		CategoryName:     req.CategoryName,
+		CategoryIcon:     req.CategoryIcon,
+		IsIncome:         req.IsIncome,
+		DefaultSpendType: req.DefaultSpendType,
+		CreatedAt:        timeNow,
+		UpdatedAt:        timeNow,
 	}
 
 	if err := s.repo.Insert(ctx, &cat); err != nil {
@@ -94,6 +95,7 @@ func (s *Core) EditCategory(ctx context.Context, claims mjwt.CustomClaim, newDat
 	// Modify data
 	categoryExisting.CategoryName = newData.CategoryName
 	categoryExisting.CategoryIcon = newData.CategoryIcon
+	categoryExisting.DefaultSpendType = newData.DefaultSpendType
 
 	// Edit
 	err = s.repo.Edit(ctx, &categoryExisting)

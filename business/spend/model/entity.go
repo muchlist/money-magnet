@@ -20,7 +20,7 @@ type Spend struct {
 	Price            int64
 	BalanceSnapshoot int64
 	IsIncome         bool
-	SpendType        int
+	SpendType        int // 0:unknown, 1:need, 2:want, 3:saving
 	Date             time.Time
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
