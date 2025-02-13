@@ -9,11 +9,13 @@ import (
 	firebase "firebase.google.com/go/v4"
 	"github.com/go-playground/validator/v10"
 	"github.com/muchlist/moneymagnet/cfg"
+	"github.com/muchlist/moneymagnet/pkg/cache"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/global"
 	"github.com/muchlist/moneymagnet/pkg/mfirebase"
 	"github.com/muchlist/moneymagnet/pkg/observ"
 	"github.com/muchlist/moneymagnet/pkg/observ/mmetric"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/muchlist/moneymagnet/pkg/validate"
 
@@ -31,6 +33,7 @@ type application struct {
 	validator validate.Validator
 	db        *pgxpool.Pool
 	firebase  *firebase.App
+	redis     *redis.Client
 }
 
 // @title Money Magnet API
@@ -94,6 +97,14 @@ func main() {
 	}
 	defer database.Close()
 
+	// init redis
+	redis := cache.InitRedis(config)
+	defer func() {
+		if redis != nil {
+			redis.Close()
+		}
+	}()
+
 	// init firebase app
 	firebaseApp, err := mfirebase.InitFirebase(mfirebase.Config{
 		CredLocation: config.Google.CredentialLocation,
@@ -125,6 +136,7 @@ func main() {
 		validator: validatorInst,
 		db:        database,
 		firebase:  firebaseApp,
+		redis:     redis,
 	}
 
 	// start debug server

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strconv"
 	"time"
 
 	notifModel "github.com/muchlist/moneymagnet/business/notification/model"
@@ -36,6 +37,7 @@ type Core struct {
 	log                mlogger.Logger
 	repo               port.SpendStorer
 	pocketRepo         port.PocketStorer
+	eTagRepo           port.ETagStorer
 	notificationSender port.NotificationSender
 	txManager          port.Transactor
 }
@@ -45,6 +47,7 @@ func NewCore(
 	log mlogger.Logger,
 	repo port.SpendStorer,
 	pocketRepo port.PocketStorer,
+	eTagRepo port.ETagStorer,
 	notificationSender port.NotificationSender,
 	txManager port.Transactor,
 ) *Core {
@@ -52,6 +55,7 @@ func NewCore(
 		log:                log,
 		repo:               repo,
 		pocketRepo:         pocketRepo,
+		eTagRepo:           eTagRepo,
 		notificationSender: notificationSender,
 		txManager:          txManager,
 	}
@@ -114,6 +118,17 @@ func (s *Core) CreateSpend(ctx context.Context, claims mjwt.CustomClaim, req mod
 	if transErr != nil {
 		return model.SpendResp{}, transErr
 	}
+
+	// updating eTag
+	bg.RunSafeBackground(ctx, bg.BackgroundJob{
+		JobTitle: "set etag for pocket",
+		Execute: func(ctx context.Context) {
+			err := s.eTagRepo.SetTagByPocketID(ctx, pocketExisting.ID.String(), time.Now().UnixMilli())
+			if err != nil {
+				s.log.ErrorT(ctx, fmt.Sprintf("error set eTag for pocket %s", pocketExisting.ID.String()), err)
+			}
+		},
+	})
 
 	// send notification to other user if any
 	otherUsers := pocketExisting.GetOtherUsers(claims.Identity)
@@ -241,6 +256,22 @@ func (s *Core) TransferToPocketAsSpend(ctx context.Context, claims mjwt.CustomCl
 		return transErr
 	}
 
+	// updating eTag
+	bg.RunSafeBackground(ctx, bg.BackgroundJob{
+		JobTitle: "set etag for pockets",
+		Execute: func(ctx context.Context) {
+			err := s.eTagRepo.SetTagByPocketID(ctx, req.PocketIDFrom.String(), time.Now().UnixMilli())
+			if err != nil {
+				s.log.ErrorT(ctx, fmt.Sprintf("error set eTag for pocket %s", req.PocketIDFrom.String()), err)
+			}
+
+			err = s.eTagRepo.SetTagByPocketID(ctx, req.PocketIDTo.String(), time.Now().UnixMilli())
+			if err != nil {
+				s.log.ErrorT(ctx, fmt.Sprintf("error set eTag for pocket %s", req.PocketIDTo.String()), err)
+			}
+		},
+	})
+
 	return nil
 }
 
@@ -297,18 +328,36 @@ func (s *Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, 
 	}
 
 	// Edit
-	err = s.repo.Edit(ctx, &spendExisting)
-	if err != nil {
-		return model.SpendResp{}, fmt.Errorf("edit spend: %w", err)
+	transErr := s.txManager.WithAtomic(ctx, func(ctx context.Context) error {
+		err := s.repo.Edit(ctx, &spendExisting)
+		if err != nil {
+			return fmt.Errorf("edit spend: %w", err)
+		}
+
+		if diff != 0 {
+			newBalance, err := s.pocketRepo.UpdateBalance(ctx, spendExisting.PocketID, diff, false)
+			if err != nil {
+				return fmt.Errorf("fail to change balance: %w", err)
+			}
+			spendExisting.BalanceSnapshoot = newBalance
+		}
+
+		return nil
+	})
+	if transErr != nil {
+		return model.SpendResp{}, transErr
 	}
 
-	if diff != 0 {
-		newBalance, err := s.pocketRepo.UpdateBalance(ctx, spendExisting.PocketID, diff, false)
-		if err != nil {
-			return model.SpendResp{}, fmt.Errorf("fail to change balance: %w", err)
-		}
-		spendExisting.BalanceSnapshoot = newBalance
-	}
+	// updating eTag
+	bg.RunSafeBackground(ctx, bg.BackgroundJob{
+		JobTitle: "set etag for pocket",
+		Execute: func(ctx context.Context) {
+			err := s.eTagRepo.SetTagByPocketID(ctx, spendExisting.PocketID.String(), time.Now().UnixMilli())
+			if err != nil {
+				s.log.ErrorT(ctx, fmt.Sprintf("error set eTag for pocket %s", spendExisting.PocketID.String()), err)
+			}
+		},
+	})
 
 	// send notification to other user if any
 	otherUsers := pocketExisting.GetOtherUsers(claims.Identity)
@@ -430,11 +479,40 @@ type AutoDateRangeParams struct {
 	Filter    paging.Cursor
 	RangeType string
 	TimeZone  string
+	ETag      string
 }
 
 func (s *Core) FindAllSpendByCursorAutoDateRange(ctx context.Context, params AutoDateRangeParams) ([]model.SpendResp, paging.CursorMetadata, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-FindAllSpendByCursorAutoDateRange")
 	defer span.End()
+
+	// only support eTag for rangeType week right now
+	islast7daysType := params.RangeType == "last-7-days"
+	isPageOne := params.Filter.GetCursor() == ""
+	var tagSaved int64 = 0
+
+	if islast7daysType && isPageOne {
+		// always check eTag from redis
+		tag, err := s.eTagRepo.GetTagByPocketID(ctx, params.PocketID.String())
+		if err != nil {
+			return nil,
+				paging.CursorMetadata{},
+				errr.New(fmt.Sprintf("error get tag: %s", err.Error()), 500)
+		}
+
+		if tag != 0 {
+			tagSaved = tag
+			tagInput, _ := strconv.ParseInt(params.ETag, 10, 64)
+			if tag == tagInput {
+				return nil,
+					paging.CursorMetadata{},
+					errr.New(
+						"data is uptodate",
+						http.StatusNotModified,
+					)
+			}
+		}
+	}
 
 	dateRange, err := daterange.ParseDateRange(params.RangeType, params.TimeZone)
 	if err != nil {
@@ -448,8 +526,28 @@ func (s *Core) FindAllSpendByCursorAutoDateRange(ctx context.Context, params Aut
 	spendFilter.PocketID.ULID = params.PocketID
 
 	// use exisitng logic to get spend by cursor
-	return s.FindAllSpendByCursor(ctx, params.Claims, spendFilter, params.Filter)
+	results, metaPaging, err := s.FindAllSpendByCursor(ctx, params.Claims, spendFilter, params.Filter)
+	if err != nil {
+		return nil, paging.CursorMetadata{}, err
+	}
 
+	// updating eTag if empty
+	if islast7daysType && (tagSaved == 0) && isPageOne {
+		tagSaved = time.Now().UnixMilli() // updating tag coz existing is empty
+		bg.RunSafeBackground(ctx, bg.BackgroundJob{
+			JobTitle: "set etag for pocket",
+			Execute: func(ctx context.Context) {
+				err := s.eTagRepo.SetTagByPocketID(ctx, params.PocketID.String(), tagSaved)
+				if err != nil {
+					s.log.ErrorT(ctx, fmt.Sprintf("error set eTag for pocket %s", params.PocketID.String()), err)
+				}
+			},
+		})
+	}
+
+	metaPaging.ETag = fmt.Sprintf("%d", tagSaved)
+
+	return results, metaPaging, err
 }
 
 // FindAllSpendMultiPocketByCursor ...

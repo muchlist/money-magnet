@@ -122,6 +122,7 @@ type CursorMetadata struct {
 	NextPage      string `json:"next_page" example:"/users?limit=50&cursor=01ARZ3NDEKTSV5RRFFQ69G5AAA&cursor_type=id"`
 	ReverseCursor string `json:"reverse_cursor" example:"01ARZ3NDEKTSV5RRFFQ69G5AAA"`
 	ReversePage   string `json:"reverse_page" example:"/users?limit=50&cursor=01ARZ3NDEKTSV5RRFFQ69G5AAA&cursor_type=-id"`
+	ETag          string `json:"etag"`
 }
 
 func (c *CursorMetadata) GenerateAndApplyPageUri(basePath string, queryParams url.Values) {

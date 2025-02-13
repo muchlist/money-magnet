@@ -4,6 +4,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestGetEnv(t *testing.T) {
@@ -71,6 +72,15 @@ func TestGetEnv(t *testing.T) {
 			},
 			want: "http://muchlis.dev/test",
 		},
+		{
+			name: "time duration",
+			set:  "48h",
+			args: args{
+				key: "duration",
+				def: time.Duration(time.Hour * 24),
+			},
+			want: time.Duration(time.Hour * 48),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -86,6 +96,10 @@ func TestGetEnv(t *testing.T) {
 					t.Errorf("Get() = %v, want %v", got, tt.want)
 				}
 			case string:
+				if got := Get(tt.args.key, x); !reflect.DeepEqual(got, tt.want) {
+					t.Errorf("Get() = %v, want %v", got, tt.want)
+				}
+			case time.Duration:
 				if got := Get(tt.args.key, x); !reflect.DeepEqual(got, tt.want) {
 					t.Errorf("Get() = %v, want %v", got, tt.want)
 				}

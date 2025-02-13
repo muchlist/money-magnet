@@ -543,6 +543,7 @@ func (pt *spendHandler) FindSpendAutoDateByCursor(w http.ResponseWriter, r *http
 	pageSize := web.ReadInt(queryValues, "page_size", 0)
 	rangeType := web.ReadString(queryValues, "range_type", "")
 	timeZone := web.ReadString(queryValues, "time_zone", "")
+	eTag := web.ReadString(queryValues, "etag", "")
 
 	cursorDataInput := paging.Cursor{}
 	cursorDataInput.SetCursorList([]string{"-date", "date", "-id", "id"})
@@ -562,6 +563,7 @@ func (pt *spendHandler) FindSpendAutoDateByCursor(w http.ResponseWriter, r *http
 		Filter:    cursorDataInput,
 		RangeType: rangeType,
 		TimeZone:  timeZone,
+		ETag:      eTag,
 	})
 	if err != nil {
 		pt.log.ErrorT(ctx, "error find spend by cursor auto date", err)
