@@ -7,7 +7,6 @@ import (
 	"github.com/muchlist/moneymagnet/business/spend/model"
 	"github.com/muchlist/moneymagnet/business/spend/service"
 	"github.com/muchlist/moneymagnet/business/zhelper"
-	"github.com/muchlist/moneymagnet/pkg/daterange"
 	"github.com/muchlist/moneymagnet/pkg/lrucache"
 	"github.com/muchlist/moneymagnet/pkg/mid"
 	"github.com/muchlist/moneymagnet/pkg/observ"
@@ -544,19 +543,7 @@ func (pt *spendHandler) FindSpendAutoDateByCursor(w http.ResponseWriter, r *http
 	pageSize := web.ReadInt(queryValues, "page_size", 0)
 	rangeType := web.ReadString(queryValues, "range_type", "")
 	timeZone := web.ReadString(queryValues, "time_zone", "")
-
-	dateRange, err := daterange.ParseDateRange(rangeType, timeZone)
-	if err != nil {
-		pt.log.WarnT(ctx, err.Error(), err)
-		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	filter := model.SpendFilter{
-		DateStart: &dateRange.StartDate,
-		DateEnd:   &dateRange.EndDate,
-	}
-	filter.PocketID.ULID = pocketID
+	eTag := web.ReadString(queryValues, "etag", "")
 
 	cursorDataInput := paging.Cursor{}
 	cursorDataInput.SetCursorList([]string{"-date", "date", "-id", "id"})
@@ -570,7 +557,14 @@ func (pt *spendHandler) FindSpendAutoDateByCursor(w http.ResponseWriter, r *http
 		return
 	}
 
-	result, metadata, err := pt.service.FindAllSpendByCursor(ctx, claims, filter, cursorDataInput)
+	result, metadata, err := pt.service.FindAllSpendByCursorAutoDateRange(ctx, service.AutoDateRangeParams{
+		PocketID:  pocketID,
+		Claims:    claims,
+		Filter:    cursorDataInput,
+		RangeType: rangeType,
+		TimeZone:  timeZone,
+		ETag:      eTag,
+	})
 	if err != nil {
 		pt.log.ErrorT(ctx, "error find spend by cursor auto date", err)
 		statusCode, msg := zhelper.ParseError(err)

@@ -2,6 +2,7 @@ package cfg
 
 import (
 	"log"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/muchlist/moneymagnet/pkg/env"
@@ -10,6 +11,7 @@ import (
 type Config struct {
 	App       App
 	DB        DbConfig
+	Redis     RedisConfig
 	Google    GoogleConfig
 	Telemetry Telemetry
 	Toggle    Toggle
@@ -36,6 +38,12 @@ func Load() *Config {
 			MaxOpenCons: env.Get("DB_MAX_CONN", 100),
 			MinOpenCons: env.Get("DB_MIN_CONN", 2),
 		},
+		Redis: RedisConfig{
+			RedisURL:         env.Get("REDIS_URL", "localhost:6379"),
+			RedisPass:        env.Get("REDIS_PASSWORD", ""),
+			RedisDB:          env.Get("REDIS_DB", 0),
+			RedisDefDuration: env.Get("REDIS_DEF_DURATION", time.Duration(48*time.Hour)),
+		},
 		Google: GoogleConfig{
 			CredentialLocation: env.Get("GOOGLE_CREDENTIAL_LOCATION", ""),
 		},
@@ -47,6 +55,7 @@ func Load() *Config {
 		Toggle: Toggle{
 			TraceON:  env.Get("TRACE_ON", false),
 			MetricON: env.Get("METRIC_ON", false),
+			CacheON:  env.Get("CACHE_ON", true),
 		},
 	}
 

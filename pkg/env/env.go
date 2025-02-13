@@ -2,42 +2,46 @@ package env
 
 import (
 	"os"
-	"reflect"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type commonValue interface {
-	int | bool | string
+	~int | ~bool | ~string | ~int64
 }
 
 func Get[T commonValue](key string, def T) T {
 	var result any = def
 	valueStr := strings.TrimSpace(os.Getenv(key))
+	if valueStr == "" {
+		return def
+	}
 
-	switch reflect.TypeOf(def).Kind() {
-	case reflect.String:
-		if valueStr != "" {
-			result = valueStr
-		}
+	switch any(def).(type) {
+	case string:
+		result = valueStr
 
-	case reflect.Bool:
-		if valueStr != "" {
-			val, err := strconv.ParseBool(strings.ToLower(valueStr))
-			if err != nil {
-				return def
-			}
-			result = val
+	case bool:
+		val, err := strconv.ParseBool(strings.ToLower(valueStr))
+		if err != nil {
+			return def
 		}
+		result = val
 
-	case reflect.Int:
-		if valueStr != "" {
-			val, err := strconv.Atoi(valueStr)
-			if err != nil {
-				return def
-			}
-			result = val
+	case int:
+		val, err := strconv.Atoi(valueStr)
+		if err != nil {
+			return def
 		}
+		result = val
+
+	case time.Duration:
+		duration, err := time.ParseDuration(valueStr)
+		if err != nil {
+			return def
+		}
+		result = duration
 	}
 
 	return result.(T)

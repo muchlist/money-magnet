@@ -20,6 +20,7 @@ import (
 	urhand "github.com/muchlist/moneymagnet/business/user/handler"
 	urrepo "github.com/muchlist/moneymagnet/business/user/repo"
 	urserv "github.com/muchlist/moneymagnet/business/user/service"
+	"github.com/muchlist/moneymagnet/pkg/cache"
 	"github.com/muchlist/moneymagnet/pkg/db"
 	"github.com/muchlist/moneymagnet/pkg/lrucache"
 	"github.com/muchlist/moneymagnet/pkg/mfirebase"
@@ -38,14 +39,15 @@ func (app *application) routes() (http.Handler, error) {
 	// dependency
 	jwt := mjwt.New(app.config.App.Secret)
 	bcrypt := mcrypto.New()
-	cache := lrucache.NewLRUCache()
+	lruCacheObj := lrucache.NewLRUCache()
+	int64Cache := cache.NewCache[int64](app.redis, true)
 	fcmClient, err := mfirebase.NewFcmClient(app.firebase)
 	if err != nil {
-		fmt.Errorf("error get fcm client: %w", err)
+		return r, fmt.Errorf("error get fcm client: %w", err)
 	}
 
 	// middleware
-	idempo := mid.NewIdempotencyMiddleware(cache)
+	idempo := mid.NewIdempotencyMiddleware(lruCacheObj)
 	r.Use(mid.EndpoitnCounter)
 
 	userRepo := urrepo.NewRepo(app.db, app.logger)
@@ -53,6 +55,10 @@ func (app *application) routes() (http.Handler, error) {
 	categoryRepo := cyrepo.NewRepo(app.db, app.logger)
 	requestRepo := reqrepo.NewRepo(app.db, app.logger)
 	spendRepo := spnrepo.NewRepo(app.db, app.logger)
+	rTagCacheRepo := spnrepo.NewETagCache(int64Cache,
+		app.config.Redis.RedisDefDuration,
+		app.logger,
+	)
 	txManager := db.NewTxManager(app.db, app.logger)
 
 	notificaionService := notifserv.NewCore(app.logger, fcmClient, userRepo)
@@ -61,7 +67,7 @@ func (app *application) routes() (http.Handler, error) {
 	userHandler := urhand.NewUserHandler(app.logger, app.validator, userService)
 
 	pocketService := ptserv.NewCore(app.logger, pocketRepo, userRepo, categoryRepo, txManager)
-	pocketHandler := pthand.NewPocketHandler(app.logger, app.validator, cache, pocketService)
+	pocketHandler := pthand.NewPocketHandler(app.logger, app.validator, lruCacheObj, pocketService)
 
 	categoryService := cyserv.NewCore(app.logger, categoryRepo, pocketRepo)
 	categoryHandler := cyhand.NewCatHandler(app.logger, app.validator, categoryService)
@@ -69,8 +75,8 @@ func (app *application) routes() (http.Handler, error) {
 	requestService := reqserv.NewCore(app.logger, requestRepo, pocketRepo, txManager)
 	requestHandler := reqhand.NewRequestHandler(app.logger, app.validator, requestService)
 
-	spendService := spnserv.NewCore(app.logger, spendRepo, pocketRepo, notificaionService, txManager)
-	spendHandler := spnhand.NewSpendHandler(app.logger, app.validator, cache, spendService)
+	spendService := spnserv.NewCore(app.logger, spendRepo, pocketRepo, rTagCacheRepo, notificaionService, txManager)
+	spendHandler := spnhand.NewSpendHandler(app.logger, app.validator, lruCacheObj, spendService)
 
 	// swagger endpoint
 	r.Get("/swagger/*", httpSwagger.Handler(

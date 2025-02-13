@@ -1,5 +1,7 @@
 package cfg
 
+import "time"
+
 type App struct {
 	Name         string
 	Port         int
@@ -15,6 +17,13 @@ type DbConfig struct {
 	MinOpenCons int
 }
 
+type RedisConfig struct {
+	RedisURL         string
+	RedisPass        string
+	RedisDB          int
+	RedisDefDuration time.Duration
+}
+
 type GoogleConfig struct {
 	CredentialLocation string
 }
@@ -28,4 +37,5 @@ type Telemetry struct {
 type Toggle struct {
 	TraceON  bool
 	MetricON bool
+	CacheON  bool
 }
