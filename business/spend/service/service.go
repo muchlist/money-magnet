@@ -14,6 +14,7 @@ import (
 	"github.com/muchlist/moneymagnet/constant"
 	"github.com/muchlist/moneymagnet/pkg/bg"
 	"github.com/muchlist/moneymagnet/pkg/ctype"
+	"github.com/muchlist/moneymagnet/pkg/daterange"
 	"github.com/muchlist/moneymagnet/pkg/errr"
 	"github.com/muchlist/moneymagnet/pkg/mjwt"
 	"github.com/muchlist/moneymagnet/pkg/observ"
@@ -421,6 +422,34 @@ func (s *Core) FindAllSpendByCursor(ctx context.Context, claims mjwt.CustomClaim
 		ReverseCursor: reverseCursor,
 		ReversePage:   "",
 	}, nil
+}
+
+type AutoDateRangeParams struct {
+	PocketID  xulid.ULID
+	Claims    mjwt.CustomClaim
+	Filter    paging.Cursor
+	RangeType string
+	TimeZone  string
+}
+
+func (s *Core) FindAllSpendByCursorAutoDateRange(ctx context.Context, params AutoDateRangeParams) ([]model.SpendResp, paging.CursorMetadata, error) {
+	ctx, span := observ.GetTracer().Start(ctx, "service-FindAllSpendByCursorAutoDateRange")
+	defer span.End()
+
+	dateRange, err := daterange.ParseDateRange(params.RangeType, params.TimeZone)
+	if err != nil {
+		return nil, paging.CursorMetadata{}, errr.New(err.Error(), 400)
+	}
+
+	spendFilter := model.SpendFilter{
+		DateStart: &dateRange.StartDate,
+		DateEnd:   &dateRange.EndDate,
+	}
+	spendFilter.PocketID.ULID = params.PocketID
+
+	// use exisitng logic to get spend by cursor
+	return s.FindAllSpendByCursor(ctx, params.Claims, spendFilter, params.Filter)
+
 }
 
 // FindAllSpendMultiPocketByCursor ...
