@@ -136,6 +136,7 @@ func (app *application) routes() (http.Handler, error) {
 			r.Get("/from-pocket/{id}", spendHandler.FindSpend)
 			r.Get("/{id}", spendHandler.GetByID)
 			r.Post("/sync/{id}", spendHandler.SyncBalance)
+			r.Delete("/{id}", spendHandler.DeleteSpend)
 
 			i := r.With(idempo.IdempotentCheck)
 			i.Post("/", spendHandler.CreateSpend)

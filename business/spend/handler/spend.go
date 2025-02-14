@@ -206,6 +206,52 @@ func (pt *spendHandler) EditSpend(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// @Summary      Delete Spend
+// @Description  Delete spend
+// @Tags         Spend
+// @Accept       json
+// @Produce      json
+// @Param		 spend_id path string true "spend_id"
+// @Success      200  {object}  misc.ResponseSuccess{data=model.SpendResp}
+// @Failure      400  {object}  misc.ResponseErr
+// @Failure      500  {object}  misc.Response500Err
+// @Router       /spends/{spend_id} [patch]
+func (pt *spendHandler) DeleteSpend(w http.ResponseWriter, r *http.Request) {
+	ctx, span := observ.GetTracer().Start(r.Context(), "handler-DeleteSpend")
+	defer span.End()
+
+	claims, err := mid.GetClaims(ctx)
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+
+	// extract url path
+	spendID, err := web.ReadULIDParam(r)
+	if err != nil {
+		pt.log.WarnT(ctx, err.Error(), err)
+		web.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = pt.service.DeleteSpend(ctx, claims, spendID)
+	if err != nil {
+		pt.log.ErrorT(ctx, "error delete spend", err)
+		statusCode, msg := zhelper.ParseError(err)
+		web.ErrorResponse(w, statusCode, msg)
+		return
+	}
+	env := web.Envelope{
+		"data": "success delete spend",
+	}
+
+	err = web.WriteJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		web.ServerErrorResponse(w, r, err)
+		return
+	}
+}
+
 // @Summary      Sync Spend Balance
 // @Description  Sync spend to update pocket balance
 // @Tags         Spend
