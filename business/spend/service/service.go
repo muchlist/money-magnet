@@ -380,6 +380,84 @@ func (s *Core) UpdatePartialSpend(ctx context.Context, claims mjwt.CustomClaim, 
 	return spendExisting.ToResp(), nil
 }
 
+func (s *Core) DeleteSpend(ctx context.Context, claims mjwt.CustomClaim, spendID xulid.ULID) error {
+	ctx, span := observ.GetTracer().Start(ctx, "service-UpdatePartialSpend")
+	defer span.End()
+
+	// Get existing Spend
+	spendExisting, err := s.repo.GetByID(ctx, spendID)
+	if err != nil {
+		return fmt.Errorf("get spend by id: %w", err)
+	}
+
+	// validate id creator
+	if spendExisting.UserID != claims.GetULID() {
+		return errr.New("user cannot delete this transaction", 400)
+	}
+
+	// Get existing Pocket
+	pocketExisting, err := s.pocketRepo.GetByID(ctx, spendExisting.PocketID)
+	if err != nil {
+		return fmt.Errorf("get pocket by id: %w", err)
+	}
+
+	// Validate Pocket Roles Editor
+	if !slicer.In(xulid.MustParse(claims.Identity).String(), pocketExisting.EditorID) {
+		return errr.New("not have access to this pocket", 400)
+	}
+
+	reverseExistingPriceToDelete := -spendExisting.Price
+
+	// Edit
+	transErr := s.txManager.WithAtomic(ctx, func(ctx context.Context) error {
+		err := s.repo.Delete(ctx, spendID)
+		if err != nil {
+			return fmt.Errorf("delete spend: %w", err)
+		}
+
+		_, err = s.pocketRepo.UpdateBalance(ctx, spendExisting.PocketID, reverseExistingPriceToDelete, false)
+		if err != nil {
+			return fmt.Errorf("fail to updating balance: %w", err)
+		}
+
+		return nil
+	})
+	if transErr != nil {
+		return transErr
+	}
+
+	// updating eTag
+	bg.RunSafeBackground(ctx, bg.BackgroundJob{
+		JobTitle: "set etag for pocket",
+		Execute: func(ctx context.Context) {
+			err := s.eTagRepo.SetTagByPocketID(ctx, spendExisting.PocketID.String(), time.Now().UnixMilli())
+			if err != nil {
+				s.log.ErrorT(ctx, fmt.Sprintf("error set eTag for pocket %s", spendExisting.PocketID.String()), err)
+			}
+		},
+	})
+
+	// send notification to other user if any
+	otherUsers := pocketExisting.GetOtherUsers(claims.Identity)
+	if len(otherUsers) != 0 {
+		bg.RunSafeBackground(ctx, bg.BackgroundJob{
+			JobTitle: "Send Notification Delete Spend",
+			Execute: func(ctx context.Context) {
+				err := s.notificationSender.SendNotificationToUser(ctx, notifModel.SendMessage{
+					Title:   fmt.Sprintf("Penghapusan record pada %s oleh %s", pocketExisting.PocketName, claims.Name),
+					Message: fmt.Sprintf("%s %d", spendExisting.Name, spendExisting.Price),
+					UserIds: otherUsers,
+				})
+				if err != nil {
+					s.log.ErrorT(ctx, "error send notification to user", err)
+				}
+			},
+		})
+	}
+
+	return nil
+}
+
 // GetDetail ...
 func (s *Core) GetDetail(ctx context.Context, spendID xulid.ULID) (model.SpendResp, error) {
 	ctx, span := observ.GetTracer().Start(ctx, "service-GetDetail")
